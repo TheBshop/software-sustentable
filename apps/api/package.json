@@ -7,12 +7,15 @@
   "scripts": {
     "dev": "node --watch --env-file-if-exists=.env src/server.js",
     "start": "node src/server.js",
+    "dev:memoria": "node src/dev-memory.js",
     "seed": "node --env-file-if-exists=.env src/seed.js",
+    "importar": "node --env-file-if-exists=.env src/import/cli.js",
     "test": "vitest run"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
+    "exceljs": "^4.4.0",
     "express": "^5.1.0",
     "helmet": "^8.0.0",
     "jsonwebtoken": "^9.0.2",

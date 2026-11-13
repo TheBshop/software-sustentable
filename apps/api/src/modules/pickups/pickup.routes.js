@@ -6,7 +6,7 @@ import multer from 'multer';
 import { z } from 'zod';
 import { Pickup, ESTADOS_RETIRO } from './pickup.model.js';
 import { nextSeq } from '../../lib/counters.js';
-import { objectId, dateInput } from '../../lib/validation.js';
+import { objectId, dateInput, endOfLocalDay } from '../../lib/validation.js';
 import { requireRole } from '../../middleware/auth.js';
 import { HttpError } from '../../middleware/error.js';
 import { env } from '../../config/env.js';
@@ -50,8 +50,8 @@ pickupsRouter.get('/', async (req, res) => {
   if (typeof estado === 'string') query.estado = estado;
   if (desde || hasta) {
     query.fecha = {};
-    if (desde) query.fecha.$gte = new Date(desde);
-    if (hasta) query.fecha.$lte = new Date(hasta);
+    if (desde) query.fecha.$gte = dateInput.parse(desde);
+    if (hasta) query.fecha.$lte = endOfLocalDay(dateInput.parse(hasta));
   }
   // Un chofer solo ve sus propios retiros
   if (req.user.role === 'chofer') query.chofer = req.user.sub;

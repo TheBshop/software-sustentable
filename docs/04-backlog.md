@@ -12,7 +12,7 @@ Personas: **Chofer** (hace los retiros), **Planta** (recibe y pesa), **Administr
 |---|---|---|
 | S0-1 | Como equipo, quiero el repo, CI y entornos (Atlas, Render, Netlify) para poder deployar desde el día 1. ✅ repo/CI | 3 |
 | S0-2 | Como equipo, quiero relevar en la planta **un día de trabajo real** (acompañar un recorrido, ver la balanza, ver cómo facturan hoy) para validar el modelo de datos. | 2 |
-| S0-3 | Como coordinación, quiero cargar la lista real de materiales, clientes y tarifas (desde Excel) para arrancar con datos verdaderos. | 3 |
+| S0-3 | Como coordinación, quiero cargar la lista real de materiales, clientes y tarifas (desde Excel) para arrancar con datos verdaderos. ✅ importador + plantilla | 3 |
 
 ## Sprint 1 — Registro de retiros (objetivo: los choferes dejan el papel)
 | # | Historia | Criterios de aceptación | Pts |
@@ -27,28 +27,28 @@ Personas: **Chofer** (hace los retiros), **Planta** (recibe y pesa), **Administr
 ## Sprint 2 — Planta y certificados (objetivo: primer certificado real a un cliente piloto)
 | # | Historia | Pts |
 |---|---|---|
-| 2.1 | Como **planta**, quiero ver los retiros que llegan y cargar el peso real de balanza. ✅ API | 5 |
-| 2.2 | Como **planta**, quiero registrar ingresos que no vienen de retiros (recuperadores, entregas voluntarias). ✅ API | 3 |
-| 2.3 | Como **administración**, quiero emitir el certificado PDF con QR de un retiro. ✅ API | 3 |
+| 2.1 | Como **planta**, quiero ver los retiros que llegan y cargar el peso real de balanza. ✅ | 5 |
+| 2.2 | Como **planta**, quiero registrar ingresos que no vienen de retiros (recuperadores, entregas voluntarias). ✅ | 3 |
+| 2.3 | Como **administración**, quiero emitir el certificado PDF con QR de un retiro. ✅ | 3 |
 | 2.4 | Como **generador**, quiero escanear el QR y ver que el certificado es auténtico. ✅ | 2 |
-| 2.5 | Como **administración**, quiero enviar el certificado por email o WhatsApp con un clic. ✅ API | 3 |
+| 2.5 | Como **administración**, quiero enviar el certificado por email o WhatsApp con un clic. ✅ | 3 |
 | 2.6 | Como **coordinación**, quiero que los factores de CO2 tengan fuente citada y aparezca en el PDF. | 2 |
-| 2.7 | Como **administración**, quiero el ABM de materiales con tarifas. ✅ API | 2 |
+| 2.7 | Como **administración**, quiero el ABM de materiales con tarifas. ✅ | 2 |
 
 ## Sprint 3 — Facturación y cobranza (objetivo: liquidar el primer mes)
 | # | Historia | Pts |
 |---|---|---|
 | 3.1 | Como **administración**, quiero configurar la tarifa de cada cliente (por retiro, por kg, abono). ✅ API | 3 |
-| 3.2 | Como **administración**, quiero ver una vista previa de lo que le corresponde facturar a un cliente en un período y confirmarla. ✅ API | 5 |
-| 3.3 | Como **administración**, quiero registrar pagos (parciales o totales). ✅ API | 2 |
-| 3.4 | Como **administración**, quiero ver alertas de facturas vencidas y por vencer en el inicio. ✅ API · ✅ KPIs | 3 |
+| 3.2 | Como **administración**, quiero ver una vista previa de lo que le corresponde facturar a un cliente en un período y confirmarla. ✅ | 5 |
+| 3.3 | Como **administración**, quiero registrar pagos (parciales o totales). ✅ | 2 |
+| 3.4 | Como **administración**, quiero ver alertas de facturas vencidas y por vencer en el inicio. ✅ | 3 |
 | 3.5 | Como **administración**, quiero un mail automático semanal con el resumen de cobros pendientes. | 3 |
-| 3.6 | Como **administración**, quiero cargar el número y CAE de la factura fiscal emitida para cada liquidación. | 2 |
+| 3.6 | Como **administración**, quiero cargar el número y CAE de la factura fiscal emitida para cada liquidación. ✅ | 2 |
 
 ## Sprint 4 — Ventas, dashboard y contratos
 | # | Historia | Pts |
 |---|---|---|
-| 4.1 | Como **administración**, quiero registrar ventas de material a compradores. ✅ API | 3 |
+| 4.1 | Como **administración**, quiero registrar ventas de material a compradores. ✅ | 3 |
 | 4.2 | Como **coordinación**, quiero un dashboard con kg por material, por cliente y ventas del mes. ✅ | 3 |
 | 4.3 | Como **coordinación**, quiero filtrar el dashboard por fechas y exportar a Excel. | 3 |
 | 4.4 | Como **administración**, quiero generar el contrato de un gran generador en PDF a partir del template y sus datos. | 5 |

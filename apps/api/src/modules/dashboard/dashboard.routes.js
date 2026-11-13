@@ -4,7 +4,7 @@ import { Pickup } from '../pickups/pickup.model.js';
 import { Sale } from '../plant/plant.models.js';
 import { Certificate } from '../certificates/certificate.model.js';
 import { paymentAlerts } from '../invoices/invoice.service.js';
-import { dateInput } from '../../lib/validation.js';
+import { dateInput, endOfLocalDay, startOfLocalMonth } from '../../lib/validation.js';
 
 export const dashboardRouter = Router();
 
@@ -18,12 +18,11 @@ dashboardRouter.get('/', async (req, res) => {
   const now = new Date();
   const { desde, hasta } = z
     .object({
-      desde: dateInput.default(new Date(now.getFullYear(), now.getMonth(), 1)),
-      hasta: dateInput.default(now),
+      desde: dateInput.default(startOfLocalMonth(now)),
+      hasta: dateInput.optional(),
     })
     .parse(req.query);
-  const hastaFin = new Date(hasta);
-  hastaFin.setUTCHours(23, 59, 59, 999);
+  const hastaFin = hasta ? endOfLocalDay(hasta) : now;
   const matchRetiros = { fecha: { $gte: desde, $lte: hastaFin }, estado: { $ne: 'anulado' } };
 
   const [porMaterial, porCliente, totalesRetiros, ventasPorMaterial, co2, cobranzas] = await Promise.all([
@@ -61,7 +60,7 @@ dashboardRouter.get('/', async (req, res) => {
   ]);
 
   res.json({
-    periodo: { desde, hasta },
+    periodo: { desde, hasta: hastaFin },
     totales: {
       retiros: totalesRetiros,
       kgRecuperados: Math.round(porMaterial.reduce((a, m) => a + m.kg, 0) * 100) / 100,

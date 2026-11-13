@@ -117,6 +117,16 @@ describe('Flujo retiro → certificado → factura → cobranza', () => {
     expect(pagada.body.saldo).toBe(0);
   });
 
+  it('anota el comprobante fiscal de ARCA en la liquidación', async () => {
+    await request(app).patch(`/api/facturas/${factura._id}/comprobante`).set(auth()).send({ tipo: 'B', puntoVenta: 2, numero: 15, cae: '123' }).expect(400);
+    const res = await request(app)
+      .patch(`/api/facturas/${factura._id}/comprobante`)
+      .set(auth())
+      .send({ tipo: 'B', puntoVenta: 2, numero: 15, cae: '74123456789012' })
+      .expect(200);
+    expect(res.body.comprobanteFiscal).toMatchObject({ tipo: 'B', puntoVenta: 2, numero: 15 });
+  });
+
   it('dashboard agrega por material y por cliente', async () => {
     const res = await request(app).get('/api/dashboard?desde=2000-01-01&hasta=2100-01-01').set(auth()).expect(200);
     expect(res.body.totales).toMatchObject({ retiros: 1, kgRecuperados: 150, co2EvitadoKg: 111 });
