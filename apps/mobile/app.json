@@ -1,0 +1,20 @@
+{
+  "expo": {
+    "name": "Nueva Vida Retiros",
+    "slug": "nueva-vida-retiros",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "android": {
+      "package": "ar.coopnuevavida.retiros",
+      "permissions": ["CAMERA", "ACCESS_FINE_LOCATION"]
+    },
+    "plugins": [
+      ["expo-image-picker", { "cameraPermission": "La app usa la cámara para fotografiar los materiales retirados." }],
+      ["expo-location", { "locationWhenInUsePermission": "Registramos la ubicación del retiro." }]
+    ],
+    "extra": {
+      "apiUrl": "http://192.168.0.10:4000"
+    }
+  }
+}

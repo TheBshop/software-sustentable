@@ -1,0 +1,59 @@
+import express from 'express';
+import cors from 'cors';
+import helmet from 'helmet';
+import morgan from 'morgan';
+import { env } from './config/env.js';
+import { requireAuth } from './middleware/auth.js';
+import { errorHandler, notFound } from './middleware/error.js';
+import { crudRouter } from './lib/crud.js';
+import { authRouter, usersRouter } from './modules/users/auth.routes.js';
+import { Client, clientInput } from './modules/clients/client.model.js';
+import { Material, materialInput } from './modules/materials/material.model.js';
+import { Intake, intakeInput, Sale, saleInput } from './modules/plant/plant.models.js';
+import { pickupsRouter } from './modules/pickups/pickup.routes.js';
+import { certificatesRouter, publicCertificatesRouter } from './modules/certificates/certificate.routes.js';
+import { invoicesRouter } from './modules/invoices/invoice.routes.js';
+import { dashboardRouter } from './modules/dashboard/dashboard.routes.js';
+
+export function createApp() {
+  const app = express();
+  app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
+  app.use(cors());
+  app.use(express.json({ limit: '1mb' }));
+  if (env.nodeEnv !== 'test') app.use(morgan('dev'));
+
+  app.get('/health', (_req, res) => res.json({ ok: true }));
+  app.use('/uploads', express.static(env.uploadsDir));
+
+  // ---- Públicas ----
+  app.use('/api/auth', authRouter);
+  app.use('/api/public/certificados', publicCertificatesRouter);
+
+  // ---- Privadas ----
+  app.use('/api', requireAuth);
+  app.use('/api/usuarios', usersRouter);
+  app.use(
+    '/api/clientes',
+    crudRouter(Client, { createSchema: clientInput, searchFields: ['razonSocial', 'cuit'], filters: ['tipo'], sort: 'razonSocial', writeRoles: ['administracion'] }),
+  );
+  app.use(
+    '/api/materiales',
+    crudRouter(Material, { createSchema: materialInput, searchFields: ['nombre', 'codigo'], filters: ['categoria'], sort: 'nombre', writeRoles: ['administracion'] }),
+  );
+  app.use(
+    '/api/ingresos',
+    crudRouter(Intake, { createSchema: intakeInput, filters: ['origen'], sort: '-fecha', populate: 'items.material', writeRoles: ['operador_planta', 'administracion'] }),
+  );
+  app.use(
+    '/api/ventas',
+    crudRouter(Sale, { createSchema: saleInput, filters: ['comprador'], sort: '-fecha', populate: 'comprador items.material', writeRoles: ['administracion'] }),
+  );
+  app.use('/api/retiros', pickupsRouter);
+  app.use('/api/certificados', certificatesRouter);
+  app.use('/api/facturas', invoicesRouter);
+  app.use('/api/dashboard', dashboardRouter);
+
+  app.use(notFound);
+  app.use(errorHandler);
+  return app;
+}
