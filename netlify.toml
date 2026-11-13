@@ -1,0 +1,27 @@
+# Panel web en Netlify. En Netlify: Add new site → Import from Git → este repositorio.
+# Definir VITE_API_URL en Site settings → Environment variables (ej. https://nueva-vida-api.onrender.com).
+# Cada pull request genera un "deploy preview" con su propia URL para revisar antes de mergear.
+[build]
+  command = "npm ci --workspace apps/web && npm run build --workspace apps/web"
+  publish = "apps/web/dist"
+
+[build.environment]
+  NODE_VERSION = "22"
+
+# SPA: todas las rutas (/retiros, /verificar/abc...) las resuelve React Router
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"

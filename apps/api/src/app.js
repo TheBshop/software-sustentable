@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
+import rateLimit from 'express-rate-limit';
 import { env } from './config/env.js';
 import { requireAuth } from './middleware/auth.js';
 import { errorHandler, notFound } from './middleware/error.js';
@@ -15,17 +16,38 @@ import { certificatesRouter, publicCertificatesRouter } from './modules/certific
 import { invoicesRouter } from './modules/invoices/invoice.routes.js';
 import { dashboardRouter } from './modules/dashboard/dashboard.routes.js';
 
-export function createApp() {
+/** `config` permite a los tests cambiar orígenes CORS o el límite de login sin tocar el entorno. */
+export function createApp(config = {}) {
+  const corsOrigins = config.corsOrigins ?? env.corsOrigins;
+  const loginLimit = config.loginRateLimit ?? env.loginRateLimit;
+
   const app = express();
+  app.set('trust proxy', 1); // Render/Railway/Fly ponen un proxy adelante: la IP real viene en X-Forwarded-For
   app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
-  app.use(cors());
+  app.use(
+    cors({
+      // Sin lista configurada (desarrollo) se acepta cualquier origen. La app móvil no envía Origin.
+      origin: (origin, cb) => cb(null, !corsOrigins.length || !origin || corsOrigins.includes(origin)),
+    }),
+  );
   app.use(express.json({ limit: '1mb' }));
-  if (env.nodeEnv !== 'test') app.use(morgan('dev'));
+  if (env.nodeEnv !== 'test') app.use(morgan(env.nodeEnv === 'production' ? 'combined' : 'dev'));
 
   app.get('/health', (_req, res) => res.json({ ok: true }));
-  app.use('/uploads', express.static(env.uploadsDir));
+  if (env.storage.driver === 'local') app.use('/uploads', express.static(env.uploadsDir));
 
   // ---- Públicas ----
+  app.use(
+    '/api/auth/login',
+    rateLimit({
+      windowMs: 15 * 60 * 1000,
+      limit: loginLimit,
+      standardHeaders: 'draft-7',
+      legacyHeaders: false,
+      skipSuccessfulRequests: true, // solo cuentan los intentos fallidos
+      message: { error: 'Demasiados intentos fallidos. Esperá 15 minutos y volvé a probar.' },
+    }),
+  );
   app.use('/api/auth', authRouter);
   app.use('/api/public/certificados', publicCertificatesRouter);
 

@@ -39,7 +39,10 @@ export async function openPdf(path) {
   else window.location.href = url;
 }
 
-export const publicPdfUrl = (codigo) => `${BASE}/api/public/certificados/${codigo}/pdf`;
+/** Fotos: con almacenamiento local la API devuelve "/uploads/..." (relativo a la API); con R2/S3, una URL completa. */
+export const fileUrl = (url) => (url?.startsWith('/') ? `${BASE}${url}` : url);
+
+export const publicPdfUrl =(codigo) => `${BASE}/api/public/certificados/${codigo}/pdf`;
 
 export const fmtKg = (n) => `${Number(n ?? 0).toLocaleString('es-AR', { maximumFractionDigits: 1 })} kg`;
 // Sin centavos para montos redondos; con centavos para tarifas como $0,70/kg

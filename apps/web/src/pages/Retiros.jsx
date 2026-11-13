@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { api, fmtKg, fmtFechaCorta, pad } from '../api.js';
+import { api, fmtKg, fmtFechaCorta, pad, fileUrl } from '../api.js';
 import { useLoad, Tag, ErrorMsg } from '../ui.jsx';
 
 const peso = (it) => it.pesoRealKg ?? it.pesoEstimadoKg;
@@ -89,7 +89,7 @@ export default function Retiros() {
                     <td>
                       {r.items.map((it) => `${it.material?.nombre} ${fmtKg(peso(it))}`).join(' · ')}
                       <div className="muted small">
-                        {r.fotos.length ? r.fotos.map((f, i) => <a key={f.url} href={f.url} target="_blank" rel="noreferrer">foto {i + 1} </a>) : 'sin fotos'}
+                        {r.fotos.length ? r.fotos.map((f, i) => <a key={f.url} href={fileUrl(f.url)} target="_blank" rel="noreferrer">foto {i + 1} </a>) : 'sin fotos'}
                         {r.observaciones && ` · ${r.observaciones}`}
                       </div>
                     </td>
