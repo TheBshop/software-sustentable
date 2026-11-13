@@ -27,6 +27,7 @@ Base: `/api`. Todo requiere `Authorization: Bearer <token>` salvo lo marcado com
 | POST | `/facturas/preview` | administracion | `{cliente, desde, hasta}` → qué se facturaría |
 | POST | `/facturas` | administracion | genera la liquidación y marca los retiros |
 | POST | `/facturas/:id/pagos` | administracion | `{monto, fecha?, medio?, referencia?}` |
+| PATCH | `/facturas/:id/comprobante` | administracion | `{tipo: A\|B\|C, puntoVenta, numero, cae?}` — factura fiscal emitida en ARCA |
 | POST | `/facturas/:id/anular` | administracion | libera los retiros |
 | GET | `/facturas/alertas?dias=7` | administracion | `{vencidas[], porVencer[], totalVencido, totalPorVencer}` |
 | GET | `/dashboard?desde=&hasta=` | | KPIs, kg por material, kg por cliente, ventas |
@@ -49,5 +50,7 @@ curl -s localhost:4000/api/retiros -H "Authorization: Bearer $TOKEN" -H 'Content
 curl -s localhost:4000/api/facturas/preview -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' \
   -d '{"cliente":"<idCliente>","desde":"2026-11-01","hasta":"2026-11-30"}'
 ```
+
+Fechas: una fecha sin hora (`"2026-11-13"`) se toma como la medianoche de ese día en hora de Argentina (UTC-3, configurable con `TZ_OFFSET`), y un `hasta` incluye el día completo.
 
 Errores: siempre `{ "error": "mensaje", "details"?: [...] }` con 400 (validación), 401, 403, 404, 409 (duplicado/conflicto) o 422 (regla de negocio).

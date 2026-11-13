@@ -2,7 +2,7 @@ import { Invoice } from './invoice.model.js';
 import { Client } from '../clients/client.model.js';
 import { Pickup, pesoEfectivo } from '../pickups/pickup.model.js';
 import { nextSeq } from '../../lib/counters.js';
-import { round2 } from '../../lib/validation.js';
+import { round2, endOfLocalDay } from '../../lib/validation.js';
 import { HttpError } from '../../middleware/error.js';
 
 const DIA_MS = 24 * 60 * 60 * 1000;
@@ -21,8 +21,7 @@ export async function buildInvoiceDraft({ cliente: clienteId, desde, hasta }) {
   const { modalidad, montoFijo = 0, preciosPorKg = [] } = cliente.tarifa ?? {};
   if (!modalidad || modalidad === 'sin_cargo') throw new HttpError(422, 'El cliente no tiene una tarifa facturable');
 
-  const hastaFinDelDia = new Date(hasta);
-  hastaFinDelDia.setUTCHours(23, 59, 59, 999); // "hasta 2026-11-30" incluye todo ese día
+  const hastaFinDelDia = endOfLocalDay(hasta); // "hasta 2026-11-30" incluye todo ese día
   const retiros = await Pickup.find({
     cliente: cliente._id,
     fecha: { $gte: desde, $lte: hastaFinDelDia },
