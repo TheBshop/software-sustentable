@@ -112,5 +112,5 @@ Convención por módulo: `*.model.js` (esquema Mongoose + schema Zod de entrada)
 | Generación de facturas | **Liquidación / prefactura interna** (lo que se le cobra a cada cliente y por qué) + alertas de cobro. La factura fiscal se sigue haciendo como hoy y se registra el número/CAE. | Integrar un proveedor de factura electrónica con API (ARCA, ex AFIP). **No** integrar ARCA directo: certificados digitales y WSFE consumen semanas. |
 | Contratos | Un template Markdown/Word con campos a completar (en `templates/`). | Generación automática del PDF del contrato desde los datos del cliente y firma digital. |
 | Dashboard | KPIs + 2 rankings (kg por material, kg por cliente) del mes. | Filtros de fecha, gráficos históricos, exportar a Excel. |
-| Fotos | Disco del servidor. | Storage externo (R2/Cloudinary) — **obligatorio antes de producción**, porque Render/Railway borran el disco en cada deploy. |
+| Fotos | Disco del servidor en desarrollo; Cloudflare R2 en producción (ya implementado, `STORAGE_DRIVER=s3`). | Redimensionar en el servidor si el volumen de fotos crece. |
 | CO2 evitado | Factor fijo por material, configurable. | Revisar factores con una fuente citada (ver modelo de datos). |

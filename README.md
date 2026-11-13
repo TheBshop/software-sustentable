@@ -81,3 +81,4 @@ npx eas-cli build -p android --profile preview
 4. [Backlog de user stories](docs/04-backlog.md)
 5. [Flujo de desarrollo e integración](docs/05-flujo-de-desarrollo.md)
 6. [Equipo y proyecto](docs/06-equipo-y-proyecto.md)
+7. [Despliegue](docs/07-despliegue.md): Atlas, R2, Render, Netlify, backups y APK, paso a paso
