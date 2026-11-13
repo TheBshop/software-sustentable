@@ -17,11 +17,11 @@ Personas: **Chofer** (hace los retiros), **Planta** (recibe y pesa), **Administr
 ## Sprint 1 — Registro de retiros (objetivo: los choferes dejan el papel)
 | # | Historia | Criterios de aceptación | Pts |
 |---|---|---|---|
-| 1.1 | Como **chofer**, quiero iniciar sesión en la app una vez y que me recuerde. | Token guardado; expira a los 30 días. | 2 |
+| 1.1 | Como **chofer**, quiero iniciar sesión en la app una vez y que me recuerde. ✅ | Token guardado; expira a los 30 días. | 2 |
 | 1.2 | Como **chofer**, quiero registrar un retiro eligiendo cliente, materiales y kg estimados. ✅ API · ✅ pantalla | < 30 seg por retiro; busca cliente por nombre. | 5 |
 | 1.3 | Como **chofer**, quiero registrar retiros **sin señal** y que se envíen solos al volver la conexión. ✅ | Indicador "N sin enviar"; no duplica al reintentar. | 5 |
 | 1.4 | Como **chofer**, quiero sacar fotos del material. ✅ API · ✅ pantalla | Hasta 6 fotos comprimidas. | 3 |
-| 1.5 | Como **chofer**, quiero ver mis retiros del día para saber qué me falta. | Lista por fecha con estado de sincronización. | 3 |
+| 1.5 | Como **chofer**, quiero ver mis retiros del día para saber qué me falta. ✅ | Lista por fecha con estado de sincronización. | 3 |
 | 1.6 | Como **administración**, quiero el ABM de clientes en la web. ✅ | Alta, edición, baja lógica, búsqueda, validación de CUIT. | 3 |
 
 ## Sprint 2 — Planta y certificados (objetivo: primer certificado real a un cliente piloto)

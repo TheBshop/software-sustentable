@@ -52,13 +52,25 @@ npm run importar -- plantilla nueva-plantilla.xlsx   # vuelve a generar la plani
 
 Si alguna fila tiene errores, se listan con hoja y número de fila y no se guarda nada. Volver a importar actualiza materiales (por código) y clientes (por CUIT) en vez de duplicarlos.
 
-App móvil (se instala aparte para no mezclar dependencias nativas):
+## App del chofer (Expo / React Native)
+
+Se instala aparte para no mezclar dependencias nativas con la web:
 
 ```bash
 cd apps/mobile
-npm install && npx expo install --fix
-# editar app.json → extra.apiUrl con la IP de tu PC en la red local
-npx expo start       # escanear el QR con Expo Go
+npm install
+npm run web          # la app en el navegador (http://localhost:8081), usa la API en :4000
+npx expo start       # en el teléfono: escanear el QR con Expo Go
+```
+
+En el teléfono la app necesita la IP de tu PC en la red local: editá `extra.apiUrl` en `app.json`, o arrancá con `EXPO_PUBLIC_API_URL=http://192.168.x.x:4000 npx expo start`. Usuario de prueba: `chofer@nuevavida.local` / `chofer1234`.
+
+Pantallas: login (la sesión dura 30 días), **Nuevo retiro** y **Mis retiros** (los del día, enviados y pendientes). Funciona sin señal: los retiros se guardan en el teléfono y se envían cuando vuelve la conexión, o con el botón "Enviar pendientes".
+
+APK para instalar directo en los teléfonos (requiere cuenta de Expo y completar la URL de la API en `eas.json`):
+
+```bash
+npx eas-cli build -p android --profile preview
 ```
 
 ## Documentación

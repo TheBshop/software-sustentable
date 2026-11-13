@@ -2,23 +2,27 @@
   "name": "@nueva-vida/mobile",
   "version": "0.1.0",
   "private": true,
-  "main": "expo/AppEntry.js",
+  "main": "index.js",
   "scripts": {
     "start": "expo start",
     "android": "expo start --android",
+    "web": "expo start --web",
     "build:apk": "eas build -p android --profile preview"
   },
   "dependencies": {
-    "@react-native-async-storage/async-storage": "*",
-    "@react-native-community/netinfo": "*",
-    "expo": "*",
-    "expo-constants": "*",
-    "expo-crypto": "*",
-    "expo-image-picker": "*",
-    "expo-location": "*",
-    "expo-status-bar": "*",
-    "react": "*",
-    "react-native": "*"
-  },
-  "//": "Las versiones las fija Expo: correr `npx expo install --fix` después de instalar"
+    "@expo/metro-runtime": "~58.0.17",
+    "@react-native-async-storage/async-storage": "2.2.0",
+    "@react-native-community/netinfo": "12.0.1",
+    "expo": "^58.0.25",
+    "expo-constants": "~58.0.16",
+    "expo-crypto": "~58.0.8",
+    "expo-image-picker": "~58.0.10",
+    "expo-location": "~58.0.22",
+    "expo-status-bar": "~58.0.5",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "react-native": "0.88.1",
+    "react-native-safe-area-context": "~5.11.1",
+    "react-native-web": "^0.21.4"
+  }
 }
