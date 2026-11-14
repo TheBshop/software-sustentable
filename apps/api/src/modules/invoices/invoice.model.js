@@ -14,6 +14,8 @@ const invoiceSchema = new mongoose.Schema(
     periodo: { desde: Date, hasta: Date },
     retiros: [{ type: ObjectId, ref: 'Pickup' }],
     lineas: [{ _id: false, descripcion: String, cantidad: Number, unidad: String, precioUnitario: Number, subtotal: Number }],
+    // Qué se cobró por cada retiro (auditable por el cliente en el portal)
+    detalle: [{ _id: false, retiro: { type: ObjectId, ref: 'Pickup' }, numero: Number, fecha: Date, sede: String, kg: Number, importe: Number }],
     total: { type: Number, required: true },
     emitidaEn: { type: Date, default: Date.now },
     vencimiento: { type: Date, required: true },

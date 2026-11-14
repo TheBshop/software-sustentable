@@ -34,8 +34,8 @@ invoicesRouter.get('/:id', async (req, res) => {
 
 // Vista previa: qué se facturaría, sin guardar nada.
 invoicesRouter.post('/preview', async (req, res) => {
-  const { lineas, total, retiros } = await buildInvoiceDraft(periodoInput.parse(req.body));
-  res.json({ lineas, total, retiros: retiros.map((r) => ({ id: r._id, numero: r.numero, fecha: r.fecha })) });
+  const { lineas, total, retiros, detalle } = await buildInvoiceDraft(periodoInput.parse(req.body));
+  res.json({ lineas, total, detalle, retiros: retiros.map((r) => ({ id: r._id, numero: r.numero, fecha: r.fecha })) });
 });
 
 invoicesRouter.post('/', async (req, res) => {

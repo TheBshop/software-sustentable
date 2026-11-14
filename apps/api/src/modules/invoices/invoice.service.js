@@ -55,7 +55,17 @@ export async function buildInvoiceDraft({ cliente: clienteId, desde, hasta }) {
 
   lineas = lineas.map((l) => ({ ...l, subtotal: round2(l.cantidad * l.precioUnitario) }));
   const total = round2(lineas.reduce((a, l) => a + l.subtotal, 0));
-  return { cliente, retiros, lineas, total };
+
+  // Detalle retiro por retiro, para que el cliente pueda auditar el cálculo.
+  const precioKg = (material) => preciosPorKg.find((p) => String(p.material) === String(material._id))?.precio ?? material.tarifaRetiroKg ?? 0;
+  const detalle = retiros.map((r) => {
+    const kg = round2(r.items.reduce((a, it) => a + pesoEfectivo(it), 0));
+    let importe = null; // abono mensual: no se reparte por retiro
+    if (modalidad === 'por_retiro') importe = montoFijo;
+    if (modalidad === 'por_kg') importe = round2(r.items.reduce((a, it) => a + pesoEfectivo(it) * precioKg(it.material), 0));
+    return { retiro: r._id, numero: r.numero, fecha: r.fecha, sede: r.direccion, kg, importe };
+  });
+  return { cliente, retiros, lineas, total, detalle };
 }
 
 export async function createInvoice({ cliente, desde, hasta, vencimiento }) {
@@ -70,6 +80,7 @@ export async function createInvoice({ cliente, desde, hasta, vencimiento }) {
     periodo: { desde, hasta },
     retiros: draft.retiros.map((r) => r._id),
     lineas: draft.lineas,
+    detalle: draft.detalle,
     total: draft.total,
     vencimiento: vencimiento ?? new Date(Date.now() + dias * DIA_MS),
   });

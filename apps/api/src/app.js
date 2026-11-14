@@ -13,6 +13,8 @@ import { Client, clientInput } from './modules/clients/client.model.js';
 import { Material, materialInput, materialUpdate } from './modules/materials/material.model.js';
 import { Intake, intakeInput, intakeUpdate, Sale, saleInput, saleUpdate } from './modules/plant/plant.models.js';
 import { plantaRouter } from './modules/movimientos/planta.routes.js';
+import { portalRouter } from './modules/portal/portal.routes.js';
+import { accesoPortalRouter } from './modules/clients/acceso.routes.js';
 import { assertHabilitados, assertCorrienteHabilitada, registrarIngreso, registrarVenta } from './modules/movimientos/movimiento.service.js';
 import { pickupsRouter } from './modules/pickups/pickup.routes.js';
 import { certificatesRouter, publicCertificatesRouter } from './modules/certificates/certificate.routes.js';
@@ -59,11 +61,14 @@ export function createApp(config = {}) {
   // (lib/tenancy.js filtra cada consulta por esa cooperativa).
   app.use('/api', requireAuth, withTenant);
   app.use('/api/usuarios', usersRouter);
+  // Portal de clientes generadores (empresas y municipios). Versionado: lo pueden consumir terceros.
+  app.use('/api/v1/portal', portalRouter);
 
   // Zona de gestión: solo usuarios de cooperativas. Las empresas y municipios usan el portal.
   const coopApi = Router();
   coopApi.use(requireOrgTipo('cooperativa'));
   app.use('/api', coopApi);
+  coopApi.use('/clientes', accesoPortalRouter);
   coopApi.use(
     '/clientes',
     crudRouter(Client, { createSchema: clientInput, searchFields: ['razonSocial', 'cuit'], filters: ['tipo'], sort: 'razonSocial', writeRoles: ['administracion'] }),
