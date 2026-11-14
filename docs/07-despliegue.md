@@ -60,13 +60,21 @@ Tiempo estimado: 2 a 3 horas la primera vez.
 
 > El plan `starter` (USD 7/mes) queda siempre encendido. El plan `free` se duerme a los 15 minutos sin uso y tarda cerca de un minuto en despertar: sirve para staging, no para que lo usen los choferes.
 
-## 4. Primer usuario administrador
+## 4. Alta de la cooperativa y su administrador
 
 Desde la computadora de quien despliega, con acceso a Atlas:
 
 ```bash
 cd apps/api
-MONGO_URI="mongodb+srv://api:...@.../nueva-vida" npm run crear-usuario -- admin@coopenuevavida.org.ar "Nombre Apellido"
+MONGO_URI="mongodb+srv://api:...@.../nueva-vida" npm run crear-cooperativa -- 30-12345678-9 "Cooperativa Nueva Vida" admin@coopenuevavida.org.ar "Nombre Apellido" rsu,regu
+```
+
+El último parámetro son las corrientes que la cooperativa está habilitada a gestionar (ver [08-marco-normativo.md](08-marco-normativo.md)). Cada cooperativa nueva de la plataforma se da de alta igual.
+
+Otros usuarios de una organización existente:
+
+```bash
+MONGO_URI="..." npm run crear-usuario -- chofer@coope.org.ar "Nombre" chofer 30-12345678-9
 ```
 
 Muestra una contraseña aleatoria **una sola vez**. Guardarla en el gestor de contraseñas. El mismo comando con otro rol crea choferes (`chofer`), personal de planta (`operador_planta`) o administración (`administracion`). Si alguien olvida su contraseña, correrlo de nuevo con su email le genera una nueva.
@@ -103,7 +111,8 @@ Un backup que nunca se restauró no está probado.
 
 - [ ] `/health` de la API responde.
 - [ ] Login en el panel con el admin.
-- [ ] Cargar materiales y clientes reales: `npm run importar -- revisar planilla.xlsx` y después `cargar`, con `MONGO_URI` de producción.
+- [ ] Cargar materiales y clientes reales: `npm run importar -- revisar planilla.xlsx --coop <cuit>` y después `cargar`, con `MONGO_URI` de producción.
+- [ ] Dar acceso al portal a un cliente piloto desde Clientes y entrar con ese usuario.
 - [ ] Desde un teléfono con el APK: login de un chofer, cargar un retiro **con foto** y verificar que la foto se ve desde Retiros en el panel (confirma R2).
 - [ ] Emitir un certificado y escanear el QR con otro teléfono: tiene que abrir `PUBLIC_WEB_URL/verificar/...`.
 - [ ] Enviar un certificado por mail (si se configuró SMTP).

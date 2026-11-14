@@ -136,3 +136,23 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
   main { padding: 16px; }
   .item-row { grid-template-columns: 1fr 90px 90px auto; }
 }
+
+/* ---- Portal de empresa / municipio ---- */
+.sidebar.portal { background: #1d5d8a; }
+.dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; border: 1px solid rgba(0, 0, 0, 0.2); vertical-align: -1px; flex: none; }
+.fraccion { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+.bar-label { display: flex; align-items: center; gap: 6px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.columnas { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 6px; align-items: end; height: 180px; margin-top: 12px; }
+.columna { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; gap: 4px; min-width: 0; }
+.columna-barra { width: 70%; background: var(--verde); border-radius: 4px 4px 0 0; min-height: 0; }
+.columna-valor { font-size: 11px; color: var(--gris); font-variant-numeric: tabular-nums; }
+.columna-label { font-size: 12px; color: var(--gris); }
+.alert-strip { background: var(--rojo-claro); color: var(--rojo); }
+.info-strip { background: var(--azul-claro); color: var(--azul); }
+table.detalle { background: white; border: 1px solid var(--borde); border-radius: 8px; }
+.card ul { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 4px; }
+.secreto { font-family: ui-monospace, Consolas, monospace; font-size: 18px; background: var(--gris-claro); padding: 8px 12px; border-radius: 6px; letter-spacing: 0.05em; user-select: all; }
+@media (max-width: 860px) {
+  .columnas { gap: 2px; }
+  .columna-valor { display: none; }
+}

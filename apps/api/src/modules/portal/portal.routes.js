@@ -45,7 +45,7 @@ portalRouter.get('/retiros', async (req, res) => {
   const retiros = await Pickup.find({ cliente: { $in: await misClientes(req) }, fecha: { $gte: desde, $lte: hasta } })
     .sort('-fecha')
     .limit(500)
-    .populate('items.material', 'nombre fraccion');
+    .populate('items.material', 'nombre fraccion corriente');
   const coops = await nombresCooperativas(retiros.map((r) => r.coop));
   res.json({
     items: retiros.map((r) => ({
@@ -56,7 +56,7 @@ portalRouter.get('/retiros', async (req, res) => {
       cooperativa: coops.get(String(r.coop)),
       estado: r.estado,
       pesado: r.items.every((i) => i.pesoRealKg != null),
-      materiales: r.items.map((i) => ({ nombre: i.material?.nombre, fraccion: i.material?.fraccion, kg: i.pesoRealKg ?? i.pesoEstimadoKg })),
+      materiales: r.items.map((i) => ({ nombre: i.material?.nombre, fraccion: i.material?.fraccion, corriente: i.material?.corriente, kg: i.pesoRealKg ?? i.pesoEstimadoKg })),
       certificado: r.certificado,
     })),
   });

@@ -3,13 +3,27 @@ const BASE = import.meta.env.VITE_API_URL ?? '';
 export const getToken = () => localStorage.getItem('token');
 export const setToken = (t) => (t ? localStorage.setItem('token', t) : localStorage.removeItem('token'));
 
+/** Usuario de la sesión: { id, nombre, rol, organizacion: { id, nombre, tipo } } */
+export const getUser = () => {
+  try {
+    return JSON.parse(localStorage.getItem('user') ?? 'null');
+  } catch {
+    return null;
+  }
+};
+export const setUser = (u) => (u ? localStorage.setItem('user', JSON.stringify(u)) : localStorage.removeItem('user'));
+export const esCooperativa = (u = getUser()) => u?.organizacion?.tipo === 'cooperativa';
+
+export function logout() {
+  setToken(null);
+  setUser(null);
+  window.location.href = '/login';
+}
+
 const authHeader = () => (getToken() ? { Authorization: `Bearer ${getToken()}` } : {});
 
 function handle401(res) {
-  if (res.status === 401 && getToken()) {
-    setToken(null);
-    window.location.href = '/login';
-  }
+  if (res.status === 401 && getToken()) logout();
 }
 
 export async function api(path, { method = 'GET', body } = {}) {

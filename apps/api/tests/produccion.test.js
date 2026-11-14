@@ -123,3 +123,10 @@ describe('Seguridad para producción', () => {
     expect(checkProductionEnv(completo, { MONGO_URI: 'mongodb+srv://x', JWT_SECRET: 'x'.repeat(40), PUBLIC_WEB_URL: 'https://panel.example' })).toEqual([]);
   });
 });
+
+describe('Caché', () => {
+  it('las respuestas de la API no se guardan en caché', async () => {
+    const res = await request(createApp()).get('/api/public/certificados/no-existe');
+    expect(res.headers['cache-control']).toBe('no-store');
+  });
+});

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { api, fmtPeso } from '../api.js';
 import { useLoad, ErrorMsg, ConfirmButton } from '../ui.jsx';
+import { FRACCIONES, CORRIENTES, SUBTIPOS_REGU, FraccionChip } from '../residuos.jsx';
 
 export const CATEGORIAS = {
   papel_carton: 'Papel y cartón',
@@ -10,10 +11,12 @@ export const CATEGORIAS = {
   electronicos: 'Electrónicos',
   otros: 'Otros',
 };
-const VACIO = { codigo: '', nombre: '', categoria: 'papel_carton', factorCo2: '', tarifaRetiroKg: '', precioVentaKg: '' };
+const VACIO = { codigo: '', nombre: '', categoria: 'papel_carton', corriente: 'rsu', fraccion: '', subtipoRegu: '', factorCo2: '', tarifaRetiroKg: '', precioVentaKg: '' };
 
 export default function Materiales() {
   const { data, error, reload } = useLoad('/materiales?limit=200');
+  const org = useLoad('/planta/organizacion');
+  const habilitadas = org.data?.habilitaciones?.corrientes ?? ['rsu'];
   const [form, setForm] = useState(null); // null = cerrado
   const [err, setErr] = useState(null);
   const set = (k) => (e) => setForm({ ...form, [k]: e.target.value });
@@ -25,6 +28,9 @@ export default function Materiales() {
       codigo: form.codigo.trim().toUpperCase(),
       nombre: form.nombre.trim(),
       categoria: form.categoria,
+      corriente: form.corriente,
+      ...(form.corriente === 'rsu' && form.fraccion && { fraccion: form.fraccion }),
+      ...(form.corriente === 'regu' && { subtipoRegu: form.subtipoRegu || undefined }),
       factorCo2: Number(form.factorCo2) || 0,
       tarifaRetiroKg: Number(form.tarifaRetiroKg) || 0,
       precioVentaKg: Number(form.precioVentaKg) || 0,
@@ -41,7 +47,7 @@ export default function Materiales() {
   }
 
   const edit = (m) =>
-    setForm({ _id: m._id, codigo: m.codigo, nombre: m.nombre, categoria: m.categoria, factorCo2: String(m.factorCo2), tarifaRetiroKg: String(m.tarifaRetiroKg), precioVentaKg: String(m.precioVentaKg) });
+    setForm({ _id: m._id, codigo: m.codigo, nombre: m.nombre, categoria: m.categoria, corriente: m.corriente ?? 'rsu', fraccion: m.fraccion ?? '', subtipoRegu: m.subtipoRegu ?? '', factorCo2: String(m.factorCo2), tarifaRetiroKg: String(m.tarifaRetiroKg), precioVentaKg: String(m.precioVentaKg) });
 
   return (
     <>
@@ -65,6 +71,32 @@ export default function Materiales() {
                 {Object.entries(CATEGORIAS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
               </select>
             </label>
+            <label>
+              Corriente
+              <select value={form.corriente} onChange={set('corriente')}>
+                {Object.entries(CORRIENTES).map(([k, v]) => (
+                  <option key={k} value={k} disabled={!habilitadas.includes(k)}>{v}{habilitadas.includes(k) ? '' : ' (no habilitada)'}</option>
+                ))}
+              </select>
+            </label>
+            {form.corriente === 'rsu' && (
+              <label>
+                Fracción (Decreto 779/22)
+                <select value={form.fraccion} onChange={set('fraccion')}>
+                  <option value="">Según la categoría</option>
+                  {Object.entries(FRACCIONES).map(([k, v]) => <option key={k} value={k}>{v.nombre} ({v.color})</option>)}
+                </select>
+              </label>
+            )}
+            {form.corriente === 'regu' && (
+              <label>
+                Tipo de residuo especial
+                <select value={form.subtipoRegu} onChange={set('subtipoRegu')} required>
+                  <option value="">Elegí…</option>
+                  {Object.entries(SUBTIPOS_REGU).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+                </select>
+              </label>
+            )}
             <label>Factor CO₂ (kg por kg)<input type="number" min="0" step="any" value={form.factorCo2} onChange={set('factorCo2')} /></label>
             <label>Tarifa de retiro ($/kg)<input type="number" min="0" step="any" value={form.tarifaRetiroKg} onChange={set('tarifaRetiroKg')} /></label>
             <label>Precio de venta ($/kg)<input type="number" min="0" step="any" value={form.precioVentaKg} onChange={set('precioVentaKg')} /></label>
@@ -80,14 +112,17 @@ export default function Materiales() {
         <div className="table-wrap">
           <table>
             <thead>
-              <tr><th>Código</th><th>Nombre</th><th>Categoría</th><th className="r">CO₂ (kg/kg)</th><th className="r">Retiro $/kg</th><th className="r">Venta $/kg</th><th>Acciones</th></tr>
+              <tr><th>Código</th><th>Nombre</th><th>Clasificación</th><th className="r">CO₂ (kg/kg)</th><th className="r">Retiro $/kg</th><th className="r">Venta $/kg</th><th>Acciones</th></tr>
             </thead>
             <tbody>
               {data?.items.map((m) => (
                 <tr key={m._id}>
                   <td className="mono">{m.codigo}</td>
                   <td>{m.nombre}</td>
-                  <td>{CATEGORIAS[m.categoria]}</td>
+                  <td>
+                    <FraccionChip fraccion={m.fraccion} corriente={m.corriente} />
+                    <div className="muted small">{m.corriente === 'regu' ? SUBTIPOS_REGU[m.subtipoRegu] : CATEGORIAS[m.categoria]}{m.valorizable === false && ' · no valorizable'}</div>
+                  </td>
                   <td className="r num">{m.factorCo2.toLocaleString('es-AR')}</td>
                   <td className="r num">{m.tarifaRetiroKg ? fmtPeso(m.tarifaRetiroKg) : <span className="muted">sin cargo</span>}</td>
                   <td className="r num">{fmtPeso(m.precioVentaKg)}</td>

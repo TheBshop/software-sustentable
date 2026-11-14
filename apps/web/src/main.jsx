@@ -1,7 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter, Routes, Route, Navigate, NavLink, Outlet, useLocation } from 'react-router-dom';
-import { getToken, setToken } from './api.js';
+import { getToken, getUser, esCooperativa, logout } from './api.js';
 import { useLoad } from './ui.jsx';
 import Login from './pages/Login.jsx';
 import Dashboard from './pages/Dashboard.jsx';
@@ -13,50 +13,77 @@ import Materiales from './pages/Materiales.jsx';
 import Ingresos from './pages/Ingresos.jsx';
 import Ventas from './pages/Ventas.jsx';
 import VerificarCertificado from './pages/VerificarCertificado.jsx';
+import PortalInicio from './pages/portal/Inicio.jsx';
+import PortalRetiros from './pages/portal/Retiros.jsx';
+import PortalCertificados from './pages/portal/Certificados.jsx';
+import PortalFacturas from './pages/portal/Facturas.jsx';
+import PortalInforme from './pages/portal/Informe.jsx';
+import PortalUsuarios from './pages/portal/Usuarios.jsx';
 import './styles.css';
 
 function Badge({ n, alert }) {
   return n ? <span className={`nav-badge ${alert ? 'alert' : ''}`}>{n}</span> : null;
 }
 
-function Sidebar() {
+function Salir() {
+  return (
+    <button className="link logout" onClick={logout}>
+      Salir
+    </button>
+  );
+}
+
+function CoopSidebar() {
   // Contadores de lo que necesita atención: retiros sin pesar y cobros vencidos/por vencer
   const sinPesar = useLoad('/retiros?estado=registrado&limit=1');
   const alertas = useLoad('/facturas/alertas?dias=7');
   const nAlertas = (alertas.data?.vencidas.length ?? 0) + (alertas.data?.porVencer.length ?? 0);
   return (
     <nav className="sidebar">
-      <h1>♻ Nueva Vida</h1>
+      <h1>♻ {getUser()?.organizacion?.nombre}</h1>
       <span className="nav-group">Operación</span>
       <NavLink to="/" end>Inicio</NavLink>
       <NavLink to="/retiros">Retiros <Badge n={sinPesar.data?.total} /></NavLink>
-      <NavLink to="/ingresos">Ingresos a planta</NavLink>
+      <NavLink to="/ingresos">Planta y stock</NavLink>
       <NavLink to="/ventas">Ventas</NavLink>
       <span className="nav-group">Clientes</span>
       <NavLink to="/certificados">Certificados</NavLink>
       <NavLink to="/facturacion">Facturación <Badge n={nAlertas} alert={alertas.data?.vencidas.length > 0} /></NavLink>
       <NavLink to="/clientes">Clientes</NavLink>
       <NavLink to="/materiales">Materiales</NavLink>
-      <button
-        className="link logout"
-        onClick={() => {
-          setToken(null);
-          window.location.href = '/login';
-        }}
-      >
-        Salir
-      </button>
+      <Salir />
     </nav>
   );
 }
 
-function Layout() {
+function PortalSidebar() {
+  const user = getUser();
+  return (
+    <nav className="sidebar portal">
+      <h1>♻ {user?.organizacion?.nombre}</h1>
+      <span className="nav-group">{user?.organizacion?.tipo === 'municipio' ? 'Portal del municipio' : 'Portal de la empresa'}</span>
+      <NavLink to="/portal" end>Impacto</NavLink>
+      <NavLink to="/portal/retiros">Retiros</NavLink>
+      <NavLink to="/portal/certificados">Certificados</NavLink>
+      <NavLink to="/portal/facturas">Facturas</NavLink>
+      <NavLink to="/portal/informe">Informe anual</NavLink>
+      {user?.rol === 'cliente_admin' && <NavLink to="/portal/usuarios">Usuarios</NavLink>}
+      <Salir />
+    </nav>
+  );
+}
+
+/** Exige sesión y que el tipo de organización corresponda a la zona (gestión o portal). */
+function Zona({ portal }) {
   const { pathname } = useLocation();
-  if (!getToken()) return <Navigate to="/login" replace />;
+  const user = getUser();
+  if (!getToken() || !user) return <Navigate to="/login" replace />;
+  if (!portal && !esCooperativa(user)) return <Navigate to="/portal" replace />;
+  if (portal && esCooperativa(user)) return <Navigate to="/" replace />;
   return (
     <div className="layout">
       {/* key: los contadores se actualizan al cambiar de pantalla */}
-      <Sidebar key={pathname} />
+      {portal ? <PortalSidebar /> : <CoopSidebar key={pathname} />}
       <main>
         <Outlet />
       </main>
@@ -71,7 +98,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
         <Route path="/login" element={<Login />} />
         {/* Página pública a la que apunta el QR del certificado */}
         <Route path="/verificar/:codigo" element={<VerificarCertificado />} />
-        <Route element={<Layout />}>
+        <Route element={<Zona />}>
           <Route index element={<Dashboard />} />
           <Route path="/retiros" element={<Retiros />} />
           <Route path="/ingresos" element={<Ingresos />} />
@@ -80,6 +107,14 @@ ReactDOM.createRoot(document.getElementById('root')).render(
           <Route path="/facturacion" element={<Facturacion />} />
           <Route path="/clientes" element={<Clientes />} />
           <Route path="/materiales" element={<Materiales />} />
+        </Route>
+        <Route path="/portal" element={<Zona portal />}>
+          <Route index element={<PortalInicio />} />
+          <Route path="retiros" element={<PortalRetiros />} />
+          <Route path="certificados" element={<PortalCertificados />} />
+          <Route path="facturas" element={<PortalFacturas />} />
+          <Route path="informe" element={<PortalInforme />} />
+          <Route path="usuarios" element={<PortalUsuarios />} />
         </Route>
       </Routes>
     </BrowserRouter>

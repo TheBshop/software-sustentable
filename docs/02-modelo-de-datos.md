@@ -107,3 +107,47 @@ Permite registrar material que no vino de un retiro propio (recuperadores, entre
 | `sin_cargo` | no se factura (p. ej. clientes que solo entregan material valioso) |
 
 Solo entran retiros no anulados y con `factura: null`. Anular una factura libera sus retiros.
+
+---
+
+## Multi-organización (plataforma)
+
+### `organizations`
+| Campo | Notas |
+|---|---|
+| tipo | `cooperativa` (presta el servicio), `empresa` o `municipio` (clientes generadores con portal) |
+| nombre, cuit | CUIT único en la plataforma; sirve para vincular un mismo cliente entre cooperativas |
+| habilitaciones | Solo cooperativas: `corrientes` que puede gestionar (por defecto `rsu`) y `registros` (inscripciones, por ejemplo como operador de peligrosos, con vencimiento) |
+
+### Aislamiento por cooperativa
+- Clientes, materiales, retiros, ingresos, ventas, movimientos, certificados y facturas llevan **`coop`**. `lib/tenancy.js` lo completa y filtra automáticamente en cada consulta, según la cooperativa del usuario. **Una consulta sin cooperativa en contexto falla.**
+- Los índices únicos son por cooperativa: `{coop, codigo}` en materiales, `{coop, cuit}` en clientes y `{coop, numero}` en retiros, certificados y facturas. La numeración también es propia de cada cooperativa.
+- `Client.organizacion`: vincula el cliente con su organización (empresa o municipio) para el portal. Una empresa atendida por dos cooperativas tiene dos `Client` y una sola organización.
+- `User.organizacion` + `rol`. Roles de cooperativa: `admin`, `administracion`, `operador_planta`, `chofer`. Roles de cliente: `cliente_admin`, `cliente`.
+
+## Clasificación de residuos (ver [08-marco-normativo.md](08-marco-normativo.md))
+
+`materials` suma:
+| Campo | Valores |
+|---|---|
+| corriente | `rsu`, `regu`, `peligroso`, `industrial`, `fitosanitario` |
+| fraccion | Solo RSU, Decreto 779/22 Anexo II: `secos_valorizables`, `basura`, `organicos`, `plasticos`, `papel_carton`, `vidrio`, `metales`. Si no se indica, se toma de la categoría |
+| subtipoRegu | Solo REGU: `pilas_baterias`, `raee`, `lamparas`, `neumaticos`, `aceite_vegetal_usado`, `otros` |
+| valorizable | `false` = va a disposición final (la fracción `basura` lo es siempre) |
+
+## `movimientos`: libro de planta (solo agregado)
+| Campo | Notas |
+|---|---|
+| tipo | `ingreso` (+), `venta` (−, destino valorización), `rechazo` (−, destino disposición final), `ajuste` (±) |
+| material, kg | kg con signo |
+| etapa | Etapa de la Ley 25.916 |
+| ref | retiro, ingreso o venta de origen |
+
+- Se escriben solos: al **pesar un retiro** (crea su ingreso; corregir o anular genera ajustes), al dar de alta un **ingreso** de terceros o una **venta**, y con **rechazos** y **ajustes** manuales.
+- **No se editan ni se borran** (el modelo lo impide). Por eso los ingresos y las ventas tampoco se borran ni cambian sus kilos.
+- Un rechazo se descuenta del material que se rechaza (por ejemplo, cartón húmedo).
+- Stock por material = Σ kg. **Tasa de desvío** = valorizado ÷ (valorizado + dispuesto).
+
+## Cambios en certificados y facturas
+- `certificates.emisorSnapshot`: la cooperativa que certifica. `materiales[]` suma `corriente`, `fraccion` y `valorizable`.
+- `invoices.detalle[]`: `{retiro, numero, fecha, sede, kg, importe}` para cada retiro incluido. El cliente lo ve en su portal (`importe` vacío = abono mensual).

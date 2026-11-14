@@ -39,6 +39,11 @@ export function createApp(config = {}) {
   if (env.nodeEnv !== 'test') app.use(morgan(env.nodeEnv === 'production' ? 'combined' : 'dev'));
 
   app.get('/health', (_req, res) => res.json({ ok: true }));
+  // Datos privados: que ni el navegador ni proxies intermedios guarden respuestas de la API
+  app.use('/api', (_req, res, next) => {
+    res.set('Cache-Control', 'no-store');
+    next();
+  });
   if (env.storage.driver === 'local') app.use('/uploads', express.static(env.uploadsDir));
 
   // ---- Públicas ----

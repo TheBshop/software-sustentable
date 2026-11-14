@@ -47,6 +47,9 @@ export async function login(email, password) {
     if (!err.status) throw new Error('No hay conexión con el servidor. El primer ingreso necesita señal.');
     throw err;
   }
+  if (res.user.organizacion?.tipo !== 'cooperativa') {
+    throw new Error('Esta app es para el personal de las cooperativas. Las empresas y municipios usan el portal web.');
+  }
   await AsyncStorage.multiSet([[TOKEN, res.token], [USER, JSON.stringify(res.user)]]);
   return res.user;
 }

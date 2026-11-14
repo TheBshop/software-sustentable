@@ -54,3 +54,38 @@ curl -s localhost:4000/api/facturas/preview -H "Authorization: Bearer $TOKEN" -H
 Fechas: una fecha sin hora (`"2026-11-13"`) se toma como la medianoche de ese día en hora de Argentina (UTC-3, configurable con `TZ_OFFSET`), y un `hasta` incluye el día completo.
 
 Errores: siempre `{ "error": "mensaje", "details"?: [...] }` con 400 (validación), 401, 403, 404, 409 (duplicado/conflicto) o 422 (regla de negocio).
+
+## Zonas de la API (multi-organización)
+
+- `/api/auth/*` y `/api/public/*`: sin login.
+- `/api/usuarios`: usuarios de la **propia** organización (admin de cooperativa o `cliente_admin`).
+- `/api/*` (resto): **solo usuarios de cooperativas**. Cada consulta se filtra por la cooperativa del usuario. Un usuario de empresa o municipio recibe 403.
+- `/api/v1/portal/*`: **solo empresas y municipios**. Solo lectura de sus datos, en todas las cooperativas que los atienden. Está versionada porque la pueden consumir terceros.
+
+Todas las respuestas de `/api` llevan `Cache-Control: no-store`. El login devuelve `user.organizacion = { id, nombre, tipo }`; la web elige el panel o el portal según el tipo.
+
+### Planta y trazabilidad
+| Método | Ruta | Rol | Descripción |
+|---|---|---|---|
+| GET | `/planta/organizacion` | | Datos y habilitaciones de la cooperativa |
+| GET | `/planta/stock` | | Stock por material (Σ movimientos) |
+| GET | `/planta/movimientos?material=&tipo=` | | Últimos 200 movimientos |
+| POST | `/planta/rechazos` | planta, administracion | `{material, kg, motivo?}`: sale a disposición final |
+| POST | `/planta/ajustes` | admin | `{material, kg (±), motivo}`: conteo físico |
+
+Además, `/dashboard` devuelve `planta.indicadores = { ingresadoKg, valorizadoKg, dispuestoKg, tasaDesvio, tasaRechazo }`. Retiros, ingresos, ventas y materiales responden **422** si el material es de una corriente no habilitada. `DELETE` de ingresos y ventas responde **405**.
+
+### Acceso al portal
+| Método | Ruta | Rol | Descripción |
+|---|---|---|---|
+| POST | `/clientes/:id/acceso-portal` | administracion | `{email, nombre, tipo: empresa\|municipio}`. Crea o vincula la organización por CUIT y un usuario `cliente_admin`. Devuelve la contraseña **una sola vez** |
+
+### Portal (`/api/v1/portal`)
+| Método | Ruta | Descripción |
+|---|---|---|
+| GET | `/organizacion` | Nombre, cooperativas que lo atienden y sedes |
+| GET | `/resumen?anio=` | Totales, por mes, material, fracción, cooperativa y sede |
+| GET | `/retiros?anio=` | Historial con sede, fracción y estado |
+| GET | `/certificados` y `/certificados/:id/pdf` | Solo los propios (404 si no) |
+| GET | `/facturas` | Con saldo, vencimiento y detalle retiro por retiro |
+| GET | `/informe-anual.pdf?anio=` | Informe de impacto en PDF |

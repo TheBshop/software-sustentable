@@ -69,3 +69,26 @@ Personas: **Chofer** (hace los retiros), **Planta** (recibe y pesa), **Administr
 - Tests de API para la regla de negocio nueva; CI en verde.
 - Deployado en **staging** y probado por alguien de la cooperativa.
 - Documentación del endpoint actualizada en `docs/03-api.md`.
+
+## Plataforma multi-organización ✅
+| # | Historia | Pts |
+|---|---|---|
+| P-1 | Como **plataforma**, quiero que cada cooperativa vea solo sus datos, para poder sumar más cooperativas. ✅ | 8 |
+| P-2 | Como **cooperativa**, quiero clasificar los materiales por corriente y fracción (Decreto 779/22) y que se bloqueen las corrientes para las que no estoy habilitada. ✅ | 5 |
+| P-3 | Como **planta**, quiero ver el stock y registrar rechazos a disposición final, con una trazabilidad que no se pueda alterar. ✅ | 5 |
+| P-4 | Como **empresa o municipio**, quiero un portal con mis retiros, certificados, facturas e informe anual. ✅ | 8 |
+| P-5 | Como **municipio**, quiero ver el impacto por sede. ✅ | 2 |
+| P-6 | Como **cliente**, quiero ver qué se me cobró por cada retiro. ✅ | 2 |
+| P-7 | Como **cooperativa**, quiero darle acceso al portal a un cliente con un clic. ✅ | 3 |
+
+## Roadmap posterior (ver [09-mercado-y-diferenciales.md](09-mercado-y-diferenciales.md))
+| # | Historia | Pts |
+|---|---|---|
+| R-1 | Como **cliente**, quiero pedir un retiro desde el portal y que le aparezca a la cooperativa. | 5 |
+| R-2 | Como **coordinación**, quiero una agenda de retiros por día y camión, con orden sugerido. | 8 |
+| R-3 | Como **chofer**, quiero escanear el QR del contenedor o bolsón para precargar el retiro. | 5 |
+| R-4 | Como **planta**, quiero leer el peso directo de la balanza. | 5 |
+| R-5 | Como **empresa**, quiero un reporte ESG / ISO 14001 con su metodología. | 5 |
+| R-6 | Como **cooperativa habilitada para peligrosos**, quiero emitir el manifiesto electrónico (Ley 24.051). | 13 |
+| R-7 | Como **cliente**, quiero recibir la invitación al portal por mail en lugar de una contraseña generada. | 3 |
+| R-8 | Como **administración**, quiero el PDF de la liquidación con el detalle por retiro. | 3 |

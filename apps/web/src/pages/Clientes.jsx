@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { api, fmtPeso } from '../api.js';
-import { ConfirmButton } from '../ui.jsx';
+import { ConfirmButton, Tag } from '../ui.jsx';
+import AccesoPortal from './AccesoPortal.jsx';
 
 const VACIO = { tipo: 'generador', razonSocial: '', cuit: '', email: '', telefono: '', direccion: '', modalidad: 'por_retiro', montoFijo: 0 };
 const TIPOS = { generador: 'Generador', comprador: 'Comprador', ambos: 'Generador y comprador' };
@@ -12,6 +13,7 @@ export default function Clientes() {
   const [form, setForm] = useState(VACIO);
   const [editId, setEditId] = useState(null);
   const [error, setError] = useState(null);
+  const [acceso, setAcceso] = useState(null); // cliente al que se le da acceso al portal
 
   const load = () => api(`/clientes?q=${encodeURIComponent(q)}`).then((r) => setItems(r.items));
   useEffect(() => {
@@ -63,6 +65,7 @@ export default function Clientes() {
   return (
     <>
       <h2>Clientes</h2>
+      {acceso && <AccesoPortal key={acceso._id} cliente={acceso} onClose={() => setAcceso(null)} onDone={load} />}
       <div className="grid2">
         <section className="card">
           <input placeholder="Buscar por razón social o CUIT…" value={q} onChange={(e) => setQ(e.target.value)} />
@@ -74,7 +77,7 @@ export default function Clientes() {
               {items.map((c) => (
                 <tr key={c._id}>
                   <td>
-                    {c.razonSocial}
+                    {c.razonSocial} {c.organizacion && <Tag tone="info">Portal</Tag>}
                     <div className="muted small">{TIPOS[c.tipo]}{c.direcciones?.[0] && ` · ${c.direcciones[0].direccion}`}</div>
                   </td>
                   <td>{c.cuit}</td>
@@ -84,6 +87,9 @@ export default function Clientes() {
                   </td>
                   <td className="actions">
                     <button className="link" onClick={() => edit(c)}>Editar</button>
+                    {c.tipo !== 'comprador' && (
+                      <button className="link" onClick={() => setAcceso(c)}>{c.organizacion ? 'Sumar usuario al portal' : 'Dar acceso al portal'}</button>
+                    )}
                     <ConfirmButton onConfirm={() => remove(c._id)} confirmLabel="Sí, dar de baja">Baja</ConfirmButton>
                   </td>
                 </tr>

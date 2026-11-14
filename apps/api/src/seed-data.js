@@ -156,7 +156,8 @@ async function seedNuevaVida(orgs, chofer) {
     const sale = await Sale.create({ fecha: new Date(now - dias * DAY), comprador: acopio._id, remito: `R-${1000 + dias}`, items: items.map(([c, kg, p]) => ({ material: m[c]._id, pesoKg: kg, precioKg: p })), cobrada: dias > 10 });
     await registrarVenta(sale);
   }
-  await registrarRechazo({ material: m.RECH._id, kg: 140, fecha: new Date(now - 5 * DAY), motivo: 'Material contaminado, a relleno sanitario' });
+  // El rechazo se descuenta del material que se rechaza (acá, cartón húmedo/contaminado)
+  await registrarRechazo({ material: m.CART._id, kg: 140, fecha: new Date(now - 5 * DAY), motivo: 'Cartón húmedo y contaminado, a relleno sanitario' });
 
   // Liquidaciones del mes anterior: una vencida, una por vencer y una pagada
   const snap = (c) => ({ razonSocial: c.razonSocial, cuit: c.cuit, condicionIva: c.condicionIva });

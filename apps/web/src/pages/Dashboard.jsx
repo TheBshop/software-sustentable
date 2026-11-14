@@ -42,6 +42,16 @@ export default function Dashboard() {
         <div className={`kpi ${t.cobrosVencidos > 0 ? 'alert' : ''}`}><span>Cobros vencidos</span><strong>{fmtPeso(t.cobrosVencidos)}</strong></div>
         <div className="kpi"><span>Vencen en 7 días</span><strong>{fmtPeso(t.cobrosPorVencer)}</strong></div>
       </div>
+      <h3>Planta</h3>
+      <div className="kpis">
+        <div className="kpi"><span>Ingresado a planta</span><strong>{fmtKg(data.planta?.indicadores.ingresadoKg)}</strong></div>
+        <div className="kpi green"><span>Valorizado (vendido)</span><strong>{fmtKg(data.planta?.indicadores.valorizadoKg)}</strong></div>
+        <div className="kpi"><span>A disposición final</span><strong>{fmtKg(data.planta?.indicadores.dispuestoKg)}</strong></div>
+        <div className="kpi green" title="De lo que salió de planta, porcentaje que se valorizó en vez de ir al relleno sanitario">
+          <span>Desvío de relleno sanitario</span>
+          <strong>{data.planta?.indicadores.tasaDesvio == null ? '—' : `${data.planta.indicadores.tasaDesvio.toLocaleString('es-AR')} %`}</strong>
+        </div>
+      </div>
       <div className="grid2">
         <section className="card">
           <h3>Kg por material</h3>

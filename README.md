@@ -18,9 +18,17 @@ Requisitos: Node 20+.
 
 ```bash
 npm install
-npm run dev:memoria  # API + datos de ejemplo → admin@nuevavida.local / admin1234
+npm run dev:memoria  # API + datos de ejemplo de varias organizaciones
 npm run dev:web      # http://localhost:5173 (en otra terminal)
 ```
+
+| Usuario de prueba | Contraseña | Entra a |
+|---|---|---|
+| admin@nuevavida.local | admin1234 | Panel de la Cooperativa Nueva Vida (RSU y REGU) |
+| chofer@nuevavida.local | chofer1234 | App del chofer |
+| admin@litoral.local | admin1234 | Panel de una segunda cooperativa (solo RSU) |
+| empresa@elpuente.local | empresa1234 | Portal de una empresa atendida por las dos cooperativas |
+| municipio@ejemplo.local | municipio1234 | Portal de un municipio con tres sedes |
 
 **Con MongoDB persistente** (Docker o un Mongo accesible):
 
@@ -36,6 +44,12 @@ npm run dev:web      # http://localhost:5173
 npm test             # tests de la API (MongoDB en memoria, no necesita Docker)
 ```
 
+## Plataforma multi-organización
+
+Cada **cooperativa** ve solo sus datos en el panel de gestión. Las **empresas** y los **municipios** que generan residuos entran a un **portal**, donde ven sus retiros, certificados, facturas (con el detalle retiro por retiro) y un informe anual en PDF, aunque los atiendan varias cooperativas. La cooperativa les da acceso desde Clientes. Para dar de alta una cooperativa nueva: `npm run crear-cooperativa`.
+
+Los materiales se clasifican por corriente (RSU, REGU, peligroso…) y por fracción, con el código de colores del Decreto 779/2022. El stock de planta sale de un libro de movimientos que no se puede alterar. Ver el [marco normativo](docs/08-marco-normativo.md).
+
 ## Panel web
 
 Inicio (métricas del mes) · Retiros (pesar en planta, emitir certificado) · Ingresos a planta · Ventas · Certificados (PDF, envío por WhatsApp/email, anulación) · Facturación (alertas de cobro, liquidación con vista previa, pagos, número de factura ARCA) · Clientes · Materiales. La página pública `/verificar/:codigo` es la que abre el QR.
@@ -45,8 +59,8 @@ Inicio (métricas del mes) · Retiros (pesar en planta, emitir certificado) · I
 La cooperativa completa [templates/plantilla-carga-nueva-vida.xlsx](templates/plantilla-carga-nueva-vida.xlsx) (hojas *Materiales* y *Clientes*, con instrucciones y listas desplegables). Después:
 
 ```bash
-npm run importar -- revisar datos-cooperativa.xlsx   # valida y muestra qué haría, sin guardar
-npm run importar -- cargar datos-cooperativa.xlsx    # guarda en la base de MONGO_URI
+npm run importar -- revisar datos-cooperativa.xlsx --coop <cuit>   # valida y muestra qué haría, sin guardar
+npm run importar -- cargar datos-cooperativa.xlsx --coop <cuit>    # guarda en esa cooperativa (MONGO_URI)
 npm run importar -- plantilla nueva-plantilla.xlsx   # vuelve a generar la planilla vacía
 ```
 
@@ -82,3 +96,5 @@ npx eas-cli build -p android --profile preview
 5. [Flujo de desarrollo e integración](docs/05-flujo-de-desarrollo.md)
 6. [Equipo y proyecto](docs/06-equipo-y-proyecto.md)
 7. [Despliegue](docs/07-despliegue.md): Atlas, R2, Render, Netlify, backups y APK, paso a paso
+8. [Marco normativo](docs/08-marco-normativo.md): leyes de residuos y cómo las implementa el sistema
+9. [Mercado y diferenciales](docs/09-mercado-y-diferenciales.md)

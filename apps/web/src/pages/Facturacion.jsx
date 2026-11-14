@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { api, fmtPeso, fmtFecha, isoDate, pad } from '../api.js';
 import { useLoad, Tag, ErrorMsg, ConfirmButton } from '../ui.jsx';
+import { DetalleRetiros } from './portal/Facturas.jsx';
 
 const MODALIDADES = { por_retiro: 'por retiro', por_kg: 'por kg', abono_mensual: 'abono mensual', sin_cargo: 'sin cargo' };
 
@@ -133,6 +134,12 @@ function NuevaLiquidacion({ onCreated }) {
             <span>Total · {preview.retiros.length} retiro{preview.retiros.length === 1 ? '' : 's'} incluido{preview.retiros.length === 1 ? '' : 's'}</span>
             <span className="num">{fmtPeso(preview.total)}</span>
           </div>
+          {preview.detalle?.length > 0 && (
+            <details>
+              <summary className="small">Ver el detalle retiro por retiro (lo verá el cliente en su portal)</summary>
+              <DetalleRetiros detalle={preview.detalle} />
+            </details>
+          )}
           {preview.total > 0 && <div className="row"><button type="button" onClick={generar}>Generar liquidación</button></div>}
         </>
       )}
@@ -141,7 +148,7 @@ function NuevaLiquidacion({ onCreated }) {
 }
 
 function Liquidaciones({ data, error, onChange }) {
-  const [abierto, setAbierto] = useState(null); // { id, tipo: 'pago' | 'fiscal' }
+  const [abierto, setAbierto] = useState(null); // { id, tipo: 'pago' | 'fiscal' | 'detalle' }
   return (
     <section className="card flush">
       <div className="card-head"><h3>Liquidaciones emitidas</h3></div>
@@ -170,6 +177,9 @@ function Liquidaciones({ data, error, onChange }) {
                   ) : '—'}
                 </td>
                 <td>
+                  <div className="actions">
+                    <button type="button" className="link" onClick={() => setAbierto(abierto?.id === f._id && abierto.tipo === 'detalle' ? null : { id: f._id, tipo: 'detalle' })}>Detalle</button>
+                  </div>
                   {f.estado === 'pendiente' && (
                     <div className="actions">
                       <button type="button" className="secondary sm" onClick={() => setAbierto({ id: f._id, tipo: 'pago' })}>Registrar pago</button>
@@ -181,7 +191,9 @@ function Liquidaciones({ data, error, onChange }) {
               abierto?.id === f._id && (
                 <tr key={`${f._id}-form`} className="edit-row">
                   <td colSpan={8}>
-                    {abierto.tipo === 'pago' ? (
+                    {abierto.tipo === 'detalle' ? (
+                      <DetalleRetiros detalle={f.detalle} lineas={f.lineas} />
+                    ) : abierto.tipo === 'pago' ? (
                       <PagoForm factura={f} onDone={() => { setAbierto(null); onChange(); }} onCancel={() => setAbierto(null)} />
                     ) : (
                       <FiscalForm factura={f} onDone={() => { setAbierto(null); onChange(); }} onCancel={() => setAbierto(null)} />

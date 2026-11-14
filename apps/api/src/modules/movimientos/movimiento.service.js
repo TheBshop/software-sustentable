@@ -121,7 +121,7 @@ export async function stock() {
   const filas = await Movimiento.aggregate([
     { $group: { _id: '$material', kg: { $sum: '$kg' } } },
     { $lookup: { from: 'materials', localField: '_id', foreignField: '_id', as: 'm' } },
-    { $project: { _id: 0, materialId: '$_id', material: { $first: '$m.nombre' }, fraccion: { $first: '$m.fraccion' }, kg: { $round: ['$kg', 2] } } },
+    { $project: { _id: 0, materialId: '$_id', material: { $first: '$m.nombre' }, fraccion: { $first: '$m.fraccion' }, corriente: { $first: '$m.corriente' }, kg: { $round: ['$kg', 2] } } },
     { $sort: { kg: -1 } },
   ]);
   return filas;
