@@ -11,7 +11,8 @@
     "seed": "node --env-file-if-exists=.env src/seed.js",
     "importar": "node --env-file-if-exists=.env src/import/cli.js",
     "crear-usuario": "node --env-file-if-exists=.env src/scripts/crear-usuario.js",
-    "test": "vitest run"
+    "test": "vitest run",
+    "crear-cooperativa": "node --env-file-if-exists=.env src/scripts/crear-cooperativa.js"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1168.0",

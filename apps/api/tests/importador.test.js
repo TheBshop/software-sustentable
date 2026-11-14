@@ -5,17 +5,22 @@ import { MongoMemoryServer } from 'mongodb-memory-server';
 import { buildTemplate, parseWorkbook, applyImport } from '../src/import/importer.js';
 import { Material } from '../src/modules/materials/material.model.js';
 import { Client } from '../src/modules/clients/client.model.js';
+import { Organization } from '../src/modules/organizations/organization.model.js';
+import { enterTenant } from '../src/lib/tenancy.js';
 
 let mongo;
+let coop;
 beforeAll(async () => {
   mongo = await MongoMemoryServer.create();
   await mongoose.connect(mongo.getUri());
+  coop = await Organization.create({ tipo: 'cooperativa', nombre: 'Coop Import', cuit: '30700000097' });
 });
 afterAll(async () => {
   await mongoose.disconnect();
   await mongo?.stop();
 });
 beforeEach(async () => {
+  enterTenant(coop._id);
   await Material.deleteMany({});
   await Client.deleteMany({});
 });
@@ -49,6 +54,7 @@ describe('Importador desde Excel', () => {
   });
 
   it('importa materiales y clientes con tarifas, precios por kg y contrato', async () => {
+    enterTenant(coop._id);
     const parsed = parseWorkbook(await planilla({ materiales: MATS, clientes: [HOTEL, ['Escuela Uno', '', '', '', '', '', '', 'Pasaje 2', 'Abono mensual', '40.000', '', '', '', '', '', '']] }));
     expect(parsed.errores).toEqual([]);
 
@@ -72,6 +78,7 @@ describe('Importador desde Excel', () => {
   });
 
   it('volver a importar actualiza en vez de duplicar', async () => {
+    enterTenant(coop._id);
     await applyImport(parseWorkbook(await planilla({ materiales: MATS, clientes: [HOTEL] })));
     const cambiado = [...HOTEL];
     cambiado[8] = 'Por retiro'; // Modalidad de cobro
@@ -83,6 +90,7 @@ describe('Importador desde Excel', () => {
   });
 
   it('reporta errores por fila y no guarda nada', async () => {
+    enterTenant(coop._id);
     const parsed = parseWorkbook(
       await planilla({
         materiales: [...MATS, ['VID', 'Vidrio repetido', 'Vidrio', 0, 0, 0], ['ALU', 'Aluminio', 'Metal pesado', 9, 0, 0]],
@@ -96,6 +104,7 @@ describe('Importador desde Excel', () => {
   });
 
   it('rechaza precios por kg de materiales que no existen', async () => {
+    enterTenant(coop._id);
     const sinVidrio = [MATS[0]];
     const r = await applyImport(parseWorkbook(await planilla({ materiales: sinVidrio, clientes: [HOTEL] })));
     expect(r.errores[0].mensaje).toContain('VID no existe');
@@ -103,6 +112,7 @@ describe('Importador desde Excel', () => {
   });
 
   it('revisar (dryRun) no escribe', async () => {
+    enterTenant(coop._id);
     const r = await applyImport(parseWorkbook(await planilla({ materiales: MATS, clientes: [HOTEL] })), { dryRun: true });
     expect(r.clientes.nuevos).toBe(1);
     expect(await Client.countDocuments()).toBe(0);

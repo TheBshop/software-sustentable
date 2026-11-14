@@ -15,7 +15,7 @@ export default function VerificarCertificado() {
   return (
     <div className="center">
       <div className="card verify">
-        <h2>♻ Cooperativa Nueva Vida</h2>
+        <h2>♻ {cert?.emisor?.nombre ?? 'Verificación de certificado'}</h2>
         {error && <p className="badge invalid">✗ {error}</p>}
         {!cert && !error && <p>Verificando…</p>}
         {cert && (

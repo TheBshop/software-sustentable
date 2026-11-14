@@ -9,6 +9,8 @@ import { s3Driver } from '../src/lib/storage.js';
 import { User } from '../src/modules/users/user.model.js';
 import { Client } from '../src/modules/clients/client.model.js';
 import { Material } from '../src/modules/materials/material.model.js';
+import { Organization } from '../src/modules/organizations/organization.model.js';
+import { runWithTenant } from '../src/lib/tenancy.js';
 
 // PNG de 1×1 px
 const PNG = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==', 'base64');
@@ -21,12 +23,15 @@ beforeAll(async () => {
   mongo = await MongoMemoryServer.create();
   await mongoose.connect(mongo.getUri());
   const app = createApp();
+  const coop = await Organization.create({ tipo: 'cooperativa', nombre: 'Coop Fotos', cuit: '30700000098' });
   for (const [rol, email] of [['chofer', 'c1@test.local'], ['chofer', 'c2@test.local']]) {
-    await User.create({ nombre: email, email, rol, passwordHash: await User.hashPassword('secreto123') });
+    await User.create({ nombre: email, email, rol, organizacion: coop._id, passwordHash: await User.hashPassword('secreto123') });
     tokens[email] = (await request(app).post('/api/auth/login').send({ email, password: 'secreto123' })).body.token;
   }
-  const cliente = await Client.create({ razonSocial: 'Cliente Fotos' });
-  const material = await Material.create({ codigo: 'CART', nombre: 'Cartón', categoria: 'papel_carton' });
+  const [cliente, material] = await runWithTenant(coop._id, async () => [
+    await Client.create({ razonSocial: 'Cliente Fotos' }),
+    await Material.create({ codigo: 'CART', nombre: 'Cartón', categoria: 'papel_carton' }),
+  ]);
   retiro = (
     await request(app)
       .post('/api/retiros')

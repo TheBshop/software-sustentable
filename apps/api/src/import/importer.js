@@ -9,6 +9,7 @@ import ExcelJS from 'exceljs';
 import { Material, materialInput } from '../modules/materials/material.model.js';
 import { Client, clientInput } from '../modules/clients/client.model.js';
 import { parseLocalDate } from '../lib/validation.js';
+import { FRACCIONES, SUBTIPOS_REGU } from '../modules/materials/fracciones.js';
 
 // ---------- Columnas y valores aceptados ----------
 
@@ -19,6 +20,10 @@ const MAT_COLS = [
   ['factorCo2', 'Factor CO2 (kg/kg)', 18],
   ['tarifaRetiroKg', 'Tarifa retiro ($/kg)', 18],
   ['precioVentaKg', 'Precio venta ($/kg)', 18],
+  // Opcionales (las planillas generadas antes de agregarlas siguen siendo válidas)
+  ['corriente', 'Corriente', 22, true],
+  ['fraccion', 'Fracción', 22, true],
+  ['subtipoRegu', 'Tipo de residuo especial', 28, true],
 ];
 
 const CLI_COLS = [
@@ -58,6 +63,9 @@ const OPCIONES = {
     'Consumidor final': 'consumidor_final',
   },
   modalidad: { 'Por retiro': 'por_retiro', 'Por kg': 'por_kg', 'Abono mensual': 'abono_mensual', 'Sin cargo': 'sin_cargo' },
+  corriente: { 'Residuos urbanos (RSU)': 'rsu', 'Residuo especial (REGU)': 'regu', Peligroso: 'peligroso', Industrial: 'industrial', 'Envases fitosanitarios': 'fitosanitario' },
+  fraccion: Object.fromEntries(Object.entries(FRACCIONES).map(([k, v]) => [v.nombre, k])),
+  subtipoRegu: Object.fromEntries(Object.entries(SUBTIPOS_REGU).map(([k, v]) => [v, k])),
 };
 
 const norm = (s) =>
@@ -145,13 +153,13 @@ function readSheet(ws, cols) {
   // Se ubican las columnas por el texto del encabezado, así no importa si la cooperativa las reordena.
   const header = {};
   ws.getRow(1).eachCell((cell, col) => (header[norm(cellValue(cell.value) ?? '')] = col));
-  const faltan = cols.filter(([, label]) => !(norm(label) in header)).map(([, label]) => label);
+  const faltan = cols.filter(([, label, , opcional]) => !opcional && !(norm(label) in header)).map(([, label]) => label);
   if (faltan.length) throw new Error(`Hoja "${ws.name}": faltan las columnas ${faltan.join(', ')}`);
 
   ws.eachRow((row, fila) => {
     if (fila === 1) return;
     const data = {};
-    for (const [key, label] of cols) data[key] = cellValue(row.getCell(header[norm(label)]).value);
+    for (const [key, label] of cols) data[key] = norm(label) in header ? cellValue(row.getCell(header[norm(label)]).value) : null;
     if (Object.values(data).some((v) => v != null)) rows.push({ fila, data });
   });
   return rows;
@@ -189,6 +197,9 @@ export function parseWorkbook(wb) {
         factorCo2: numero(data.factorCo2, 'Factor CO2') ?? 0,
         tarifaRetiroKg: numero(data.tarifaRetiroKg, 'Tarifa retiro') ?? 0,
         precioVentaKg: numero(data.precioVentaKg, 'Precio venta') ?? 0,
+        corriente: opcion('corriente', data.corriente) ?? 'rsu',
+        fraccion: opcion('fraccion', data.fraccion),
+        subtipoRegu: opcion('subtipoRegu', data.subtipoRegu),
       });
       if (codigosVistos.has(parsed.codigo)) throw new Error(`Código ${parsed.codigo} repetido (también en la fila ${codigosVistos.get(parsed.codigo)})`);
       codigosVistos.set(parsed.codigo, fila);
@@ -285,12 +296,12 @@ export async function applyImport({ materiales, clientes }, { dryRun = false } =
 /** Planilla vacía para que complete la cooperativa: encabezados, listas desplegables e instrucciones. */
 export function buildTemplate() {
   const wb = new ExcelJS.Workbook();
-  wb.creator = 'Cooperativa Nueva Vida';
+  wb.creator = 'Plataforma de gestión de residuos';
 
   const ins = wb.addWorksheet('Instrucciones');
   ins.getColumn(1).width = 110;
   const lineas = [
-    ['Planilla de carga inicial · Cooperativa Nueva Vida', true],
+    ['Planilla de carga inicial de materiales y clientes', true],
     [''],
     ['Completá una fila por material en la hoja "Materiales" y una fila por cliente en la hoja "Clientes".'],
     ['No cambies los títulos de la primera fila. Las celdas vacías se toman como 0 o "sin dato".'],
@@ -301,6 +312,9 @@ export function buildTemplate() {
     ['Tarifa retiro: lo que se le cobra al generador por kg retirado de ese material (0 si no se cobra).'],
     ['Precio venta: precio de referencia por kg cuando se vende el material.'],
     [`Categorías: ${Object.keys(OPCIONES.categoria).join(', ')}.`],
+    ['Corriente (opcional, por defecto RSU): residuos urbanos, residuo especial (REGU: pilas, RAEE, neumáticos, aceite usado), peligroso, industrial o envases fitosanitarios.'],
+    ['Fracción (opcional): según el código de colores del Decreto 779/2022. Si se deja vacía, se toma de la categoría.'],
+    ['Tipo de residuo especial: obligatorio solo si la corriente es REGU.'],
     [''],
     ['CLIENTES', true],
     ['CUIT: con o sin guiones (30-12345678-9). Si el cliente ya existe, la planilla actualiza sus datos.'],
@@ -336,7 +350,7 @@ export function buildTemplate() {
     }
     return ws;
   };
-  addSheet('Materiales', MAT_COLS, { categoria: OPCIONES.categoria });
+  addSheet('Materiales', MAT_COLS, { categoria: OPCIONES.categoria, corriente: OPCIONES.corriente, fraccion: OPCIONES.fraccion, subtipoRegu: OPCIONES.subtipoRegu });
   addSheet('Clientes', CLI_COLS, { tipo: OPCIONES.tipo, condicionIva: OPCIONES.condicionIva, modalidad: OPCIONES.modalidad });
   return wb;
 }

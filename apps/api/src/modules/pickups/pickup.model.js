@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { tenantPlugin } from '../../lib/tenancy.js';
 
 const { ObjectId } = mongoose.Schema.Types;
 
@@ -15,7 +16,7 @@ const itemSchema = new mongoose.Schema(
 
 const pickupSchema = new mongoose.Schema(
   {
-    numero: { type: Number, unique: true },
+    numero: Number, // correlativo por cooperativa
     // UUID generado por la app móvil al crear el retiro offline. Si la app reintenta la
     // sincronización, el backend reconoce el localId y no duplica el retiro.
     localId: { type: String, unique: true, sparse: true },
@@ -41,5 +42,8 @@ pickupSchema.index({ cliente: 1, fecha: -1 });
 
 /** Peso a usar en certificados, facturas y métricas: el real si ya se pesó, si no el estimado. */
 export const pesoEfectivo = (item) => item.pesoRealKg ?? item.pesoEstimadoKg;
+
+pickupSchema.plugin(tenantPlugin);
+pickupSchema.index({ coop: 1, numero: 1 }, { unique: true });
 
 export const Pickup = mongoose.model('Pickup', pickupSchema);

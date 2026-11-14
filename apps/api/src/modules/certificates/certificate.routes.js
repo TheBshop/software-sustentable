@@ -43,13 +43,13 @@ certificatesRouter.post('/:id/anular', requireRole('administracion'), async (req
 export const publicCertificatesRouter = Router();
 
 publicCertificatesRouter.get('/:codigo', async (req, res) => {
-  const cert = await Certificate.findOne({ codigo: req.params.codigo });
+  const cert = await Certificate.findOne({ codigo: req.params.codigo }).setOptions({ sinTenant: true }); // público: el código del QR identifica al certificado sin importar la cooperativa
   if (!cert) throw new HttpError(404, 'Certificado inexistente');
   res.json(publicView(cert));
 });
 
 publicCertificatesRouter.get('/:codigo/pdf', async (req, res) => {
-  const cert = await Certificate.findOne({ codigo: req.params.codigo });
+  const cert = await Certificate.findOne({ codigo: req.params.codigo }).setOptions({ sinTenant: true }); // público: el código del QR identifica al certificado sin importar la cooperativa
   if (!cert) throw new HttpError(404, 'Certificado inexistente');
   res.type('application/pdf').setHeader('Content-Disposition', `attachment; filename="certificado-${cert.numero}.pdf"`);
   await renderCertificatePdf(cert, res);

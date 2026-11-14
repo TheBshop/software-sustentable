@@ -6,6 +6,9 @@ import { nextSeq } from '../../lib/counters.js';
 import { round2 } from '../../lib/validation.js';
 import { HttpError } from '../../middleware/error.js';
 import { env } from '../../config/env.js';
+import { FRACCIONES } from '../materials/fracciones.js';
+import { Organization } from '../organizations/organization.model.js';
+import { currentTenant } from '../../lib/tenancy.js';
 
 export const verificationUrl = (codigo) => `${env.publicWebUrl}/verificar/${codigo}`;
 
@@ -23,6 +26,9 @@ export async function issueCertificate(pickupId) {
       nombre: it.material.nombre,
       pesoKg: kg,
       pesoEstimado: it.pesoRealKg == null,
+      corriente: it.material.corriente ?? 'rsu',
+      fraccion: it.material.fraccion,
+      valorizable: it.material.valorizable !== false,
       co2EvitadoKg: round2(kg * (it.material.factorCo2 ?? 0)),
     };
   });
@@ -33,6 +39,7 @@ export async function issueCertificate(pickupId) {
     retiro: pickup._id,
     cliente: pickup.cliente._id,
     clienteSnapshot: { razonSocial: pickup.cliente.razonSocial, cuit: pickup.cliente.cuit },
+    emisorSnapshot: await Organization.findById(currentTenant()).then((o) => ({ nombre: o?.nombre, cuit: o?.cuit })),
     fechaRetiro: pickup.fecha,
     materiales,
     totalKg: round2(materiales.reduce((a, m) => a + m.pesoKg, 0)),
@@ -53,7 +60,15 @@ export function publicView(cert) {
     emitidoEn: cert.createdAt,
     fechaRetiro: cert.fechaRetiro,
     generador: cert.clienteSnapshot,
-    materiales: cert.materiales.map(({ nombre, pesoKg, pesoEstimado, co2EvitadoKg }) => ({ nombre, pesoKg, pesoEstimado, co2EvitadoKg })),
+    emisor: cert.emisorSnapshot,
+    materiales: cert.materiales.map(({ nombre, pesoKg, pesoEstimado, co2EvitadoKg, fraccion, valorizable }) => ({
+      nombre,
+      pesoKg,
+      pesoEstimado,
+      co2EvitadoKg,
+      fraccion: fraccion ? { codigo: fraccion, ...FRACCIONES[fraccion] } : null,
+      destino: valorizable === false ? 'Disposición final' : 'Valorización',
+    })),
     totalKg: cert.totalKg,
     co2EvitadoKg: cert.co2EvitadoKg,
   };
@@ -71,7 +86,7 @@ const transport = env.smtp.host
 export async function sendCertificate(cert, { canal, destino }) {
   const url = verificationUrl(cert.codigo);
   const texto =
-    `Hola! Te compartimos el Certificado de Disposición Sustentable N° ${cert.numero} de la Cooperativa Nueva Vida. ` +
+    `Hola! Te compartimos el Certificado de Disposición Sustentable N° ${cert.numero} de ${cert.emisorSnapshot?.nombre ?? 'la cooperativa'}. ` +
     `Recuperamos ${cert.totalKg} kg de materiales y evitamos ${cert.co2EvitadoKg} kg de CO2. ` +
     `Podés verlo y descargarlo acá: ${url}`;
 

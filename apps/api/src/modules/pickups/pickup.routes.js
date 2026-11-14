@@ -8,6 +8,7 @@ import { requireRole } from '../../middleware/auth.js';
 import { HttpError } from '../../middleware/error.js';
 import { storage } from '../../lib/storage.js';
 import { issueCertificate } from '../certificates/certificate.service.js';
+import { assertHabilitados, sincronizarIngresoDeRetiro } from '../movimientos/movimiento.service.js';
 
 export const pickupsRouter = Router();
 
@@ -70,6 +71,7 @@ pickupsRouter.get('/:id', async (req, res) => {
 // Alta de retiro. Idempotente por localId: la app móvil puede reintentar sin duplicar.
 pickupsRouter.post('/', requireRole('chofer', 'operador_planta', 'administracion'), async (req, res) => {
   const data = createInput.parse(req.body);
+  await assertHabilitados(data.items.map((i) => i.material));
   if (data.localId) {
     const existing = await Pickup.findOne({ localId: data.localId });
     if (existing) return res.status(200).json(existing);
@@ -84,8 +86,11 @@ pickupsRouter.patch('/:id', requireRole('operador_planta', 'administracion'), as
   const pickup = await Pickup.findById(req.params.id);
   if (!pickup) throw new HttpError(404, 'Retiro no encontrado');
   if (pickup.factura && data.items) throw new HttpError(409, 'El retiro ya fue facturado: no se pueden cambiar los pesos');
+  if (data.items) await assertHabilitados(data.items.map((i) => i.material));
   pickup.set(data);
   await pickup.save();
+  // Al pesarlo en planta (o corregirlo/anularlo) el stock se actualiza en el libro de movimientos
+  if (pickup.estado !== 'registrado') await sincronizarIngresoDeRetiro(pickup, req.user.sub);
   res.json(pickup);
 });
 

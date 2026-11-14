@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { tenantPlugin } from '../../lib/tenancy.js';
 import { z } from 'zod';
 import { objectId, dateInput } from '../../lib/validation.js';
 
@@ -12,7 +13,10 @@ const clientSchema = new mongoose.Schema(
   {
     tipo: { type: String, enum: TIPOS_CLIENTE, default: 'generador' },
     razonSocial: { type: String, required: true, trim: true },
-    cuit: { type: String, trim: true, unique: true, sparse: true },
+    cuit: { type: String, trim: true }, // único por cooperativa (ver índice abajo)
+    // Organización (empresa o municipio) con acceso al portal. Una misma organización puede
+    // ser cliente de varias cooperativas: cada una tiene su propio registro Client vinculado.
+    organizacion: { type: ObjectId, ref: 'Organization' },
     condicionIva: { type: String, enum: CONDICIONES_IVA, default: 'responsable_inscripto' },
     contacto: {
       nombre: String,
@@ -39,6 +43,10 @@ const clientSchema = new mongoose.Schema(
 );
 
 clientSchema.index({ razonSocial: 'text' });
+
+clientSchema.plugin(tenantPlugin);
+clientSchema.index({ coop: 1, cuit: 1 }, { unique: true, partialFilterExpression: { cuit: { $type: 'string' } } });
+clientSchema.index({ organizacion: 1 });
 
 export const Client = mongoose.model('Client', clientSchema);
 

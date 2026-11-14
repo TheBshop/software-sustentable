@@ -10,8 +10,11 @@ import { escapeRegex } from './validation.js';
  *
  * - Si el modelo tiene campo `activo`, DELETE hace baja lógica (no se pierde historial).
  * - Solo se aceptan como filtro los campos listados en `filters` (evita inyección de queries).
+ * - `beforeCreate(data, req)` valida reglas de negocio antes del alta (ej. habilitaciones).
+ * - `afterCreate(doc, req)` registra efectos del alta (ej. movimientos de stock).
+ * - `allowDelete: false` para registros que alimentan el libro de movimientos.
  */
-export function crudRouter(Model, { createSchema, updateSchema, searchFields = [], filters = [], populate = '', sort = '-createdAt', writeRoles = [] }) {
+export function crudRouter(Model, { createSchema, updateSchema, searchFields = [], filters = [], populate = '', sort = '-createdAt', writeRoles = [], beforeCreate, afterCreate, allowDelete = true }) {
   const router = Router();
   const canWrite = requireRole(...writeRoles);
   const hasSoftDelete = Boolean(Model.schema.path('activo'));
@@ -42,7 +45,9 @@ export function crudRouter(Model, { createSchema, updateSchema, searchFields = [
 
   router.post('/', canWrite, async (req, res) => {
     const data = createSchema.parse(req.body);
+    if (beforeCreate) await beforeCreate(data, req);
     const doc = await Model.create(data);
+    if (afterCreate) await afterCreate(doc, req);
     res.status(201).json(doc);
   });
 
@@ -56,6 +61,7 @@ export function crudRouter(Model, { createSchema, updateSchema, searchFields = [
   });
 
   router.delete('/:id', canWrite, async (req, res) => {
+    if (!allowDelete) throw new HttpError(405, 'Este registro no se puede borrar: registrá un ajuste');
     const doc = hasSoftDelete
       ? await Model.findByIdAndUpdate(req.params.id, { activo: false }, { new: true })
       : await Model.findByIdAndDelete(req.params.id);

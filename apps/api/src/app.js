@@ -1,16 +1,19 @@
-import express from 'express';
+import express, { Router } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import rateLimit from 'express-rate-limit';
 import { env } from './config/env.js';
-import { requireAuth } from './middleware/auth.js';
+import { requireAuth, requireOrgTipo } from './middleware/auth.js';
+import { withTenant } from './lib/tenancy.js';
 import { errorHandler, notFound } from './middleware/error.js';
 import { crudRouter } from './lib/crud.js';
 import { authRouter, usersRouter } from './modules/users/auth.routes.js';
 import { Client, clientInput } from './modules/clients/client.model.js';
-import { Material, materialInput } from './modules/materials/material.model.js';
-import { Intake, intakeInput, Sale, saleInput } from './modules/plant/plant.models.js';
+import { Material, materialInput, materialUpdate } from './modules/materials/material.model.js';
+import { Intake, intakeInput, intakeUpdate, Sale, saleInput, saleUpdate } from './modules/plant/plant.models.js';
+import { plantaRouter } from './modules/movimientos/planta.routes.js';
+import { assertHabilitados, assertCorrienteHabilitada, registrarIngreso, registrarVenta } from './modules/movimientos/movimiento.service.js';
 import { pickupsRouter } from './modules/pickups/pickup.routes.js';
 import { certificatesRouter, publicCertificatesRouter } from './modules/certificates/certificate.routes.js';
 import { invoicesRouter } from './modules/invoices/invoice.routes.js';
@@ -52,28 +55,56 @@ export function createApp(config = {}) {
   app.use('/api/public/certificados', publicCertificatesRouter);
 
   // ---- Privadas ----
-  app.use('/api', requireAuth);
+  // requireAuth identifica al usuario; withTenant fija su cooperativa para todo el request
+  // (lib/tenancy.js filtra cada consulta por esa cooperativa).
+  app.use('/api', requireAuth, withTenant);
   app.use('/api/usuarios', usersRouter);
-  app.use(
-    '/api/clientes',
+
+  // Zona de gestión: solo usuarios de cooperativas. Las empresas y municipios usan el portal.
+  const coopApi = Router();
+  coopApi.use(requireOrgTipo('cooperativa'));
+  app.use('/api', coopApi);
+  coopApi.use(
+    '/clientes',
     crudRouter(Client, { createSchema: clientInput, searchFields: ['razonSocial', 'cuit'], filters: ['tipo'], sort: 'razonSocial', writeRoles: ['administracion'] }),
   );
-  app.use(
-    '/api/materiales',
-    crudRouter(Material, { createSchema: materialInput, searchFields: ['nombre', 'codigo'], filters: ['categoria'], sort: 'nombre', writeRoles: ['administracion'] }),
+  coopApi.use(
+    '/materiales',
+    crudRouter(Material, { createSchema: materialInput, updateSchema: materialUpdate, beforeCreate: (d) => assertCorrienteHabilitada(d.corriente), searchFields: ['nombre', 'codigo'], filters: ['categoria'], sort: 'nombre', writeRoles: ['administracion'] }),
   );
-  app.use(
-    '/api/ingresos',
-    crudRouter(Intake, { createSchema: intakeInput, filters: ['origen'], sort: '-fecha', populate: 'items.material', writeRoles: ['operador_planta', 'administracion'] }),
+  coopApi.use(
+    '/ingresos',
+    crudRouter(Intake, {
+      createSchema: intakeInput,
+      updateSchema: intakeUpdate,
+      beforeCreate: (d) => assertHabilitados(d.items.map((i) => i.material)),
+      afterCreate: (doc, req) => registrarIngreso(doc, req.user.sub),
+      allowDelete: false,
+      filters: ['origen'],
+      sort: '-fecha',
+      populate: 'items.material',
+      writeRoles: ['operador_planta', 'administracion'],
+    }),
   );
-  app.use(
-    '/api/ventas',
-    crudRouter(Sale, { createSchema: saleInput, filters: ['comprador'], sort: '-fecha', populate: 'comprador items.material', writeRoles: ['administracion'] }),
+  coopApi.use(
+    '/ventas',
+    crudRouter(Sale, {
+      createSchema: saleInput,
+      updateSchema: saleUpdate,
+      beforeCreate: (d) => assertHabilitados(d.items.map((i) => i.material)),
+      afterCreate: (doc, req) => registrarVenta(doc, req.user.sub),
+      allowDelete: false,
+      filters: ['comprador'],
+      sort: '-fecha',
+      populate: 'comprador items.material',
+      writeRoles: ['administracion'],
+    }),
   );
-  app.use('/api/retiros', pickupsRouter);
-  app.use('/api/certificados', certificatesRouter);
-  app.use('/api/facturas', invoicesRouter);
-  app.use('/api/dashboard', dashboardRouter);
+  coopApi.use('/retiros', pickupsRouter);
+  coopApi.use('/certificados', certificatesRouter);
+  coopApi.use('/facturas', invoicesRouter);
+  coopApi.use('/dashboard', dashboardRouter);
+  coopApi.use('/planta', plantaRouter);
 
   app.use(notFound);
   app.use(errorHandler);

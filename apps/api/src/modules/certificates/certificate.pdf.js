@@ -1,6 +1,7 @@
 import PDFDocument from 'pdfkit';
 import QRCode from 'qrcode';
 import { verificationUrl } from './certificate.service.js';
+import { FRACCIONES } from '../materials/fracciones.js';
 
 const VERDE = '#2f7d32';
 const fmtFecha = (d) => new Date(d).toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
@@ -15,8 +16,8 @@ export async function renderCertificatePdf(cert, stream) {
   doc.pipe(stream);
 
   doc.rect(0, 0, doc.page.width, 90).fill(VERDE);
-  doc.fillColor('white').fontSize(20).text('Cooperativa Nueva Vida', 50, 28);
-  doc.fontSize(11).text('Reciclado con inclusión social · Paraná, Entre Ríos', 50, 55);
+  doc.fillColor('white').fontSize(20).text(cert.emisorSnapshot?.nombre ?? 'Cooperativa', 50, 28);
+  doc.fontSize(11).text(cert.emisorSnapshot?.cuit ? `CUIT ${cert.emisorSnapshot.cuit} · Reciclado con inclusión social` : 'Reciclado con inclusión social', 50, 55);
 
   doc.fillColor('black').moveDown(3);
   doc.fontSize(18).text('Certificado de Disposición Sustentable', 50, 120, { align: 'center' });
@@ -30,19 +31,25 @@ export async function renderCertificatePdf(cert, stream) {
 
   // Tabla de materiales
   doc.moveDown(1.5);
-  const cols = [50, 300, 420];
+  const cols = [50, 270, 345, 440];
   let y = doc.y;
-  doc.font('Helvetica-Bold').text('Material', cols[0], y).text('Peso (kg)', cols[1], y).text('CO2 evitado (kg)', cols[2], y);
+  doc.font('Helvetica-Bold').text('Material y fracción', cols[0], y).text('Peso (kg)', cols[1], y).text('CO2 (kg)', cols[2], y).text('Destino', cols[3], y);
   y += 20;
   doc.moveTo(50, y - 5).lineTo(545, y - 5).strokeColor('#ccc').stroke();
   doc.font('Helvetica');
   for (const m of cert.materiales) {
-    doc.text(m.nombre + (m.pesoEstimado ? ' *' : ''), cols[0], y).text(fmtNum(m.pesoKg), cols[1], y).text(fmtNum(m.co2EvitadoKg), cols[2], y);
-    y += 18;
+    const fr = FRACCIONES[m.fraccion];
+    if (fr) doc.rect(cols[0], y + 1, 8, 8).fillAndStroke(fr.hex, '#999').fillColor('black');
+    doc.text(m.nombre + (m.pesoEstimado ? ' *' : ''), cols[0] + (fr ? 13 : 0), y);
+    if (fr) doc.fontSize(8).fillColor('#666').text(fr.nombre, cols[0] + 13, y + 12).fontSize(12).fillColor('black');
+    doc.text(fmtNum(m.pesoKg), cols[1], y).text(fmtNum(m.co2EvitadoKg), cols[2], y).text(m.valorizable === false ? 'Disp. final' : 'Valorización', cols[3], y);
+    y += fr ? 26 : 18;
   }
   doc.moveTo(50, y).lineTo(545, y).stroke();
   y += 8;
   doc.font('Helvetica-Bold').text('Total', cols[0], y).text(fmtNum(cert.totalKg), cols[1], y).text(fmtNum(cert.co2EvitadoKg), cols[2], y);
+  doc.font('Helvetica').fontSize(8).fillColor('#666').text('Fracciones según el código unificado de colores del Decreto 779/2022 (reglamentario de la Ley 25.916).', 50, y + 16, { width: 495 }).fontSize(12).fillColor('black');
+  y += 10;
   doc.font('Helvetica');
 
   if (cert.materiales.some((m) => m.pesoEstimado)) {

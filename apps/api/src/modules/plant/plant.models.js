@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { tenantPlugin } from '../../lib/tenancy.js';
 import { z } from 'zod';
 import { objectId, dateInput, round2 } from '../../lib/validation.js';
 
@@ -19,12 +20,13 @@ const intakeSchema = new mongoose.Schema(
   { timestamps: true },
 );
 intakeSchema.index({ fecha: -1 });
+intakeSchema.plugin(tenantPlugin);
 export const Intake = mongoose.model('Intake', intakeSchema);
 
 export const intakeInput = z.object({
   fecha: dateInput.optional(),
-  origen: z.enum(['retiro', 'recuperador', 'entrega_voluntaria', 'otro']).default('retiro'),
-  retiro: objectId.optional(),
+  // Los ingresos de retiros propios los crea el sistema al pesar el retiro (movimiento.service.js)
+  origen: z.enum(['recuperador', 'entrega_voluntaria', 'otro']).default('recuperador'),
   detalleOrigen: z.string().optional(),
   items: z.array(z.object({ material: objectId, pesoKg: z.number().min(0) })).min(1),
   observaciones: z.string().optional(),
@@ -53,7 +55,13 @@ saleSchema.pre('save', function () {
   this.total = round2(this.items.reduce((acc, i) => acc + i.pesoKg * i.precioKg, 0));
 });
 saleSchema.index({ fecha: -1 });
+saleSchema.plugin(tenantPlugin);
 export const Sale = mongoose.model('Sale', saleSchema);
+
+// Ingresos y ventas alimentan el libro de movimientos: después del alta solo se editan
+// datos que no cambian el stock.
+export const intakeUpdate = z.object({ observaciones: z.string().optional(), detalleOrigen: z.string().optional() });
+export const saleUpdate = z.object({ cobrada: z.boolean().optional(), remito: z.string().optional() });
 
 export const saleInput = z.object({
   fecha: dateInput.optional(),
