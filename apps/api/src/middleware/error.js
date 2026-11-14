@@ -19,6 +19,11 @@ export function errorHandler(err, _req, res, _next) {
   }
   if (err.name === 'CastError') return res.status(400).json({ error: 'ID inválido' });
   if (err.name === 'ValidationError') return res.status(400).json({ error: err.message });
+  // Archivo demasiado grande, campo inesperado, etc. (multer)
+  if (err.name === 'MulterError') {
+    const msg = err.code === 'LIMIT_FILE_SIZE' ? 'El archivo es demasiado grande' : `Archivo no válido (${err.code})`;
+    return res.status(400).json({ error: msg });
+  }
   if (err.code === 11000) return res.status(409).json({ error: 'Registro duplicado', details: err.keyValue });
 
   const status = err.status ?? 500;

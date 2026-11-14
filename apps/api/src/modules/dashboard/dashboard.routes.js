@@ -4,7 +4,7 @@ import { Pickup } from '../pickups/pickup.model.js';
 import { Sale } from '../plant/plant.models.js';
 import { Certificate } from '../certificates/certificate.model.js';
 import { paymentAlerts } from '../invoices/invoice.service.js';
-import { indicadores } from '../movimientos/movimiento.service.js';
+import { indicadores, recuperacionMezcla } from '../movimientos/movimiento.service.js';
 import { dateInput, endOfLocalDay, startOfLocalMonth } from '../../lib/validation.js';
 
 export const dashboardRouter = Router();
@@ -26,7 +26,7 @@ dashboardRouter.get('/', async (req, res) => {
   const hastaFin = hasta ? endOfLocalDay(hasta) : now;
   const matchRetiros = { fecha: { $gte: desde, $lte: hastaFin }, estado: { $ne: 'anulado' } };
 
-  const [porMaterial, porCliente, totalesRetiros, ventasPorMaterial, co2, cobranzas, indPlanta] = await Promise.all([
+  const [porMaterial, porCliente, totalesRetiros, ventasPorMaterial, co2, cobranzas, indPlanta, mezcla] = await Promise.all([
     Pickup.aggregate([
       { $match: matchRetiros },
       { $unwind: '$items' },
@@ -59,6 +59,7 @@ dashboardRouter.get('/', async (req, res) => {
     ]),
     paymentAlerts(7),
     indicadores(desde, hastaFin),
+    recuperacionMezcla(desde, hastaFin),
   ]);
 
   res.json({
@@ -75,6 +76,6 @@ dashboardRouter.get('/', async (req, res) => {
     porCliente,
     ventasPorMaterial,
     // Trazabilidad de planta (libro de movimientos): Decreto 779/22, Anexo I, art. 6 inc. g
-    planta: { indicadores: indPlanta },
+    planta: { indicadores: indPlanta, mezcla },
   });
 });

@@ -10,6 +10,9 @@ const itemSchema = new mongoose.Schema(
     material: { type: ObjectId, ref: 'Material', required: true },
     pesoEstimadoKg: { type: Number, required: true, min: 0 }, // lo carga el chofer en el momento
     pesoRealKg: { type: Number, min: 0 }, // lo completa la planta al pesar en balanza
+    // Sin balanza: se cargan unidades (ej. 3 fardos) y el peso se estima con el peso estándar
+    cantidad: Number,
+    unidad: String,
   },
   { _id: false },
 );

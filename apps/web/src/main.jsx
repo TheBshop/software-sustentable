@@ -12,6 +12,8 @@ import Clientes from './pages/Clientes.jsx';
 import Materiales from './pages/Materiales.jsx';
 import Ingresos from './pages/Ingresos.jsx';
 import Ventas from './pages/Ventas.jsx';
+import Balance from './pages/Balance.jsx';
+import Configuracion from './pages/Configuracion.jsx';
 import VerificarCertificado from './pages/VerificarCertificado.jsx';
 import PortalInicio from './pages/portal/Inicio.jsx';
 import PortalRetiros from './pages/portal/Retiros.jsx';
@@ -51,6 +53,13 @@ function CoopSidebar() {
       <NavLink to="/facturacion">Facturación <Badge n={nAlertas} alert={alertas.data?.vencidas.length > 0} /></NavLink>
       <NavLink to="/clientes">Clientes</NavLink>
       <NavLink to="/materiales">Materiales</NavLink>
+      {['admin', 'administracion'].includes(getUser()?.rol) && (
+        <>
+          <span className="nav-group">Administración</span>
+          <NavLink to="/balance">Balance</NavLink>
+          {getUser()?.rol === 'admin' && <NavLink to="/configuracion">Configuración</NavLink>}
+        </>
+      )}
       <Salir />
     </nav>
   );
@@ -107,6 +116,8 @@ ReactDOM.createRoot(document.getElementById('root')).render(
           <Route path="/facturacion" element={<Facturacion />} />
           <Route path="/clientes" element={<Clientes />} />
           <Route path="/materiales" element={<Materiales />} />
+          <Route path="/balance" element={<Balance />} />
+          <Route path="/configuracion" element={<Configuracion />} />
         </Route>
         <Route path="/portal" element={<Zona portal />}>
           <Route index element={<PortalInicio />} />

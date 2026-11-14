@@ -87,7 +87,7 @@ export default function Retiros() {
                     <td className="num">{fmtFechaCorta(r.fecha)}</td>
                     <td>{r.cliente?.razonSocial}<div className="muted small">{r.chofer?.nombre}</div></td>
                     <td>
-                      {r.items.map((it) => `${it.material?.nombre} ${fmtKg(peso(it))}`).join(' · ')}
+                      {r.items.map((it) => `${it.material?.nombre} ${fmtKg(peso(it))}${it.cantidad && it.pesoRealKg == null ? ` (${it.cantidad} ${it.unidad})` : ''}`).join(' · ')}
                       <div className="muted small">
                         {r.fotos.length ? r.fotos.map((f, i) => <a key={f.url} href={fileUrl(f.url)} target="_blank" rel="noreferrer">foto {i + 1} </a>) : 'sin fotos'}
                         {r.observaciones && ` · ${r.observaciones}`}

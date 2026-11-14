@@ -151,3 +151,22 @@ Solo entran retiros no anulados y con `factura: null`. Anular una factura libera
 ## Cambios en certificados y facturas
 - `certificates.emisorSnapshot`: la cooperativa que certifica. `materiales[]` suma `corriente`, `fraccion` y `valorizable`.
 - `invoices.detalle[]`: `{retiro, numero, fecha, sede, kg, importe}` para cada retiro incluido. El cliente lo ve en su portal (`importe` vacío = abono mensual).
+
+## Prioridades de la cooperativa (diagnóstico)
+
+Cambios pensados para los problemas del diagnóstico: balanza rota, camión municipal con 20 t/día mezcladas, cartón vendido debajo del mercado, sin balances, certificados sin firma.
+
+- **`materials`**
+  - `unidades: [{ nombre, kg }]`: peso estándar de un fardo, bolsón, tambor o camión, para cargar **sin balanza**. El servidor convierte `cantidad` + `unidad` en kg y marca el ítem `estimado: true`. Se aplica en `pickups.items` (`pesoEstimadoKg`) y en `intakes.items` (`pesoKg`).
+  - `mezcla: true`: residuo sin clasificar, el que trae el camión municipal. No tiene fracción ni aparece en la app del chofer.
+  - `precioReferencia: { minKg, maxKg, fuente, fecha }`: rango de mercado. Cada venta copia la referencia en sus líneas (`referenciaMinKg`, `referenciaMaxKg`) para que el aviso no cambie si después se actualiza el precio.
+- **`intakes.origen`** suma `recoleccion_municipal`.
+- **`movimientos`**
+  - `causa` del rechazo: humedad, mezclado, contaminado, no_reciclable u otro.
+  - `origen: { tipo, cliente }`: de dónde vino el material. Con eso se calcula la **calidad de separación por generador**: cuánto de lo que entrega termina en rechazo.
+  - **Clasificación**: un movimiento −kg del material mezcla y +kg de cada material recuperado. El resto va a rechazo con su causa.
+- **`gastos`** (nueva colección): `fecha`, `categoria` (combustible, reparaciones, repuestos, indumentaria, servicios, retiros de socios, impuestos, otros), `descripcion`, `monto` y `proveedor`. El **balance mensual** usa:
+  - ingresos: ventas cobradas y liquidaciones cobradas;
+  - egresos: gastos;
+  - pendiente: lo que falta cobrar.
+- **`organizations.certificado`**: `responsable`, `cargo`, `firmaUrl` y `selloUrl`. Al emitirse un certificado se copian al `emisorSnapshot`, junto con `costoServicio { importe, modalidad }`. El costo aparece solo en el PDF que ven la cooperativa y el cliente con sesión iniciada, no en el PDF público del QR.

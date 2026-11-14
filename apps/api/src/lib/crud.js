@@ -47,8 +47,9 @@ export function crudRouter(Model, { createSchema, updateSchema, searchFields = [
     const data = createSchema.parse(req.body);
     if (beforeCreate) await beforeCreate(data, req);
     const doc = await Model.create(data);
-    if (afterCreate) await afterCreate(doc, req);
-    res.status(201).json(doc);
+    // afterCreate puede devolver datos extra para la respuesta (ej. avisos de precio)
+    const extra = afterCreate ? await afterCreate(doc, req) : null;
+    res.status(201).json(extra && typeof extra === 'object' && !Array.isArray(extra) ? { ...doc.toJSON(), ...extra } : doc);
   });
 
   router.patch('/:id', canWrite, async (req, res) => {

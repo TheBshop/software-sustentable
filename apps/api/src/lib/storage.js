@@ -58,3 +58,11 @@ export function s3Driver(cfg, client) {
 }
 
 export const storage = env.storage.driver === 's3' ? s3Driver(env.storage.s3) : localDriver(env.uploadsDir);
+
+/** Devuelve el contenido de un archivo guardado con `storage.save` (para insertarlo en un PDF). */
+export async function leerArchivo(url) {
+  if (url.startsWith('/uploads/')) return fs.readFile(path.join(env.uploadsDir, url.slice('/uploads/'.length)));
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`No se pudo leer ${url}`);
+  return Buffer.from(await res.arrayBuffer());
+}

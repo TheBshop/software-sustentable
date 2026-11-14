@@ -3,6 +3,7 @@ import { Pickup } from '../pickups/pickup.model.js';
 import { Certificate } from '../certificates/certificate.model.js';
 import { Organization } from '../organizations/organization.model.js';
 import { FRACCIONES } from '../materials/fracciones.js';
+import { calidadSeparacion } from '../movimientos/movimiento.service.js';
 import { parseLocalDate, endOfLocalDay, round2, TZ_OFFSET } from '../../lib/validation.js';
 
 // Todo lo del portal cruza cooperativas: corre con runWithoutTenant (ver portal.routes.js)
@@ -26,7 +27,7 @@ export async function resumenAnual(orgId, anio) {
   const { desde, hasta } = rangoAnio(anio);
   const match = { cliente: { $in: ids }, fecha: { $gte: desde, $lte: hasta }, estado: { $ne: 'anulado' } };
 
-  const [items, retirosPorSede, retirosPorCoop, certs] = await Promise.all([
+  const [items, retirosPorSede, retirosPorCoop, certs, separacion] = await Promise.all([
     Pickup.aggregate([
       { $match: match },
       { $unwind: '$items' },
@@ -43,6 +44,7 @@ export async function resumenAnual(orgId, anio) {
     Pickup.aggregate([{ $match: match }, { $group: { _id: '$direccion', retiros: { $sum: 1 } } }]).option({ sinTenant: true }),
     Pickup.aggregate([{ $match: match }, { $group: { _id: '$coop', retiros: { $sum: 1 } } }]).option({ sinTenant: true }),
     Certificate.find({ cliente: { $in: ids }, fechaRetiro: { $gte: desde, $lte: hasta }, anulado: false }).select('co2EvitadoKg totalKg'),
+    calidadSeparacion(desde, hasta, { clientes: ids, opciones: { sinTenant: true } }),
   ]);
 
   const sumar = (key) => {
@@ -74,6 +76,14 @@ export async function resumenAnual(orgId, anio) {
       certificados: certs.length,
       co2CertificadoKg: round2(certs.reduce((a, c) => a + (c.co2EvitadoKg ?? 0), 0)),
     },
+    // Calidad de la separación en origen: cuánto de lo entregado tuvo que ir a disposición final
+    separacion: (() => {
+      const ingresadoKg = round2(separacion.reduce((a, o) => a + o.ingresadoKg, 0));
+      const rechazadoKg = round2(separacion.reduce((a, o) => a + o.rechazadoKg, 0));
+      const causas = {};
+      for (const o of separacion) for (const [c, kg] of Object.entries(o.causas)) causas[c] = round2((causas[c] ?? 0) + kg);
+      return { ingresadoKg, rechazadoKg, tasaCorrecta: ingresadoKg ? round2(100 - (rechazadoKg / ingresadoKg) * 100) : null, causas };
+    })(),
     porMes,
     porMaterial: [...sumar((k) => `${k.material}|${k.fraccion ?? ''}|${k.corriente}`)]
       .map(([k, v]) => {

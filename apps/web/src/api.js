@@ -56,7 +56,29 @@ export async function openPdf(path) {
 /** Fotos: con almacenamiento local la API devuelve "/uploads/..." (relativo a la API); con R2/S3, una URL completa. */
 export const fileUrl = (url) => (url?.startsWith('/') ? `${BASE}${url}` : url);
 
-export const publicPdfUrl =(codigo) => `${BASE}/api/public/certificados/${codigo}/pdf`;
+/** POST multipart (subir imágenes) con el token. */
+export async function apiForm(path, formData) {
+  const res = await fetch(`${BASE}/api${path}`, { method: 'POST', headers: authHeader(), body: formData });
+  handle401(res);
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error ?? 'No se pudo subir el archivo');
+  return data;
+}
+
+/** Descarga un archivo que requiere login (ej. CSV del balance). */
+export async function descargar(path, nombre) {
+  const res = await fetch(`${BASE}/api${path}`, { headers: authHeader() });
+  handle401(res);
+  if (!res.ok) throw new Error('No se pudo descargar el archivo');
+  const url = URL.createObjectURL(await res.blob());
+  const a = Object.assign(document.createElement('a'), { href: url, download: nombre });
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 10000);
+}
+
+export const publicPdfUrl = (codigo) => `${BASE}/api/public/certificados/${codigo}/pdf`;
 
 export const fmtKg = (n) => `${Number(n ?? 0).toLocaleString('es-AR', { maximumFractionDigits: 1 })} kg`;
 // Sin centavos para montos redondos; con centavos para tarifas como $0,70/kg

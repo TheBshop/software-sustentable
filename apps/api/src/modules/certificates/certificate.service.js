@@ -9,6 +9,7 @@ import { env } from '../../config/env.js';
 import { FRACCIONES } from '../materials/fracciones.js';
 import { Organization } from '../organizations/organization.model.js';
 import { currentTenant } from '../../lib/tenancy.js';
+import { importeDeRetiro } from '../invoices/invoice.service.js';
 
 export const verificationUrl = (codigo) => `${env.publicWebUrl}/verificar/${codigo}`;
 
@@ -39,7 +40,8 @@ export async function issueCertificate(pickupId) {
     retiro: pickup._id,
     cliente: pickup.cliente._id,
     clienteSnapshot: { razonSocial: pickup.cliente.razonSocial, cuit: pickup.cliente.cuit },
-    emisorSnapshot: await Organization.findById(currentTenant()).then((o) => ({ nombre: o?.nombre, cuit: o?.cuit })),
+    emisorSnapshot: await Organization.findById(currentTenant()).then((o) => ({ nombre: o?.nombre, cuit: o?.cuit, ...(o?.certificado?.toObject?.() ?? o?.certificado ?? {}) })),
+    costoServicio: { importe: importeDeRetiro(pickup, pickup.cliente), modalidad: pickup.cliente.tarifa?.modalidad },
     fechaRetiro: pickup.fecha,
     materiales,
     totalKg: round2(materiales.reduce((a, m) => a + m.pesoKg, 0)),

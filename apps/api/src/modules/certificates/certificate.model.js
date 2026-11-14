@@ -12,7 +12,10 @@ const certificateSchema = new mongoose.Schema(
     retiro: { type: ObjectId, ref: 'Pickup', required: true, unique: true },
     cliente: { type: ObjectId, ref: 'Client', required: true },
     clienteSnapshot: { razonSocial: String, cuit: String },
-    emisorSnapshot: { nombre: String, cuit: String }, // la cooperativa que certifica
+    emisorSnapshot: { nombre: String, cuit: String, responsable: String, cargo: String, firmaUrl: String, selloUrl: String }, // quién certifica
+    // Costo del servicio de ese retiro según la tarifa del cliente (pedido del diagnóstico).
+    // Solo se muestra al cliente y a la cooperativa, no en la verificación pública.
+    costoServicio: { importe: Number, modalidad: String },
     fechaRetiro: Date,
     materiales: [
       {

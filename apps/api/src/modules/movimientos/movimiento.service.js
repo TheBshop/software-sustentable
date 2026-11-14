@@ -40,8 +40,8 @@ export async function assertCorrienteHabilitada(corriente) {
 
 // ---------- Registro ----------
 
-/** Ingreso a planta: suma stock. */
-export async function registrarIngreso(intake, usuario) {
+/** Ingreso a planta: suma stock. `cliente`: generador, si el ingreso viene de un retiro. */
+export async function registrarIngreso(intake, usuario, cliente) {
   await Movimiento.insertMany(
     intake.items.map((it) => ({
       fecha: intake.fecha,
@@ -50,6 +50,7 @@ export async function registrarIngreso(intake, usuario) {
       kg: it.pesoKg,
       etapa: 'tratamiento',
       ref: { ingreso: intake._id, retiro: intake.retiro },
+      origen: { tipo: intake.origen, cliente },
       usuario,
     })),
   );
@@ -75,7 +76,7 @@ export async function sincronizarIngresoDeRetiro(pickup, usuario) {
       retiro: pickup._id,
       items: [...pesos].map(([material, kg]) => ({ material, pesoKg: round2(kg) })),
     });
-    await registrarIngreso(nuevo, usuario);
+    await registrarIngreso(nuevo, usuario, pickup.cliente?._id ?? pickup.cliente);
     return;
   }
 
@@ -84,7 +85,7 @@ export async function sincronizarIngresoDeRetiro(pickup, usuario) {
   for (const material of new Set([...pesos.keys(), ...previos.keys()])) {
     const delta = round2((pesos.get(material) ?? 0) - (previos.get(material) ?? 0));
     if (delta !== 0) {
-      ajustes.push({ tipo: 'ajuste', material, kg: delta, etapa: 'tratamiento', ref: { retiro: pickup._id, ingreso: intake._id }, usuario, motivo: pickup.estado === 'anulado' ? `Anulación del retiro N° ${pickup.numero}` : `Corrección del peso del retiro N° ${pickup.numero}` });
+      ajustes.push({ tipo: 'ajuste', material, kg: delta, etapa: 'tratamiento', ref: { retiro: pickup._id, ingreso: intake._id }, origen: { tipo: 'retiro', cliente: pickup.cliente?._id ?? pickup.cliente }, usuario, motivo: pickup.estado === 'anulado' ? `Anulación del retiro N° ${pickup.numero}` : `Corrección del peso del retiro N° ${pickup.numero}` });
     }
   }
   if (!ajustes.length) return;
@@ -100,11 +101,37 @@ export async function registrarVenta(sale, usuario) {
   );
 }
 
-/** Rechazo: material no valorizable que se envía a disposición final. */
-export async function registrarRechazo({ material, kg, fecha, motivo }, usuario) {
+/**
+ * Rechazo: material no valorizable que se envía a disposición final.
+ * `causa` (humedad, mezclado...) y `cliente`/`origenTipo` permiten medir la calidad de la
+ * separación en origen de cada generador y de la recolección municipal.
+ */
+export async function registrarRechazo({ material, kg, fecha, motivo, causa, cliente, origenTipo }, usuario) {
   await assertHabilitados([material]);
-  const [mov] = await Movimiento.insertMany([{ fecha: fecha ?? new Date(), tipo: 'rechazo', material, kg: -Math.abs(kg), etapa: 'disposicion_final', destino: 'disposicion_final', usuario, motivo }]);
+  const origen = cliente ? { tipo: 'retiro', cliente } : origenTipo ? { tipo: origenTipo } : undefined;
+  const [mov] = await Movimiento.insertMany([
+    { fecha: fecha ?? new Date(), tipo: 'rechazo', material, kg: -Math.abs(kg), etapa: 'disposicion_final', destino: 'disposicion_final', usuario, motivo, causa, origen },
+  ]);
   return mov;
+}
+
+/**
+ * Clasificación de residuo mezclado (ej. lo que trae el camión municipal): sale de la
+ * "mezcla" y entra a cada material recuperado; lo que no sirve va a disposición final.
+ */
+export async function registrarClasificacion({ desde, items = [], rechazoKg = 0, causa, fecha, origenTipo = 'recoleccion_municipal' }, usuario) {
+  const mezcla = await Material.findById(desde);
+  if (!mezcla?.mezcla) throw new HttpError(422, 'La clasificación parte de un material "sin clasificar" (mezcla)');
+  await assertHabilitados(items.map((i) => i.material));
+  const cuando = fecha ?? new Date();
+  const origen = { tipo: origenTipo };
+  const movs = items.flatMap((i) => [
+    { fecha: cuando, tipo: 'clasificacion', material: mezcla._id, kg: -i.kg, etapa: 'tratamiento', origen, usuario },
+    { fecha: cuando, tipo: 'clasificacion', material: i.material, kg: i.kg, etapa: 'tratamiento', origen, usuario },
+  ]);
+  if (movs.length) await Movimiento.insertMany(movs);
+  if (rechazoKg > 0) await registrarRechazo({ material: mezcla._id, kg: rechazoKg, fecha: cuando, causa, origenTipo, motivo: 'Rechazo de clasificación' }, usuario);
+  return { clasificadoKg: round2(items.reduce((a, i) => a + i.kg, 0)), rechazoKg };
 }
 
 /** Ajuste de inventario (por ejemplo, después de un conteo físico). */
@@ -153,3 +180,69 @@ export async function indicadores(desde, hasta) {
 }
 
 export const toObjectId = (v) => new mongoose.Types.ObjectId(id(v));
+
+/**
+ * Calidad de la separación en origen: por cada origen (generador o recolección municipal),
+ * cuánto entró y cuánto se rechazó, con las causas. `clientes` filtra (lo usa el portal).
+ */
+export async function calidadSeparacion(desde, hasta, { clientes, opciones } = {}) {
+  const match = { fecha: { $gte: desde, $lte: hasta }, tipo: { $in: ['ingreso', 'rechazo'] } };
+  if (clientes) match['origen.cliente'] = { $in: clientes };
+  const filas = await Movimiento.aggregate([
+    { $match: match },
+    {
+      $group: {
+        _id: { cliente: '$origen.cliente', tipo: '$origen.tipo', mov: '$tipo', causa: '$causa' },
+        kg: { $sum: { $abs: '$kg' } },
+      },
+    },
+    { $lookup: { from: 'clients', localField: '_id.cliente', foreignField: '_id', as: 'c' } },
+    { $set: { nombre: { $first: '$c.razonSocial' } } },
+  ]).option(opciones ?? {});
+  const ETIQUETAS = { recoleccion_municipal: 'Recolección municipal', recuperador: 'Recuperadores', entrega_voluntaria: 'Entregas voluntarias', otro: 'Otros orígenes', retiro: 'Retiros' };
+  const porOrigen = new Map();
+  for (const f of filas) {
+    const key = f._id.cliente ? String(f._id.cliente) : f._id.tipo ?? 'sin_origen';
+    const o = porOrigen.get(key) ?? { origen: f.nombre ?? ETIQUETAS[f._id.tipo] ?? 'Sin origen', esGenerador: Boolean(f._id.cliente), ingresadoKg: 0, rechazadoKg: 0, causas: {} };
+    if (f._id.mov === 'ingreso') o.ingresadoKg += f.kg;
+    else {
+      o.rechazadoKg += f.kg;
+      const causa = f._id.causa ?? 'sin_dato';
+      o.causas[causa] = round2((o.causas[causa] ?? 0) + f.kg);
+    }
+    porOrigen.set(key, o);
+  }
+  return [...porOrigen.values()]
+    .map((o) => ({
+      ...o,
+      ingresadoKg: round2(o.ingresadoKg),
+      rechazadoKg: round2(o.rechazadoKg),
+      // % de lo que entró que tuvo que ir a disposición final
+      tasaRechazo: o.ingresadoKg ? round2((o.rechazadoKg / o.ingresadoKg) * 100) : null,
+    }))
+    .sort((a, b) => b.ingresadoKg - a.ingresadoKg);
+}
+
+/** Recuperación de la mezcla: de lo que entró sin clasificar, cuánto se recuperó. */
+export async function recuperacionMezcla(desde, hasta) {
+  const [r] = await Movimiento.aggregate([
+    { $match: { fecha: { $gte: desde, $lte: hasta } } },
+    { $lookup: { from: 'materials', localField: 'material', foreignField: '_id', as: 'm' } },
+    { $set: { mezcla: { $first: '$m.mezcla' } } },
+    {
+      $group: {
+        _id: null,
+        ingresoMezcla: { $sum: { $cond: [{ $and: ['$mezcla', { $eq: ['$tipo', 'ingreso'] }] }, '$kg', 0] } },
+        recuperado: { $sum: { $cond: [{ $and: [{ $ne: ['$mezcla', true] }, { $eq: ['$tipo', 'clasificacion'] }] }, '$kg', 0] } },
+        rechazoMezcla: { $sum: { $cond: [{ $and: ['$mezcla', { $eq: ['$tipo', 'rechazo'] }] }, { $abs: '$kg' }, 0] } },
+      },
+    },
+  ]);
+  const ingreso = r?.ingresoMezcla ?? 0;
+  return {
+    ingresoMezclaKg: round2(ingreso),
+    recuperadoKg: round2(r?.recuperado ?? 0),
+    rechazoMezclaKg: round2(r?.rechazoMezcla ?? 0),
+    tasaRecuperacion: ingreso ? round2(((r?.recuperado ?? 0) / ingreso) * 100) : null,
+  };
+}

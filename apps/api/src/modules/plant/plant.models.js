@@ -11,10 +11,10 @@ const { ObjectId } = mongoose.Schema.Types;
 const intakeSchema = new mongoose.Schema(
   {
     fecha: { type: Date, default: Date.now },
-    origen: { type: String, enum: ['retiro', 'recuperador', 'entrega_voluntaria', 'otro'], default: 'retiro' },
+    origen: { type: String, enum: ['retiro', 'recoleccion_municipal', 'recuperador', 'entrega_voluntaria', 'otro'], default: 'retiro' },
     retiro: { type: ObjectId, ref: 'Pickup' },
     detalleOrigen: String,
-    items: [{ _id: false, material: { type: ObjectId, ref: 'Material', required: true }, pesoKg: { type: Number, required: true, min: 0 } }],
+    items: [{ _id: false, material: { type: ObjectId, ref: 'Material', required: true }, pesoKg: { type: Number, required: true, min: 0 }, cantidad: Number, unidad: String, estimado: Boolean }],
     observaciones: String,
   },
   { timestamps: true },
@@ -26,9 +26,15 @@ export const Intake = mongoose.model('Intake', intakeSchema);
 export const intakeInput = z.object({
   fecha: dateInput.optional(),
   // Los ingresos de retiros propios los crea el sistema al pesar el retiro (movimiento.service.js)
-  origen: z.enum(['recuperador', 'entrega_voluntaria', 'otro']).default('recuperador'),
+  origen: z.enum(['recoleccion_municipal', 'recuperador', 'entrega_voluntaria', 'otro']).default('recuperador'),
   detalleOrigen: z.string().optional(),
-  items: z.array(z.object({ material: objectId, pesoKg: z.number().min(0) })).min(1),
+  items: z
+    .array(
+      z
+        .object({ material: objectId, pesoKg: z.number().min(0).optional(), cantidad: z.number().positive().optional(), unidad: z.string().max(30).optional() })
+        .refine((i) => i.pesoKg != null || (i.cantidad != null && i.unidad), 'Indicá los kg o la cantidad y la unidad'),
+    )
+    .min(1),
   observaciones: z.string().optional(),
 });
 
@@ -44,6 +50,8 @@ const saleSchema = new mongoose.Schema(
         material: { type: ObjectId, ref: 'Material', required: true },
         pesoKg: { type: Number, required: true, min: 0 },
         precioKg: { type: Number, required: true, min: 0 },
+        referenciaMinKg: Number, // precio de mercado al momento de la venta
+        referenciaMaxKg: Number,
       },
     ],
     total: Number,

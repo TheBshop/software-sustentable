@@ -54,6 +54,13 @@ export default function PortalInicio() {
             <div className="kpi green"><span>Valorizable</span><strong>{t.tasaValorizacion == null ? '—' : `${t.tasaValorizacion.toLocaleString('es-AR')} %`}</strong></div>
             <div className="kpi green"><span>CO₂ evitado (estimado)</span><strong>{fmtKg(t.co2EvitadoKg)}</strong></div>
             <div className="kpi"><span>Certificados emitidos</span><strong>{t.certificados}</strong></div>
+            {data.separacion?.ingresadoKg > 0 && (
+              <div className={`kpi ${data.separacion.tasaCorrecta < 90 ? 'alert' : 'green'}`} title="Parte de lo entregado que se pudo aprovechar, sin ir a disposición final">
+                <span>Separación correcta</span>
+                <strong>{data.separacion.tasaCorrecta.toLocaleString('es-AR')} %</strong>
+                {data.separacion.rechazadoKg > 0 && <span className="small">{fmtKg(data.separacion.rechazadoKg)} descartados{data.separacion.causas.humedad ? ' (humedad)' : ''}</span>}
+              </div>
+            )}
           </div>
 
           <section className="card">

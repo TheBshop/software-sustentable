@@ -24,6 +24,8 @@ const organizationSchema = new mongoose.Schema(
       // N° de inscripción en registros específicos (ej. operador de residuos peligrosos)
       registros: [{ _id: false, corriente: { type: String, enum: CORRIENTES }, organismo: String, numero: String, vence: Date }],
     },
+    // Solo cooperativas: quién firma los certificados, con firma y sello escaneados
+    certificado: { responsable: String, cargo: String, firmaUrl: String, selloUrl: String },
     activo: { type: Boolean, default: true },
   },
   { timestamps: true },

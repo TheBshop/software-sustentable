@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { api, fmtKg, fmtFecha } from '../api.js';
 import { useLoad, ErrorMsg, Tag } from '../ui.jsx';
 import { FraccionChip } from '../residuos.jsx';
+import { CalidadSeparacion, FormClasificacion, CAUSAS } from './CalidadSeparacion.jsx';
 
 const TIPOS = { ingreso: ['Ingreso', 'info'], venta: ['Venta (valorización)', 'green'], rechazo: ['Rechazo (disp. final)', 'red'], ajuste: ['Ajuste', 'gray'] };
 
@@ -10,8 +11,11 @@ const TIPOS = { ingreso: ['Ingreso', 'info'], venta: ['Venta (valorización)', '
  * (material no valorizable que va a disposición final).
  */
 export default function StockPlanta({ materiales, refreshKey }) {
-  const stock = useLoad(`/planta/stock?k=${refreshKey}`);
-  const movs = useLoad(`/planta/movimientos?k=${refreshKey}`);
+  const [k, setK] = useState(0);
+  const stock = useLoad(`/planta/stock?k=${refreshKey}-${k}`);
+  const clientes = useLoad('/clientes?tipo=generador&limit=200');
+  const [clasificando, setClasificando] = useState(false);
+  const movs = useLoad(`/planta/movimientos?k=${refreshKey}-${k}`);
   const [form, setForm] = useState(null);
   const [verMovs, setVerMovs] = useState(false);
   const [err, setErr] = useState(null);
@@ -22,7 +26,11 @@ export default function StockPlanta({ materiales, refreshKey }) {
     if (!form.material) return setErr('Elegí el material.');
     if (!(Number(form.kg) > 0)) return setErr('Los kilos tienen que ser mayores a cero.');
     try {
-      await api('/planta/rechazos', { method: 'POST', body: { material: form.material, kg: Number(form.kg), ...(form.motivo.trim() && { motivo: form.motivo.trim() }) } });
+      await api('/planta/rechazos', {
+        method: 'POST',
+        body: { material: form.material, kg: Number(form.kg), causa: form.causa, ...(form.cliente && { cliente: form.cliente }), ...(form.motivo.trim() && { motivo: form.motivo.trim() }) },
+      });
+      setK((x) => x + 1);
       setForm(null);
       await Promise.all([stock.reload(), movs.reload()]);
     } catch (e2) {
@@ -39,7 +47,8 @@ export default function StockPlanta({ materiales, refreshKey }) {
         </div>
         <div className="row">
           <button type="button" className="secondary sm" onClick={() => setVerMovs(!verMovs)}>{verMovs ? 'Ocultar movimientos' : 'Ver movimientos'}</button>
-          {!form && <button type="button" className="secondary sm" onClick={() => setForm({ material: '', kg: '', motivo: '' })}>Registrar rechazo</button>}
+          {!clasificando && <button type="button" className="secondary sm" onClick={() => setClasificando(true)}>Clasificar lo recibido</button>}
+          {!form && <button type="button" className="secondary sm" onClick={() => setForm({ material: '', kg: '', motivo: '', causa: 'humedad', cliente: '' })}>Registrar rechazo</button>}
         </div>
       </div>
 
@@ -53,9 +62,27 @@ export default function StockPlanta({ materiales, refreshKey }) {
             </select>
           </label>
           <label>Kilos<input type="number" min="0" step="any" value={form.kg} onChange={(e) => setForm({ ...form, kg: e.target.value })} /></label>
-          <label style={{ width: 260 }}>Motivo<input value={form.motivo} onChange={(e) => setForm({ ...form, motivo: e.target.value })} placeholder="Contaminado, húmedo…" /></label>
+          <label>
+            Causa
+            <select value={form.causa} onChange={(e) => setForm({ ...form, causa: e.target.value })}>
+              {Object.entries(CAUSAS).filter(([c]) => c !== 'sin_dato').map(([c, v]) => <option key={c} value={c}>{v}</option>)}
+            </select>
+          </label>
+          <label style={{ width: 230 }}>
+            ¿De qué generador vino? (opcional)
+            <select value={form.cliente} onChange={(e) => setForm({ ...form, cliente: e.target.value })}>
+              <option value="">No se sabe / varios</option>
+              {clientes.data?.items.map((c) => <option key={c._id} value={c._id}>{c.razonSocial}</option>)}
+            </select>
+          </label>
+          <label style={{ width: 220 }}>Detalle<input value={form.motivo} onChange={(e) => setForm({ ...form, motivo: e.target.value })} placeholder="Cartón mojado por la lluvia…" /></label>
           <div className="row"><button type="submit">Enviar a disposición final</button><button type="button" className="secondary" onClick={() => setForm(null)}>Cancelar</button></div>
         </form>
+      )}
+      {clasificando && (
+        <div className="edit-row" style={{ padding: 14, borderRadius: 8 }}>
+          <FormClasificacion materiales={materiales} onCancel={() => setClasificando(false)} onDone={() => { setClasificando(false); setK((x) => x + 1); }} />
+        </div>
       )}
       <ErrorMsg error={err || stock.error} />
 
@@ -94,6 +121,7 @@ export default function StockPlanta({ materiales, refreshKey }) {
           <p className="muted small">Los movimientos no se editan ni se borran: las correcciones quedan como ajustes (trazabilidad, Decreto 779/2022).</p>
         </div>
       )}
+      <CalidadSeparacion refreshKey={`${refreshKey}-${k}`} />
     </section>
   );
 }

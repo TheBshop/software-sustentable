@@ -16,7 +16,8 @@ export default function NuevoRetiroScreen({ notify, onSaved }) {
   const [catalog, setCatalog] = useState({ clientes: [], materiales: [] });
   const [busqueda, setBusqueda] = useState('');
   const [cliente, setCliente] = useState(null);
-  const [pesos, setPesos] = useState({}); // { materialId: "120" }
+  const [pesos, setPesos] = useState({}); // { materialId: "120" } (en la unidad elegida)
+  const [unidades, setUnidades] = useState({}); // { materialId: 'fardo' } — sin balanza; por defecto kg
   const [fotos, setFotos] = useState([]);
   const [observaciones, setObservaciones] = useState('');
   const [error, setError] = useState(null);
@@ -29,9 +30,22 @@ export default function NuevoRetiroScreen({ notify, onSaved }) {
     () => catalog.clientes.filter((c) => c.razonSocial.toLowerCase().includes(busqueda.trim().toLowerCase())).slice(0, 5),
     [busqueda, catalog.clientes],
   );
+  const matPorId = useMemo(() => Object.fromEntries(catalog.materiales.map((m) => [m._id, m])), [catalog.materiales]);
+  const kgDeUnidad = (id, unidad) => matPorId[id]?.unidades?.find((u) => u.nombre === unidad)?.kg ?? 1;
   const items = Object.entries(pesos)
-    .filter(([, kg]) => Number(kg) > 0)
-    .map(([material, kg]) => ({ material, pesoEstimadoKg: Number(kg) }));
+    .filter(([, v]) => Number(v) > 0)
+    .map(([material, v]) => {
+      const unidad = unidades[material];
+      if (!unidad || unidad === 'kg') return { material, pesoEstimadoKg: Number(v) };
+      // Se manda la cantidad y la unidad: el servidor calcula los kg con el peso estándar
+      return { material, cantidad: Number(v), unidad, pesoEstimadoKg: Number(v) * kgDeUnidad(material, unidad) };
+    });
+  /** Toca para pasar de kg a fardo, bolsón… (las unidades configuradas para el material) */
+  const siguienteUnidad = (m) => {
+    const opciones = ['kg', ...(m.unidades ?? []).map((u) => u.nombre)];
+    const actual = unidades[m._id] ?? 'kg';
+    setUnidades({ ...unidades, [m._id]: opciones[(opciones.indexOf(actual) + 1) % opciones.length] });
+  };
   const totalKg = items.reduce((a, i) => a + i.pesoEstimadoKg, 0);
 
   async function sacarFoto() {
@@ -76,6 +90,7 @@ export default function NuevoRetiroScreen({ notify, onSaved }) {
     notify(`Retiro guardado · ${cliente.razonSocial} · ${totalKg.toLocaleString('es-AR')} kg`);
     setCliente(null);
     setPesos({});
+    setUnidades({});
     setFotos([]);
     setObservaciones('');
     setBusqueda('');
@@ -103,8 +118,9 @@ export default function NuevoRetiroScreen({ notify, onSaved }) {
           </>
         )}
 
-        <Text style={ui.label}>2. Materiales (kg estimados)</Text>
-        {catalog.materiales.map((m) => (
+        <Text style={ui.label}>2. Materiales (kg o unidades)</Text>
+        {/* Lo "sin clasificar" solo entra por el camión municipal, no en un retiro */}
+        {catalog.materiales.filter((m) => !m.mezcla).map((m) => (
           <View key={m._id} style={s.materialRow}>
             <Text style={s.materialName}>{m.nombre}</Text>
             <TextInput
@@ -113,9 +129,15 @@ export default function NuevoRetiroScreen({ notify, onSaved }) {
               placeholder="0"
               value={pesos[m._id] ?? ''}
               onChangeText={(v) => setPesos({ ...pesos, [m._id]: v.replace(',', '.') })}
-              accessibilityLabel={`Kilos de ${m.nombre}`}
+              accessibilityLabel={`Cantidad de ${m.nombre}`}
             />
-            <Text style={ui.muted}>kg</Text>
+            {m.unidades?.length ? (
+              <TouchableOpacity style={s.unidad} onPress={() => siguienteUnidad(m)} accessibilityRole="button" accessibilityLabel={`Unidad: ${unidades[m._id] ?? 'kg'}. Tocá para cambiar`}>
+                <Text style={s.unidadText}>{unidades[m._id] ?? 'kg'} ▾</Text>
+              </TouchableOpacity>
+            ) : (
+              <Text style={ui.muted}>kg</Text>
+            )}
           </View>
         ))}
 
@@ -152,6 +174,8 @@ const s = StyleSheet.create({
   selectedName: { fontSize: 17, fontWeight: '700', color: C.verde },
   materialRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'white', padding: 10, borderRadius: 8, marginBottom: 6, gap: 8 },
   materialName: { flex: 1, fontSize: 16, color: C.texto },
+  unidad: { minWidth: 76, paddingVertical: 8, paddingHorizontal: 10, borderRadius: 6, backgroundColor: C.verdeClaro, borderWidth: 1, borderColor: C.verde, alignItems: 'center' },
+  unidadText: { color: C.verdeOscuro, fontWeight: '700', fontSize: 14 },
   kgInput: { width: 90, borderWidth: 1, borderColor: C.borde, borderRadius: 6, padding: 8, fontSize: 18, textAlign: 'right', backgroundColor: 'white' },
   fotos: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 12 },
   foto: { width: 72, height: 72, borderRadius: 8 },

@@ -89,3 +89,19 @@ Además, `/dashboard` devuelve `planta.indicadores = { ingresadoKg, valorizadoKg
 | GET | `/certificados` y `/certificados/:id/pdf` | Solo los propios (404 si no) |
 | GET | `/facturas` | Con saldo, vencimiento y detalle retiro por retiro |
 | GET | `/informe-anual.pdf?anio=` | Informe de impacto en PDF |
+
+### Prioridades de la cooperativa
+
+| Método y ruta | Rol | Qué hace |
+|---|---|---|
+| `POST /api/retiros`, `POST /api/ingresos` | — | Cada ítem acepta `pesoEstimadoKg`/`pesoKg` **o** `cantidad` + `unidad` (por ejemplo `{cantidad: 3, unidad: "fardo"}`). Una unidad no configurada devuelve 422. |
+| `POST /api/planta/clasificacion` | operador | `{desde, items:[{material, kg}], rechazoKg, causa}`. Clasifica lo recibido mezclado. |
+| `POST /api/planta/rechazos` | operador | Suma `causa`, `cliente` (el generador) y `origenTipo`. |
+| `GET /api/planta/calidad?desde&hasta` | — | Rechazo por origen o generador, con causas y recuperación de lo mezclado. |
+| `POST /api/ventas` | administración | La respuesta incluye `avisos` si algún precio quedó debajo de la referencia de mercado. |
+| `GET /api/ventas/resumen` | — | Precio promedio por comprador y material, y cuántas ventas quedaron debajo del mercado. |
+| `GET/POST/DELETE /api/gastos` | administración | Gastos de la cooperativa. |
+| `GET /api/balance?mes=AAAA-MM` y `/api/balance/csv` | administración | Balance mensual; el CSV usa `;` y coma decimal, y abre directo en Excel. |
+| `PATCH /api/planta/organizacion` | admin | `{responsable, cargo}` de los certificados. |
+| `POST /api/planta/organizacion/firma` y `/sello` | admin | Imagen PNG o JPG de hasta 2 MB (campo `imagen`). |
+| `GET /api/v1/portal/resumen` | portal | Suma `separacion { ingresadoKg, rechazadoKg, tasaCorrecta, causas }`. |

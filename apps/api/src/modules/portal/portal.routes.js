@@ -82,7 +82,7 @@ portalRouter.get('/certificados/:id/pdf', async (req, res) => {
   const cert = await Certificate.findOne({ _id: req.params.id, cliente: { $in: await misClientes(req) } });
   if (!cert) throw new HttpError(404, 'Certificado no encontrado');
   res.type('application/pdf').setHeader('Content-Disposition', `attachment; filename="certificado-${cert.numero}.pdf"`);
-  await renderCertificatePdf(cert, res);
+  await renderCertificatePdf(cert, res, { mostrarCosto: true });
 });
 
 portalRouter.get('/facturas', async (req, res) => {

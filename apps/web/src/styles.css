@@ -156,3 +156,14 @@ table.detalle { background: white; border: 1px solid var(--borde); border-radius
   .columnas { gap: 2px; }
   .columna-valor { display: none; }
 }
+
+/* ---- Prioridades de la cooperativa ---- */
+.item-block { width: 100%; max-width: 760px; display: flex; flex-direction: column; gap: 2px; }
+.item-row.con-unidad { grid-template-columns: minmax(160px, 240px) 100px 150px 110px auto; }
+.item-row.con-unidad:not(:has(input + select + input)) { grid-template-columns: minmax(160px, 240px) 100px 150px auto; }
+label.check { flex-direction: row; align-items: center; gap: 8px; font-weight: 400; }
+label.check input { width: auto; }
+.firmas { display: flex; gap: 16px; flex-wrap: wrap; }
+.firma-box { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; border: 1px dashed var(--borde); border-radius: 8px; padding: 10px; min-width: 180px; }
+.firma-box img { max-width: 160px; max-height: 80px; object-fit: contain; background: white; }
+.kpi .small { color: var(--gris); }

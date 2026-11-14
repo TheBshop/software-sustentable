@@ -92,3 +92,15 @@ Personas: **Chofer** (hace los retiros), **Planta** (recibe y pesa), **Administr
 | R-6 | Como **cooperativa habilitada para peligrosos**, quiero emitir el manifiesto electrónico (Ley 24.051). | 13 |
 | R-7 | Como **cliente**, quiero recibir la invitación al portal por mail en lugar de una contraseña generada. | 3 |
 | R-8 | Como **administración**, quiero el PDF de la liquidación con el detalle por retiro. | 3 |
+
+## Prioridades del diagnóstico de la cooperativa ✅
+
+- ✅ Cargar retiros e ingresos en fardos, bolsones o camiones cuando no hay balanza (en la web y en la app).
+- ✅ Registrar el camión municipal, clasificarlo y registrar el rechazo con su causa. Ver la calidad de separación por generador, también en el portal de cada empresa.
+- ✅ Precio de referencia por material, aviso al vender debajo del mercado y precio promedio por comprador.
+- ✅ Gastos y balance mensual, exportable a Excel para el contador.
+- ✅ Certificado con firma, sello, responsable, cargo y costo del servicio.
+- ⏳ Pendiente con la cooperativa:
+  - pesar una vez 5 a 10 fardos y bolsones de cada material para cargar los pesos promedio reales;
+  - escanear la firma y el sello;
+  - actualizar los precios de referencia cada mes.

@@ -4,7 +4,7 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 import rateLimit from 'express-rate-limit';
 import { env } from './config/env.js';
-import { requireAuth, requireOrgTipo } from './middleware/auth.js';
+import { requireAuth, requireOrgTipo, requireRole } from './middleware/auth.js';
 import { withTenant } from './lib/tenancy.js';
 import { errorHandler, notFound } from './middleware/error.js';
 import { crudRouter } from './lib/crud.js';
@@ -14,6 +14,10 @@ import { Material, materialInput, materialUpdate } from './modules/materials/mat
 import { Intake, intakeInput, intakeUpdate, Sale, saleInput, saleUpdate } from './modules/plant/plant.models.js';
 import { plantaRouter } from './modules/movimientos/planta.routes.js';
 import { portalRouter } from './modules/portal/portal.routes.js';
+import { resolverPesos } from './modules/materials/unidades.js';
+import { anotarReferencias, avisosPrecio, ventasResumenRouter } from './modules/plant/ventas.service.js';
+import { Gasto, gastoInput } from './modules/finanzas/gasto.model.js';
+import { balanceRouter } from './modules/finanzas/balance.routes.js';
 import { accesoPortalRouter } from './modules/clients/acceso.routes.js';
 import { assertHabilitados, assertCorrienteHabilitada, registrarIngreso, registrarVenta } from './modules/movimientos/movimiento.service.js';
 import { pickupsRouter } from './modules/pickups/pickup.routes.js';
@@ -87,7 +91,10 @@ export function createApp(config = {}) {
     crudRouter(Intake, {
       createSchema: intakeInput,
       updateSchema: intakeUpdate,
-      beforeCreate: (d) => assertHabilitados(d.items.map((i) => i.material)),
+      beforeCreate: async (d) => {
+        await assertHabilitados(d.items.map((i) => i.material));
+        d.items = await resolverPesos(d.items, 'pesoKg'); // sin balanza: fardos, bolsones, camiones
+      },
       afterCreate: (doc, req) => registrarIngreso(doc, req.user.sub),
       allowDelete: false,
       filters: ['origen'],
@@ -96,13 +103,20 @@ export function createApp(config = {}) {
       writeRoles: ['operador_planta', 'administracion'],
     }),
   );
+  coopApi.use('/ventas', ventasResumenRouter);
   coopApi.use(
     '/ventas',
     crudRouter(Sale, {
       createSchema: saleInput,
       updateSchema: saleUpdate,
-      beforeCreate: (d) => assertHabilitados(d.items.map((i) => i.material)),
-      afterCreate: (doc, req) => registrarVenta(doc, req.user.sub),
+      beforeCreate: async (d) => {
+        await assertHabilitados(d.items.map((i) => i.material));
+        await anotarReferencias(d); // precio de mercado del momento
+      },
+      afterCreate: async (doc, req) => {
+        await registrarVenta(doc, req.user.sub);
+        return { avisos: await avisosPrecio(doc) };
+      },
       allowDelete: false,
       filters: ['comprador'],
       sort: '-fecha',
@@ -115,6 +129,8 @@ export function createApp(config = {}) {
   coopApi.use('/facturas', invoicesRouter);
   coopApi.use('/dashboard', dashboardRouter);
   coopApi.use('/planta', plantaRouter);
+  coopApi.use('/gastos', requireRole('administracion'), crudRouter(Gasto, { createSchema: gastoInput, filters: ['categoria'], sort: '-fecha', writeRoles: ['administracion'] }));
+  coopApi.use('/balance', requireRole('administracion'), balanceRouter);
 
   app.use(notFound);
   app.use(errorHandler);

@@ -57,14 +57,14 @@ export async function buildInvoiceDraft({ cliente: clienteId, desde, hasta }) {
   const total = round2(lineas.reduce((a, l) => a + l.subtotal, 0));
 
   // Detalle retiro por retiro, para que el cliente pueda auditar el cálculo.
-  const precioKg = (material) => preciosPorKg.find((p) => String(p.material) === String(material._id))?.precio ?? material.tarifaRetiroKg ?? 0;
-  const detalle = retiros.map((r) => {
-    const kg = round2(r.items.reduce((a, it) => a + pesoEfectivo(it), 0));
-    let importe = null; // abono mensual: no se reparte por retiro
-    if (modalidad === 'por_retiro') importe = montoFijo;
-    if (modalidad === 'por_kg') importe = round2(r.items.reduce((a, it) => a + pesoEfectivo(it) * precioKg(it.material), 0));
-    return { retiro: r._id, numero: r.numero, fecha: r.fecha, sede: r.direccion, kg, importe };
-  });
+  const detalle = retiros.map((r) => ({
+    retiro: r._id,
+    numero: r.numero,
+    fecha: r.fecha,
+    sede: r.direccion,
+    kg: round2(r.items.reduce((a, it) => a + pesoEfectivo(it), 0)),
+    importe: importeDeRetiro(r, cliente),
+  }));
   return { cliente, retiros, lineas, total, detalle };
 }
 
@@ -135,4 +135,16 @@ export async function paymentAlerts(dias = 7) {
     totalVencido: round2(vencidas.reduce((a, i) => a + i.saldo, 0)),
     totalPorVencer: round2(porVencer.reduce((a, i) => a + i.saldo, 0)),
   };
+}
+
+/**
+ * Lo que se le cobra a un cliente por un retiro según su tarifa (items con material populado).
+ * null = no se cobra por retiro (abono mensual o sin cargo).
+ */
+export function importeDeRetiro(retiro, cliente) {
+  const { modalidad, montoFijo = 0, preciosPorKg = [] } = cliente?.tarifa ?? {};
+  if (modalidad === 'por_retiro') return montoFijo;
+  if (modalidad !== 'por_kg') return null;
+  const precioKg = (material) => preciosPorKg.find((p) => String(p.material) === String(material._id ?? material))?.precio ?? material.tarifaRetiroKg ?? 0;
+  return round2(retiro.items.reduce((a, it) => a + pesoEfectivo(it) * precioKg(it.material), 0));
 }

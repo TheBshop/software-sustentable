@@ -2,15 +2,34 @@ import PDFDocument from 'pdfkit';
 import QRCode from 'qrcode';
 import { verificationUrl } from './certificate.service.js';
 import { FRACCIONES } from '../materials/fracciones.js';
+import { leerArchivo } from '../../lib/storage.js';
 
 const VERDE = '#2f7d32';
 const fmtFecha = (d) => new Date(d).toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
 const fmtNum = (n) => Number(n).toLocaleString('es-AR', { maximumFractionDigits: 2 });
 
-/** Escribe el PDF del certificado en el stream (p. ej. la respuesta HTTP). */
-export async function renderCertificatePdf(cert, stream) {
+const fmtPesos = (n) => Number(n).toLocaleString('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 2 });
+const MODALIDADES = { abono_mensual: 'incluido en el abono mensual', sin_cargo: 'sin cargo' };
+
+/** Imagen de firma o sello; si no se puede leer, el certificado se emite igual sin ella. */
+async function imagen(url) {
+  if (!url) return null;
+  try {
+    return await leerArchivo(url);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Escribe el PDF del certificado en el stream (p. ej. la respuesta HTTP).
+ * `mostrarCosto`: el costo del servicio solo va en el PDF de la cooperativa y del cliente,
+ * no en el que se descarga públicamente desde el QR.
+ */
+export async function renderCertificatePdf(cert, stream, { mostrarCosto = false } = {}) {
   const url = verificationUrl(cert.codigo);
   const qr = await QRCode.toBuffer(url, { margin: 1, width: 300 });
+  const [firma, sello] = await Promise.all([imagen(cert.emisorSnapshot?.firmaUrl), imagen(cert.emisorSnapshot?.selloUrl)]);
 
   const doc = new PDFDocument({ size: 'A4', margin: 50, info: { Title: `Certificado N° ${cert.numero}` } });
   doc.pipe(stream);
@@ -53,13 +72,30 @@ export async function renderCertificatePdf(cert, stream) {
   doc.font('Helvetica');
 
   if (cert.materiales.some((m) => m.pesoEstimado)) {
-    doc.fontSize(9).fillColor('#555').text('* Peso estimado al momento del retiro.', 50, y + 25);
+    doc.fontSize(9).fillColor('#555').text('* Peso estimado al momento del retiro (sin balanza o por unidades estándar).', 50, y + 25);
+  }
+  if (mostrarCosto && cert.costoServicio?.modalidad) {
+    const c = cert.costoServicio;
+    const texto = c.importe != null ? fmtPesos(c.importe) : MODALIDADES[c.modalidad] ?? '—';
+    doc.fontSize(11).fillColor('black').text(`Costo del servicio: ${texto}`, 50, y + 40);
+    y += 14;
   }
 
   // QR de validación
   doc.image(qr, 50, y + 60, { width: 120 });
   doc.fontSize(10).fillColor('black').text('Escaneá el código QR para verificar la autenticidad de este certificado:', 185, y + 85, { width: 360 });
   doc.fillColor(VERDE).text(url, 185, y + 115, { width: 360, link: url });
+
+  // Firma y sello de la cooperativa
+  const yf = Math.min(y + 200, doc.page.height - 190);
+  if (sello) doc.image(sello, 300, yf, { fit: [90, 90] });
+  if (firma) doc.image(firma, 400, yf + 10, { fit: [140, 60] });
+  const responsable = cert.emisorSnapshot?.responsable;
+  if (firma || sello || responsable) {
+    doc.moveTo(400, yf + 75).lineTo(545, yf + 75).strokeColor('#999').stroke();
+    doc.fontSize(10).fillColor('black').text(responsable ?? 'Firma del responsable', 400, yf + 80, { width: 145, align: 'center' });
+    if (cert.emisorSnapshot?.cargo) doc.fontSize(9).fillColor('#555').text(cert.emisorSnapshot.cargo, 400, yf + 94, { width: 145, align: 'center' });
+  }
 
   doc.fontSize(8).fillColor('#777').text(
     'El CO2 evitado se estima con factores de emisión por material configurados por la cooperativa.',

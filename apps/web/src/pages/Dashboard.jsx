@@ -51,6 +51,13 @@ export default function Dashboard() {
           <span>Desvío de relleno sanitario</span>
           <strong>{data.planta?.indicadores.tasaDesvio == null ? '—' : `${data.planta.indicadores.tasaDesvio.toLocaleString('es-AR')} %`}</strong>
         </div>
+        {data.planta?.mezcla?.ingresoMezclaKg > 0 && (
+          <div className="kpi" title="De lo que entró sin clasificar (camión municipal), cuánto se recuperó">
+            <span>Recuperación de lo recibido mezclado</span>
+            <strong>{data.planta.mezcla.tasaRecuperacion?.toLocaleString('es-AR') ?? '—'} %</strong>
+            <span className="small">{fmtKg(data.planta.mezcla.recuperadoKg)} de {fmtKg(data.planta.mezcla.ingresoMezclaKg)}</span>
+          </div>
+        )}
       </div>
       <div className="grid2">
         <section className="card">

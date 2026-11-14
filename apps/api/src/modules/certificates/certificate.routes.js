@@ -18,7 +18,7 @@ certificatesRouter.get('/:id/pdf', async (req, res) => {
   const cert = await Certificate.findById(req.params.id);
   if (!cert) throw new HttpError(404, 'Certificado no encontrado');
   res.type('application/pdf').setHeader('Content-Disposition', `inline; filename="certificado-${cert.numero}.pdf"`);
-  await renderCertificatePdf(cert, res);
+  await renderCertificatePdf(cert, res, { mostrarCosto: true });
 });
 
 certificatesRouter.post('/:id/enviar', requireRole('administracion', 'operador_planta'), async (req, res) => {

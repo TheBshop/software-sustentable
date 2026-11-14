@@ -9,14 +9,20 @@ import { HttpError } from '../../middleware/error.js';
 import { storage } from '../../lib/storage.js';
 import { issueCertificate } from '../certificates/certificate.service.js';
 import { assertHabilitados, sincronizarIngresoDeRetiro } from '../movimientos/movimiento.service.js';
+import { resolverPesos } from '../materials/unidades.js';
 
 export const pickupsRouter = Router();
 
-const itemInput = z.object({
-  material: objectId,
-  pesoEstimadoKg: z.number().min(0),
-  pesoRealKg: z.number().min(0).optional(),
-});
+const itemInput = z
+  .object({
+    material: objectId,
+    pesoEstimadoKg: z.number().min(0).optional(),
+    pesoRealKg: z.number().min(0).optional(),
+    // Sin balanza: cantidad de unidades estándar del material (fardos, bolsones...)
+    cantidad: z.number().positive().optional(),
+    unidad: z.string().min(1).max(30).optional(),
+  })
+  .refine((i) => i.pesoEstimadoKg != null || (i.cantidad != null && i.unidad), 'Indicá los kg o la cantidad y la unidad');
 
 const createInput = z.object({
   localId: z.string().uuid().optional(),
@@ -72,6 +78,7 @@ pickupsRouter.get('/:id', async (req, res) => {
 pickupsRouter.post('/', requireRole('chofer', 'operador_planta', 'administracion'), async (req, res) => {
   const data = createInput.parse(req.body);
   await assertHabilitados(data.items.map((i) => i.material));
+  data.items = await resolverPesos(data.items, 'pesoEstimadoKg');
   if (data.localId) {
     const existing = await Pickup.findOne({ localId: data.localId });
     if (existing) return res.status(200).json(existing);
@@ -86,7 +93,10 @@ pickupsRouter.patch('/:id', requireRole('operador_planta', 'administracion'), as
   const pickup = await Pickup.findById(req.params.id);
   if (!pickup) throw new HttpError(404, 'Retiro no encontrado');
   if (pickup.factura && data.items) throw new HttpError(409, 'El retiro ya fue facturado: no se pueden cambiar los pesos');
-  if (data.items) await assertHabilitados(data.items.map((i) => i.material));
+  if (data.items) {
+    await assertHabilitados(data.items.map((i) => i.material));
+    data.items = await resolverPesos(data.items, 'pesoEstimadoKg');
+  }
   pickup.set(data);
   await pickup.save();
   // Al pesarlo en planta (o corregirlo/anularlo) el stock se actualiza en el libro de movimientos

@@ -10,6 +10,8 @@ export default function Ventas() {
   const clientes = useLoad('/clientes?limit=200');
   const [form, setForm] = useState(null);
   const [err, setErr] = useState(null);
+  const [avisos, setAvisos] = useState([]);
+  const resumen = useLoad('/ventas/resumen');
   const compradores = (clientes.data?.items ?? []).filter((c) => c.tipo !== 'generador');
 
   const totalForm = form
@@ -21,12 +23,13 @@ export default function Ventas() {
     setErr(null);
     try {
       if (!form.comprador) throw new Error('Elegí el comprador.');
-      await api('/ventas', {
+      const nueva = await api('/ventas', {
         method: 'POST',
         body: { fecha: form.fecha, comprador: form.comprador, items: itemsToApi(form.items, true), ...(form.remito.trim() && { remito: form.remito.trim() }) },
       });
       setForm(null);
-      await reload();
+      setAvisos(nueva.avisos ?? []);
+      await Promise.all([reload(), resumen.reload()]);
     } catch (e2) {
       setErr(e2.message);
     }
@@ -67,6 +70,12 @@ export default function Ventas() {
         </form>
       )}
 
+      {avisos.length > 0 && (
+        <div className="strip alert-strip">
+          <b>Venta registrada por debajo del precio de mercado.</b>{' '}
+          {avisos.map((a) => `${a.mensaje}: se dejaron de ganar ${fmtPeso(a.diferenciaTotal)}.`).join(' ')}
+        </div>
+      )}
       <ErrorMsg error={error} />
       <div className="card flush">
         <div className="table-wrap">
@@ -77,7 +86,10 @@ export default function Ventas() {
                 <tr key={v._id}>
                   <td className="num">{fmtFecha(v.fecha)}{v.remito && <div className="muted small">{v.remito}</div>}</td>
                   <td>{v.comprador?.razonSocial}</td>
-                  <td>{v.items.map((it) => `${it.material?.nombre} ${fmtKg(it.pesoKg)} × ${fmtPeso(it.precioKg)}`).join(' · ')}</td>
+                  <td>
+                    {v.items.map((it) => `${it.material?.nombre} ${fmtKg(it.pesoKg)} × ${fmtPeso(it.precioKg)}`).join(' · ')}
+                    {v.items.some((it) => it.referenciaMinKg != null && it.precioKg < it.referenciaMinKg) && <div><Tag tone="red">Debajo del precio de mercado</Tag></div>}
+                  </td>
                   <td className="r num">{fmtPeso(v.total)}</td>
                   <td>
                     {v.cobrada ? (
@@ -95,6 +107,30 @@ export default function Ventas() {
           </table>
         </div>
       </div>
+
+      <section className="card flush">
+        <div className="card-head">
+          <h3>Precio promedio por comprador</h3>
+          <span className="muted small">Para saber a quién conviene venderle cada material</span>
+        </div>
+        <div className="table-wrap">
+          <table>
+            <thead><tr><th>Material</th><th>Comprador</th><th className="r">Kilos</th><th className="r">Promedio $/kg</th><th>Mercado $/kg</th><th>Ventas debajo</th></tr></thead>
+            <tbody>
+              {resumen.data?.items.map((r) => (
+                <tr key={r.material + r.comprador}>
+                  <td>{r.material}</td>
+                  <td>{r.comprador}</td>
+                  <td className="r num">{fmtKg(r.kg)}</td>
+                  <td className="r num">{fmtPeso(r.precioPromedioKg)}</td>
+                  <td className="small">{r.referencia?.minKg != null ? `${fmtPeso(r.referencia.minKg)} a ${fmtPeso(r.referencia.maxKg)}` : '—'}</td>
+                  <td>{r.ventasDebajoDeReferencia ? <Tag tone="red">{r.ventasDebajoDeReferencia} de {r.ventas}</Tag> : <Tag tone="green">Ninguna</Tag>}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
     </>
   );
 }

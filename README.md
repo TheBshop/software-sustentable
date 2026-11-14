@@ -54,6 +54,13 @@ Los materiales se clasifican por corriente (RSU, REGU, peligroso…) y por fracc
 
 Inicio (métricas del mes) · Retiros (pesar en planta, emitir certificado) · Ingresos a planta · Ventas · Certificados (PDF, envío por WhatsApp/email, anulación) · Facturación (alertas de cobro, liquidación con vista previa, pagos, número de factura ARCA) · Clientes · Materiales. La página pública `/verificar/:codigo` es la que abre el QR.
 
+Para los problemas del diagnóstico:
+- **Sin balanza**: carga en fardos, bolsones o camiones, con peso estándar por material.
+- **Camión municipal**: clasificación y rechazo con causa, con la calidad de separación por generador.
+- **Ventas**: precio de referencia de mercado con aviso.
+- **Administración**: Balance (gastos y exportación a Excel) y Configuración (firma y sello de los certificados).
+Ver `docs/04-backlog.md`.
+
 ## Carga inicial desde Excel
 
 La cooperativa completa [templates/plantilla-carga-nueva-vida.xlsx](templates/plantilla-carga-nueva-vida.xlsx) (hojas *Materiales* y *Clientes*, con instrucciones y listas desplegables). Después:

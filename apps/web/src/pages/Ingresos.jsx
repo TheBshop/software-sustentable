@@ -3,8 +3,8 @@ import { api, fmtKg, fmtFecha, isoDate } from '../api.js';
 import { useLoad, ErrorMsg, ItemsEditor, itemsToApi, Tag } from '../ui.jsx';
 import StockPlanta from './StockPlanta.jsx';
 
-const ORIGENES = { retiro: 'Retiro propio', recuperador: 'Recuperador', entrega_voluntaria: 'Entrega voluntaria', otro: 'Otro' };
-const nuevo = () => ({ fecha: isoDate(), origen: 'recuperador', detalleOrigen: '', items: [{ material: '', pesoKg: '' }], observaciones: '' });
+const ORIGENES = { retiro: 'Retiro propio', recoleccion_municipal: 'Recolección municipal (camión)', recuperador: 'Recuperador', entrega_voluntaria: 'Entrega voluntaria', otro: 'Otro' };
+const nuevo = () => ({ fecha: isoDate(), origen: 'recuperador', detalleOrigen: '', items: [{ material: '', pesoKg: '', unidad: 'kg' }], observaciones: '' });
 
 /**
  * Ingresos a planta. Los de retiros propios se registran al pesar el retiro; acá se cargan
@@ -66,7 +66,8 @@ export default function Ingresos() {
             </label>
             <label>Detalle del origen<input value={form.detalleOrigen} onChange={(e) => setForm({ ...form, detalleOrigen: e.target.value })} placeholder="Nombre del recuperador, institución…" /></label>
           </div>
-          <ItemsEditor materiales={materiales.data?.items ?? []} items={form.items} onChange={(items) => setForm({ ...form, items })} />
+          <ItemsEditor conUnidades materiales={materiales.data?.items ?? []} items={form.items} onChange={(items) => setForm({ ...form, items })} />
+          <p className="muted small">Sin balanza: elegí la unidad (fardo, bolsón, camión) y el sistema estima los kg con el peso estándar de cada material.</p>
           <label>Observaciones<input value={form.observaciones} onChange={(e) => setForm({ ...form, observaciones: e.target.value })} /></label>
           <ErrorMsg error={err} />
           <div className="row"><button type="submit">Guardar ingreso</button><button type="button" className="secondary" onClick={() => setForm(null)}>Cancelar</button></div>
@@ -89,7 +90,7 @@ export default function Ingresos() {
                     <Tag tone={i.origen === 'retiro' ? 'info' : 'gray'}>{ORIGENES[i.origen]}</Tag>
                     {i.detalleOrigen && <div className="muted small">{i.detalleOrigen}</div>}
                   </td>
-                  <td>{i.items.map((it) => `${it.material?.nombre} ${fmtKg(it.pesoKg)}`).join(' · ')}</td>
+                  <td>{i.items.map((it) => `${it.material?.nombre} ${fmtKg(it.pesoKg)}${it.cantidad ? ` (${it.cantidad} ${it.unidad})` : ''}${it.estimado ? ' est.' : ''}`).join(' · ')}</td>
                   <td className="r num">{fmtKg(i.items.reduce((a, it) => a + it.pesoKg, 0))}</td>
                 </tr>
               ))}

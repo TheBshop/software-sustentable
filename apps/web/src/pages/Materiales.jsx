@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { api, fmtPeso } from '../api.js';
-import { useLoad, ErrorMsg, ConfirmButton } from '../ui.jsx';
+import { useLoad, ErrorMsg, ConfirmButton, Tag } from '../ui.jsx';
 import { FRACCIONES, CORRIENTES, SUBTIPOS_REGU, FraccionChip } from '../residuos.jsx';
 
 export const CATEGORIAS = {
@@ -11,7 +11,21 @@ export const CATEGORIAS = {
   electronicos: 'Electrónicos',
   otros: 'Otros',
 };
-const VACIO = { codigo: '', nombre: '', categoria: 'papel_carton', corriente: 'rsu', fraccion: '', subtipoRegu: '', factorCo2: '', tarifaRetiroKg: '', precioVentaKg: '' };
+const VACIO = { codigo: '', nombre: '', categoria: 'papel_carton', corriente: 'rsu', fraccion: '', subtipoRegu: '', factorCo2: '', tarifaRetiroKg: '', precioVentaKg: '', unidades: '', refMin: '', refMax: '', mezcla: false };
+
+// "fardo=60; bolsón=25" ⇄ [{ nombre, kg }]
+const unidadesATexto = (u = []) => u.map((x) => `${x.nombre}=${x.kg}`).join('; ');
+function textoAUnidades(t) {
+  return t
+    .split(';')
+    .map((p) => p.trim())
+    .filter(Boolean)
+    .map((p) => {
+      const [nombre, kg] = p.split('=').map((x) => x?.trim());
+      if (!nombre || !(Number(String(kg).replace(',', '.')) > 0)) throw new Error(`Unidad mal escrita: "${p}". Usá nombre=kg, por ejemplo fardo=60`);
+      return { nombre, kg: Number(String(kg).replace(',', '.')) };
+    });
+}
 
 export default function Materiales() {
   const { data, error, reload } = useLoad('/materiales?limit=200');
@@ -34,6 +48,9 @@ export default function Materiales() {
       factorCo2: Number(form.factorCo2) || 0,
       tarifaRetiroKg: Number(form.tarifaRetiroKg) || 0,
       precioVentaKg: Number(form.precioVentaKg) || 0,
+      mezcla: Boolean(form.mezcla),
+      unidades: textoAUnidades(form.unidades),
+      ...((form.refMin || form.refMax) && { precioReferencia: { minKg: Number(form.refMin) || 0, maxKg: Number(form.refMax) || undefined, fecha: new Date().toISOString().slice(0, 10) } }),
     };
     if (body.codigo.length < 2) return setErr('El código tiene que tener al menos 2 letras.');
     if (body.nombre.length < 2) return setErr('Completá el nombre.');
@@ -47,7 +64,7 @@ export default function Materiales() {
   }
 
   const edit = (m) =>
-    setForm({ _id: m._id, codigo: m.codigo, nombre: m.nombre, categoria: m.categoria, corriente: m.corriente ?? 'rsu', fraccion: m.fraccion ?? '', subtipoRegu: m.subtipoRegu ?? '', factorCo2: String(m.factorCo2), tarifaRetiroKg: String(m.tarifaRetiroKg), precioVentaKg: String(m.precioVentaKg) });
+    setForm({ _id: m._id, codigo: m.codigo, nombre: m.nombre, categoria: m.categoria, corriente: m.corriente ?? 'rsu', fraccion: m.fraccion ?? '', subtipoRegu: m.subtipoRegu ?? '', factorCo2: String(m.factorCo2), tarifaRetiroKg: String(m.tarifaRetiroKg), precioVentaKg: String(m.precioVentaKg), unidades: unidadesATexto(m.unidades), refMin: m.precioReferencia?.minKg ?? '', refMax: m.precioReferencia?.maxKg ?? '', mezcla: Boolean(m.mezcla) });
 
   return (
     <>
@@ -100,6 +117,19 @@ export default function Materiales() {
             <label>Factor CO₂ (kg por kg)<input type="number" min="0" step="any" value={form.factorCo2} onChange={set('factorCo2')} /></label>
             <label>Tarifa de retiro ($/kg)<input type="number" min="0" step="any" value={form.tarifaRetiroKg} onChange={set('tarifaRetiroKg')} /></label>
             <label>Precio de venta ($/kg)<input type="number" min="0" step="any" value={form.precioVentaKg} onChange={set('precioVentaKg')} /></label>
+            <label>Mercado: mínimo ($/kg)<input type="number" min="0" step="any" value={form.refMin} onChange={set('refMin')} /></label>
+            <label>Mercado: máximo ($/kg)<input type="number" min="0" step="any" value={form.refMax} onChange={set('refMax')} /></label>
+          </div>
+          <label>
+            Unidades sin balanza
+            <input value={form.unidades} onChange={set('unidades')} placeholder="fardo=60; bolsón=25" />
+            <span className="muted small" style={{ fontWeight: 400 }}>Peso promedio de cada unidad. Pesá una vez varios fardos o bolsones y cargá el promedio.</span>
+          </label>
+          <label className="check">
+            <input type="checkbox" checked={form.mezcla} onChange={(e) => setForm({ ...form, mezcla: e.target.checked })} />
+            Es residuo sin clasificar (lo que trae el camión municipal, se clasifica en planta)
+          </label>
+          <div>
           </div>
           {form._id && <p className="muted small">Cambiar el factor de CO₂ no modifica los certificados ya emitidos.</p>}
           <ErrorMsg error={err} />
@@ -112,7 +142,7 @@ export default function Materiales() {
         <div className="table-wrap">
           <table>
             <thead>
-              <tr><th>Código</th><th>Nombre</th><th>Clasificación</th><th className="r">CO₂ (kg/kg)</th><th className="r">Retiro $/kg</th><th className="r">Venta $/kg</th><th>Acciones</th></tr>
+              <tr><th>Código</th><th>Nombre</th><th>Clasificación</th><th className="r">CO₂ (kg/kg)</th><th className="r">Retiro $/kg</th><th className="r">Venta $/kg</th><th>Mercado $/kg</th><th>Unidades</th><th>Acciones</th></tr>
             </thead>
             <tbody>
               {data?.items.map((m) => (
@@ -126,6 +156,8 @@ export default function Materiales() {
                   <td className="r num">{m.factorCo2.toLocaleString('es-AR')}</td>
                   <td className="r num">{m.tarifaRetiroKg ? fmtPeso(m.tarifaRetiroKg) : <span className="muted">sin cargo</span>}</td>
                   <td className="r num">{fmtPeso(m.precioVentaKg)}</td>
+                  <td className="small">{m.precioReferencia?.minKg != null ? `${fmtPeso(m.precioReferencia.minKg)} a ${fmtPeso(m.precioReferencia.maxKg)}` : '—'}</td>
+                  <td className="small">{m.mezcla && <Tag tone="sun">Sin clasificar</Tag>} {m.unidades?.map((u) => `${u.nombre} ${u.kg} kg`).join(' · ')}</td>
                   <td>
                     <div className="actions">
                       <button type="button" className="link" onClick={() => edit(m)}>Editar</button>
