@@ -1,12 +1,12 @@
 import { Router } from 'express';
 import multer from 'multer';
 import { z } from 'zod';
-import { Pickup, ESTADOS_RETIRO } from './pickup.model.js';
+import { Pickup, ESTADOS_RETIRO, TIPOS_DOCUMENTO } from './pickup.model.js';
 import { nextSeq } from '../../lib/counters.js';
 import { objectId, dateInput, endOfLocalDay } from '../../lib/validation.js';
 import { requireRole } from '../../middleware/auth.js';
 import { HttpError } from '../../middleware/error.js';
-import { storage } from '../../lib/storage.js';
+import { storage, leerArchivo } from '../../lib/storage.js';
 import { issueCertificate } from '../certificates/certificate.service.js';
 import { assertHabilitados, sincronizarIngresoDeRetiro } from '../movimientos/movimiento.service.js';
 import { resolverPesos } from '../materials/unidades.js';
@@ -125,6 +125,51 @@ pickupsRouter.post('/:id/fotos', requireRole('chofer', 'operador_planta', 'admin
   }
   await pickup.save();
   res.status(201).json({ fotos: pickup.fotos });
+});
+
+// ---- Documentos del traslado (remito, ticket de pesaje, factura…) ----
+const MAX_DOCUMENTOS = 10;
+const subirDocumento = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024, files: 1 },
+  fileFilter: (_req, file, cb) => cb(null, ['application/pdf', 'image/jpeg', 'image/png'].includes(file.mimetype)),
+});
+
+pickupsRouter.post('/:id/documentos', requireRole('chofer', 'operador_planta', 'administracion'), subirDocumento.single('archivo'), async (req, res) => {
+  const data = z.object({ tipo: z.enum(Object.keys(TIPOS_DOCUMENTO)), numero: z.string().max(60).optional() }).parse(req.body);
+  const pickup = await Pickup.findById(req.params.id);
+  if (!pickup) throw new HttpError(404, 'Retiro no encontrado');
+  if (req.user.role === 'chofer' && String(pickup.chofer) !== req.user.sub) throw new HttpError(403, 'El retiro es de otro chofer');
+  if (!req.file) throw new HttpError(400, 'Subí un PDF, JPG o PNG de hasta 5 MB');
+  if (pickup.documentos.length >= MAX_DOCUMENTOS) throw new HttpError(409, `Un retiro admite hasta ${MAX_DOCUMENTOS} documentos`);
+  const url = await storage.save(req.file.buffer, { prefix: 'documentos', mimetype: req.file.mimetype });
+  pickup.documentos.push({ ...data, url, nombre: req.file.originalname?.slice(0, 120), mimetype: req.file.mimetype, subidoPor: req.user.sub });
+  await pickup.save();
+  res.status(201).json({ documentos: pickup.documentos });
+});
+
+/** Descarga con sesión (los documentos pueden tener precios o datos del cliente). */
+export async function enviarDocumento(res, doc) {
+  const buffer = await leerArchivo(doc.url);
+  res.type(doc.mimetype ?? 'application/octet-stream');
+  res.setHeader('Content-Disposition', `inline; filename="${encodeURIComponent(doc.nombre ?? doc.tipo)}"`);
+  res.send(buffer);
+}
+
+pickupsRouter.get('/:id/documentos/:docId', async (req, res) => {
+  const pickup = await Pickup.findById(req.params.id);
+  const doc = pickup?.documentos.id(req.params.docId);
+  if (!doc) throw new HttpError(404, 'Documento no encontrado');
+  await enviarDocumento(res, doc);
+});
+
+pickupsRouter.delete('/:id/documentos/:docId', requireRole('operador_planta', 'administracion'), async (req, res) => {
+  const pickup = await Pickup.findById(req.params.id);
+  const doc = pickup?.documentos.id(req.params.docId);
+  if (!doc) throw new HttpError(404, 'Documento no encontrado');
+  doc.deleteOne();
+  await pickup.save();
+  res.status(204).end();
 });
 
 // ---- Certificado ----

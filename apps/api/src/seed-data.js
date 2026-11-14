@@ -18,6 +18,7 @@ import { registrarClasificacion } from './modules/movimientos/movimiento.service
 import { resolverPesos } from './modules/materials/unidades.js';
 import { anotarReferencias } from './modules/plant/ventas.service.js';
 import { Gasto } from './modules/finanzas/gasto.model.js';
+import { RegistroSeguridad } from './modules/seguridad/seguridad.js';
 import { runWithTenant } from './lib/tenancy.js';
 
 export const SEED_USUARIOS = [
@@ -56,7 +57,7 @@ const DAY = 24 * 60 * 60 * 1000;
 /** Carga los datos de ejemplo. Asume una base vacía y ya conectada. */
 export async function seedDatabase() {
   const orgs = {
-    nv: await Organization.create({ tipo: 'cooperativa', nombre: 'Cooperativa Nueva Vida', cuit: '30700000014', habilitaciones: { corrientes: ['rsu', 'regu'] }, certificado: { responsable: 'Responsable de ejemplo', cargo: 'Presidencia' } }),
+    nv: await Organization.create({ tipo: 'cooperativa', nombre: 'Cooperativa Nueva Vida', cuit: '30700000014', habilitaciones: { corrientes: ['rsu', 'regu'], registros: [{ descripcion: 'Registro municipal de depósitos de acopio', organismo: 'Municipalidad de Paraná (Ord. 9233, art. 28)', numero: 'EJEMPLO-0001' }] }, certificado: { responsable: 'Responsable de ejemplo', cargo: 'Presidencia' } }),
     litoral: await Organization.create({ tipo: 'cooperativa', nombre: 'Cooperativa Reciclar del Litoral', cuit: '30700000022', habilitaciones: { corrientes: ['rsu'] } }),
     empresa: await Organization.create({ tipo: 'empresa', nombre: 'Supermercado El Puente SA', cuit: '30712345678' }),
     municipio: await Organization.create({ tipo: 'municipio', nombre: 'Municipio de Ejemplo', cuit: '30999999991' }),
@@ -72,7 +73,8 @@ export async function seedDatabase() {
 }
 
 async function seedNuevaVida(orgs, chofer) {
-  const mats = await Material.insertMany([...MATERIALES, ...MATERIALES_REGU].map((m) => new Material(m)));
+  // Factores de CO2 de ejemplo: antes de certificar en serio hay que cargar la fuente real
+  const mats = await Material.insertMany([...MATERIALES, ...MATERIALES_REGU].map((m) => new Material({ factorCo2Fuente: 'Valor de ejemplo, falta definir la fuente', ...m })));
   const m = Object.fromEntries(mats.map((x) => [x.codigo, x]));
 
   const [superm, hotel, escuela, distri, municipio, acopio] = await Client.insertMany(
@@ -204,6 +206,17 @@ async function seedNuevaVida(orgs, chofer) {
     ].map(([d, categoria, descripcion, monto]) => new Gasto({ fecha: new Date(now - d * DAY), categoria, descripcion, monto })),
   );
 
+  // Seguridad e higiene: entregas de EPP y capacitaciones (Ord. 9233, art. 21)
+  await RegistroSeguridad.insertMany(
+    [
+      [40, 'epp', 'Socia de ejemplo 1', { elementos: ['guantes', 'botines', 'chaleco reflectivo'] }],
+      [40, 'epp', 'Socio de ejemplo 2', { elementos: ['guantes', 'botines', 'barbijo'] }],
+      [250, 'epp', 'Socio de ejemplo 3', { elementos: ['guantes'] }],
+      [60, 'capacitacion', 'Socia de ejemplo 1', { tema: 'Manejo seguro de la enfardadora', horas: 2, dictadaPor: 'Responsable de planta' }],
+      [60, 'capacitacion', 'Socio de ejemplo 2', { tema: 'Manejo seguro de la enfardadora', horas: 2, dictadaPor: 'Responsable de planta' }],
+    ].map(([d, tipo, persona, extra]) => new RegistroSeguridad({ fecha: new Date(now - d * DAY), tipo, persona, ...extra })),
+  );
+
   // Liquidaciones del mes anterior: una vencida, una por vencer y una pagada
   const snap = (c) => ({ razonSocial: c.razonSocial, cuit: c.cuit, condicionIva: c.condicionIva });
   for (const [c, lineas, emitida, vence, pagada] of [
@@ -230,7 +243,7 @@ async function seedNuevaVida(orgs, chofer) {
 
 /** Segunda cooperativa: mismos códigos de material y mismo cliente (El Puente), datos separados. */
 async function seedLitoral(orgs, admin) {
-  const mats = await Material.insertMany(MATERIALES.slice(0, 5).map((x) => new Material({ ...x, precioVentaKg: x.precioVentaKg + 10 })));
+  const mats = await Material.insertMany(MATERIALES.slice(0, 5).map((x) => new Material({ factorCo2Fuente: 'Valor de ejemplo, falta definir la fuente', ...x, precioVentaKg: x.precioVentaKg + 10 })));
   const m = Object.fromEntries(mats.map((x) => [x.codigo, x]));
   const [puente] = await Client.insertMany([
     new Client({

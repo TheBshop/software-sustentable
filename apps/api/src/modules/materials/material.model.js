@@ -26,6 +26,8 @@ const materialSchema = new mongoose.Schema(
     // kg de CO2e evitados por cada kg recuperado. Configurable: la cooperativa debe validar
     // los factores con una fuente reconocida (ver docs/02-modelo-de-datos.md).
     factorCo2: { type: Number, default: 0, min: 0 },
+    // Fuente del factor (publicación, base de datos y año). Se imprime en certificados e informes.
+    factorCo2Fuente: { type: String, trim: true },
     // Tarifa por defecto que se cobra al generador por kg retirado (puede ser 0).
     tarifaRetiroKg: { type: Number, default: 0, min: 0 },
     // Precio de referencia por kg al vender el material a compradores.
@@ -66,6 +68,7 @@ const materialBase = z.object({
     subtipoRegu: z.enum(Object.keys(SUBTIPOS_REGU)).optional(),
     valorizable: z.boolean().optional(),
     factorCo2: z.number().min(0).default(0),
+    factorCo2Fuente: z.string().max(200).optional(),
     tarifaRetiroKg: z.number().min(0).default(0),
     precioVentaKg: z.number().min(0).default(0),
     activo: z.boolean().optional(),

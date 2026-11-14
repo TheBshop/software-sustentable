@@ -63,6 +63,34 @@ export default function PortalInicio() {
             )}
           </div>
 
+          {data.recomendaciones?.length > 0 && (
+            <section className="card stack">
+              <h3>Recomendaciones</h3>
+              <p className="muted small">Surgen de tus propios datos del año: qué se observó y qué conviene hacer.</p>
+              <div className="recos">
+                {data.recomendaciones.map((r) => (
+                  <div key={r.titulo} className={`reco ${r.prioridad}`}>
+                    <strong>{r.titulo}</strong>
+                    <p className="small">{r.detalle}</p>
+                    {r.norma && <p className="muted small">{r.norma}</p>}
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {esMunicipio && data.inclusion && (
+            <section className="card">
+              <h3>Ingresos a las plantas de las cooperativas</h3>
+              <p className="muted small">Lo que llegó por recolección municipal y por recuperadores urbanos (inclusión de recuperadores, Ordenanza 9233, arts. 34 y 35).</p>
+              <div className="kpis">
+                <div className="kpi"><span>Recolección municipal</span><strong>{fmtKg(data.inclusion.recoleccionMunicipalKg)}</strong></div>
+                <div className="kpi green"><span>Recuperadores urbanos</span><strong>{fmtKg(data.inclusion.recuperadoresKg)}</strong></div>
+                <div className="kpi"><span>Entrega voluntaria</span><strong>{fmtKg(data.inclusion.entregaVoluntariaKg)}</strong></div>
+              </div>
+            </section>
+          )}
+
           <section className="card">
             <h3>Kilos retirados por mes</h3>
             <div className="columnas" role="img" aria-label="Gráfico de kilos por mes">

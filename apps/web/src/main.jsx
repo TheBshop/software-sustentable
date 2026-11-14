@@ -14,6 +14,7 @@ import Ingresos from './pages/Ingresos.jsx';
 import Ventas from './pages/Ventas.jsx';
 import Balance from './pages/Balance.jsx';
 import Configuracion from './pages/Configuracion.jsx';
+import Seguridad from './pages/Seguridad.jsx';
 import VerificarCertificado from './pages/VerificarCertificado.jsx';
 import PortalInicio from './pages/portal/Inicio.jsx';
 import PortalRetiros from './pages/portal/Retiros.jsx';
@@ -57,6 +58,7 @@ function CoopSidebar() {
         <>
           <span className="nav-group">Administración</span>
           <NavLink to="/balance">Balance</NavLink>
+          <NavLink to="/seguridad">Seguridad e higiene</NavLink>
           {getUser()?.rol === 'admin' && <NavLink to="/configuracion">Configuración</NavLink>}
         </>
       )}
@@ -118,6 +120,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
           <Route path="/materiales" element={<Materiales />} />
           <Route path="/balance" element={<Balance />} />
           <Route path="/configuracion" element={<Configuracion />} />
+          <Route path="/seguridad" element={<Seguridad />} />
         </Route>
         <Route path="/portal" element={<Zona portal />}>
           <Route index element={<PortalInicio />} />

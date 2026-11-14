@@ -10,6 +10,7 @@ import { renderInformeAnual } from './informe.pdf.js';
 import { requireOrgTipo } from '../../middleware/auth.js';
 import { HttpError } from '../../middleware/error.js';
 import { runWithoutTenant } from '../../lib/tenancy.js';
+import { enviarDocumento } from '../pickups/pickup.routes.js';
 
 // Portal de clientes generadores (empresas y municipios): /api/v1/portal
 // Solo lectura de SUS datos, en todas las cooperativas que los atienden. Nunca expone
@@ -58,8 +59,16 @@ portalRouter.get('/retiros', async (req, res) => {
       pesado: r.items.every((i) => i.pesoRealKg != null),
       materiales: r.items.map((i) => ({ nombre: i.material?.nombre, fraccion: i.material?.fraccion, corriente: i.material?.corriente, kg: i.pesoRealKg ?? i.pesoEstimadoKg })),
       certificado: r.certificado,
+      documentos: r.documentos.map((d) => ({ id: d._id, tipo: d.tipo, numero: d.numero, nombre: d.nombre })),
     })),
   });
+});
+
+portalRouter.get('/retiros/:id/documentos/:docId', async (req, res) => {
+  const retiro = await Pickup.findOne({ _id: req.params.id, cliente: { $in: await misClientes(req) } });
+  const doc = retiro?.documentos.id(req.params.docId);
+  if (!doc) throw new HttpError(404, 'Documento no encontrado');
+  await enviarDocumento(res, doc);
 });
 
 portalRouter.get('/certificados', async (req, res) => {

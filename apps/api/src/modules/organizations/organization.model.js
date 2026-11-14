@@ -22,7 +22,8 @@ const organizationSchema = new mongoose.Schema(
     habilitaciones: {
       corrientes: { type: [{ type: String, enum: CORRIENTES }], default: undefined },
       // N° de inscripción en registros específicos (ej. operador de residuos peligrosos)
-      registros: [{ _id: false, corriente: { type: String, enum: CORRIENTES }, organismo: String, numero: String, vence: Date }],
+      // Ej.: registro municipal de depósitos de acopio (Paraná, Ord. 9233 art. 28), inscripción provincial…
+      registros: [{ _id: false, descripcion: String, corriente: { type: String, enum: CORRIENTES }, organismo: String, numero: String, vence: Date }],
     },
     // Solo cooperativas: quién firma los certificados, con firma y sello escaneados
     certificado: { responsable: String, cargo: String, firmaUrl: String, selloUrl: String },

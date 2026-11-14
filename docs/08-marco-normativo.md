@@ -18,7 +18,19 @@ Relevamiento hecho en noviembre de 2026 sobre la normativa argentina de residuos
 ## Entre Ríos y Paraná
 
 - **[Ley provincial 10.311](https://faolex.fao.org/docs/pdf/arg162565.pdf)** (gestión integral de RSU, 2014): prioriza la reducción en origen y la clasificación domiciliaria.
-- **Paraná**: existe el programa Ecovecinales de separación en origen. **No encontré una ordenanza que defina "gran generador"** ni sus obligaciones.
+- **Paraná**: existe el programa Ecovecinales de separación en origen.
+- **Ordenanza 9233/2014 de Paraná** (GIRSU, modificada por la 9931; [digesto](https://digesto.parana.gob.ar/norma/6029)). Es la ordenanza general de RSU y **no define umbrales de "gran generador"**: el art. 5.11 y el art. 13 remiten a una "normativa específica" que falta encontrar. Lo que impacta en el software:
+
+| Artículo | Qué dice | Cómo lo cubre el sistema |
+|---|---|---|
+| 5 | Residuos de gestión diferenciada: RAEE, aceites minerales, baterías de vehículos, medicamentos, pilas, termómetros, químicos (pinturas, solventes), neumáticos, lámparas, higiene personal | Tipos de residuo especial (`SUBTIPOS_REGU`) |
+| 6 | Etapas: generación, disposición inicial, recolección, transporte, tratamiento, transferencia, disposición final | `ETAPAS` del libro de movimientos |
+| 10 y 44 | El generador debe separar secos y húmedos; no hacerlo es falta leve (25 a 60 UF) | Calidad de separación por generador y recomendación en el portal |
+| 21 | Elementos de protección y capacitación para quien trabaja con residuos | Módulo Seguridad e higiene |
+| 27 y 28 | Habilitación y registro municipal de depósitos de acopio | Inscripciones de la cooperativa, impresas en el certificado |
+| 2.i, 34 y 35 | Reducir el rechazo e incluir a los recuperadores | Tasa de desvío; ingresos por recuperadores en el portal del municipio |
+
+Límite conocido: el portal del municipio muestra **toda** la recolección municipal que recibió cada cooperativa que lo atiende. Si una cooperativa recibe camiones de más de un municipio, hay que distinguir el municipio de origen en el ingreso.
 
 ## Preguntas pendientes para la cooperativa y el municipio
 

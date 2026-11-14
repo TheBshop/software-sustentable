@@ -11,7 +11,7 @@ export const CATEGORIAS = {
   electronicos: 'Electrónicos',
   otros: 'Otros',
 };
-const VACIO = { codigo: '', nombre: '', categoria: 'papel_carton', corriente: 'rsu', fraccion: '', subtipoRegu: '', factorCo2: '', tarifaRetiroKg: '', precioVentaKg: '', unidades: '', refMin: '', refMax: '', mezcla: false };
+const VACIO = { codigo: '', nombre: '', categoria: 'papel_carton', corriente: 'rsu', fraccion: '', subtipoRegu: '', factorCo2: '', tarifaRetiroKg: '', precioVentaKg: '', unidades: '', refMin: '', refMax: '', mezcla: false, factorCo2Fuente: '' };
 
 // "fardo=60; bolsón=25" ⇄ [{ nombre, kg }]
 const unidadesATexto = (u = []) => u.map((x) => `${x.nombre}=${x.kg}`).join('; ');
@@ -46,6 +46,7 @@ export default function Materiales() {
       ...(form.corriente === 'rsu' && form.fraccion && { fraccion: form.fraccion }),
       ...(form.corriente === 'regu' && { subtipoRegu: form.subtipoRegu || undefined }),
       factorCo2: Number(form.factorCo2) || 0,
+      ...(form.factorCo2Fuente.trim() && { factorCo2Fuente: form.factorCo2Fuente.trim() }),
       tarifaRetiroKg: Number(form.tarifaRetiroKg) || 0,
       precioVentaKg: Number(form.precioVentaKg) || 0,
       mezcla: Boolean(form.mezcla),
@@ -64,7 +65,7 @@ export default function Materiales() {
   }
 
   const edit = (m) =>
-    setForm({ _id: m._id, codigo: m.codigo, nombre: m.nombre, categoria: m.categoria, corriente: m.corriente ?? 'rsu', fraccion: m.fraccion ?? '', subtipoRegu: m.subtipoRegu ?? '', factorCo2: String(m.factorCo2), tarifaRetiroKg: String(m.tarifaRetiroKg), precioVentaKg: String(m.precioVentaKg), unidades: unidadesATexto(m.unidades), refMin: m.precioReferencia?.minKg ?? '', refMax: m.precioReferencia?.maxKg ?? '', mezcla: Boolean(m.mezcla) });
+    setForm({ _id: m._id, codigo: m.codigo, nombre: m.nombre, categoria: m.categoria, corriente: m.corriente ?? 'rsu', fraccion: m.fraccion ?? '', subtipoRegu: m.subtipoRegu ?? '', factorCo2: String(m.factorCo2), tarifaRetiroKg: String(m.tarifaRetiroKg), precioVentaKg: String(m.precioVentaKg), unidades: unidadesATexto(m.unidades), refMin: m.precioReferencia?.minKg ?? '', refMax: m.precioReferencia?.maxKg ?? '', mezcla: Boolean(m.mezcla), factorCo2Fuente: m.factorCo2Fuente ?? '' });
 
   return (
     <>
@@ -121,6 +122,11 @@ export default function Materiales() {
             <label>Mercado: máximo ($/kg)<input type="number" min="0" step="any" value={form.refMax} onChange={set('refMax')} /></label>
           </div>
           <label>
+            Fuente del factor de CO₂
+            <input value={form.factorCo2Fuente} onChange={set('factorCo2Fuente')} placeholder="Publicación o base de datos y año" />
+            <span className="muted small" style={{ fontWeight: 400 }}>Se imprime en los certificados y en el informe anual, para que el cálculo se pueda auditar.</span>
+          </label>
+          <label>
             Unidades sin balanza
             <input value={form.unidades} onChange={set('unidades')} placeholder="fardo=60; bolsón=25" />
             <span className="muted small" style={{ fontWeight: 400 }}>Peso promedio de cada unidad. Pesá una vez varios fardos o bolsones y cargá el promedio.</span>
@@ -153,7 +159,7 @@ export default function Materiales() {
                     <FraccionChip fraccion={m.fraccion} corriente={m.corriente} />
                     <div className="muted small">{m.corriente === 'regu' ? SUBTIPOS_REGU[m.subtipoRegu] : CATEGORIAS[m.categoria]}{m.valorizable === false && ' · no valorizable'}</div>
                   </td>
-                  <td className="r num">{m.factorCo2.toLocaleString('es-AR')}</td>
+                  <td className="r num" title={m.factorCo2Fuente ?? 'Sin fuente'}>{m.factorCo2.toLocaleString('es-AR')}{!m.factorCo2Fuente && <div className="muted small">sin fuente</div>}</td>
                   <td className="r num">{m.tarifaRetiroKg ? fmtPeso(m.tarifaRetiroKg) : <span className="muted">sin cargo</span>}</td>
                   <td className="r num">{fmtPeso(m.precioVentaKg)}</td>
                   <td className="small">{m.precioReferencia?.minKg != null ? `${fmtPeso(m.precioReferencia.minKg)} a ${fmtPeso(m.precioReferencia.maxKg)}` : '—'}</td>

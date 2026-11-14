@@ -84,6 +84,55 @@ export default function Configuracion() {
           </div>
         </section>
       </div>
+      <Registros registros={data?.habilitaciones?.registros ?? []} onSaved={reload} />
     </>
+  );
+}
+
+const VACIO = { descripcion: '', organismo: '', numero: '', vence: '' };
+const SUGERENCIA = { descripcion: 'Registro municipal de depósitos de acopio', organismo: 'Municipalidad de Paraná (Ord. 9233, art. 28)', numero: '', vence: '' };
+
+/** Inscripciones y habilitaciones: se imprimen en cada certificado (las vencidas no). */
+function Registros({ registros, onSaved }) {
+  const [filas, setFilas] = useState(null);
+  const [err, setErr] = useState(null);
+  const lista = filas ?? registros.map((r) => ({ ...VACIO, ...r, vence: r.vence ? r.vence.slice(0, 10) : '' }));
+  const set = (i, k) => (e) => setFilas(lista.map((r, j) => (j === i ? { ...r, [k]: e.target.value } : r)));
+
+  async function guardar() {
+    setErr(null);
+    try {
+      const body = lista
+        .filter((r) => r.descripcion.trim() || r.numero.trim())
+        .map((r) => ({ descripcion: r.descripcion.trim(), numero: r.numero.trim(), ...(r.organismo.trim() && { organismo: r.organismo.trim() }), ...(r.vence && { vence: r.vence }) }));
+      await api('/planta/organizacion/registros', { method: 'PUT', body: { registros: body } });
+      setFilas(null);
+      await onSaved();
+    } catch (e) {
+      setErr(e.message);
+    }
+  }
+
+  return (
+    <section className="card stack">
+      <h3>Inscripciones y habilitaciones</h3>
+      <p className="muted small">
+        Van impresas en cada certificado. En Paraná, los depósitos de acopio tienen que estar en el registro municipal (Ordenanza 9233, art. 28).
+      </p>
+      {lista.map((r, i) => (
+        <div key={i} className="form-grid">
+          <label>Registro<input value={r.descripcion} onChange={set(i, 'descripcion')} placeholder="Registro municipal de acopios" /></label>
+          <label>Organismo<input value={r.organismo} onChange={set(i, 'organismo')} placeholder="Municipalidad de Paraná" /></label>
+          <label>Número<input value={r.numero} onChange={set(i, 'numero')} /></label>
+          <label>Vence<input type="date" value={r.vence} onChange={set(i, 'vence')} /></label>
+        </div>
+      ))}
+      {!lista.length && <p className="muted small">Todavía no hay inscripciones cargadas.</p>}
+      <ErrorMsg error={err} />
+      <div className="row">
+        <button type="button" className="secondary" onClick={() => setFilas([...lista, lista.length ? VACIO : SUGERENCIA])}>Agregar inscripción</button>
+        {filas && <button type="button" onClick={guardar}>Guardar inscripciones</button>}
+      </div>
+    </section>
   );
 }

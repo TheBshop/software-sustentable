@@ -167,3 +167,15 @@ label.check input { width: auto; }
 .firma-box { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; border: 1px dashed var(--borde); border-radius: 8px; padding: 10px; min-width: 180px; }
 .firma-box img { max-width: 160px; max-height: 80px; object-fit: contain; background: white; }
 .kpi .small { color: var(--gris); }
+
+/* ---- Documentos, recomendaciones ---- */
+.docs { display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: center; margin-top: 4px; }
+.doc-link { padding: 2px 4px; font-size: 12px; }
+.doc-upload { display: inline-flex; gap: 4px; align-items: center; }
+.doc-upload select { width: auto; padding: 3px 6px; font-size: 12px; }
+.recos { display: flex; flex-direction: column; gap: 10px; }
+.reco { border-left: 4px solid var(--borde); padding: 6px 12px; }
+.reco.alta { border-color: var(--rojo); }
+.reco.media { border-color: #d9a400; }
+.reco.info { border-color: var(--azul); }
+.reco p { margin-top: 2px; }

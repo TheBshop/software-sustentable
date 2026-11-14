@@ -10,7 +10,7 @@ import crypto from 'node:crypto';
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import { env } from '../config/env.js';
 
-const EXT = { 'image/jpeg': '.jpg', 'image/png': '.png', 'image/webp': '.webp', 'image/heic': '.heic' };
+const EXT = { 'image/jpeg': '.jpg', 'image/png': '.png', 'image/webp': '.webp', 'image/heic': '.heic', 'application/pdf': '.pdf' };
 
 /** Nombre único y ordenado por fecha: retiros/2026/11/<uuid>.jpg */
 function makeKey(prefix, mimetype) {

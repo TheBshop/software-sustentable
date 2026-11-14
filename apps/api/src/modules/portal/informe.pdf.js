@@ -91,10 +91,48 @@ export function renderInformeAnual(org, r, stream) {
   }
   tabla('Cooperativas que prestaron el servicio', r.porCooperativa.map((c) => [c.cooperativa, n(c.retiros, 0), `${n(c.kg)} kg`]), [['Cooperativa', 50], ['Retiros', 340], ['Kilos', 420]]);
 
-  if (y > doc.page.height - 120) {
+  if (r.inclusion) {
+    const inc = r.inclusion;
+    tabla(
+      'Ingresos a planta por origen (inclusión de recuperadores, Ord. 9233 arts. 34 y 35)',
+      [
+        ['Recolección municipal', `${n(inc.recoleccionMunicipalKg)} kg`],
+        ['Recuperadores urbanos', `${n(inc.recuperadoresKg)} kg`],
+        ['Entrega voluntaria', `${n(inc.entregaVoluntariaKg)} kg`],
+      ],
+      [['Origen', 50], ['Kilos', 340]],
+    );
+  }
+
+  if (r.recomendaciones?.length) {
+    tabla(
+      'Recomendaciones',
+      r.recomendaciones.map((x) => [x.prioridad === 'alta' ? 'Alta' : x.prioridad === 'media' ? 'Media' : 'Info', x.titulo]),
+      [['Prioridad', 50], ['Qué hacer', 120]],
+    );
+  }
+
+  tabla(
+    'Metodología: factores de CO2 evitado',
+    r.porMaterial.flatMap((m) =>
+      m.factores.map((f) => [m.factores.length > 1 ? `${m.material} (${f.cooperativa})` : m.material, `${n(f.factorCo2)} kg CO2e/kg`, f.fuente ?? 'Fuente no indicada']),
+    ),
+    [['Material', 50], ['Factor', 220], ['Fuente', 330]],
+  );
+
+  if (y > doc.page.height - 140) {
     doc.addPage();
     y = 50;
   }
+  doc.fontSize(8).fillColor('#666').text(
+    'Uso en reportes de gases de efecto invernadero: los kilos de este informe son dato de actividad de Alcance 3, categoría 5 ' +
+      '(residuos generados en las operaciones) del GHG Protocol. Las emisiones evitadas por reciclar se informan por separado ' +
+      'y no se restan del inventario de emisiones.',
+    50,
+    y,
+    { width: W },
+  );
+  y = doc.y + 8;
   doc.fontSize(8).fillColor('#666').text(
     'Metodología: los kilos son los pesados en planta o, si todavía no se pesaron, los estimados al retirar. "Valorizable" es el material ' +
       'que no se clasifica como basura y puede reinsertarse en el circuito productivo (jerarquía de opciones de la Ley 25.916). El CO2 evitado ' +

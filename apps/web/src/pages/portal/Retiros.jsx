@@ -3,6 +3,7 @@ import { fmtKg, fmtFecha, pad } from '../../api.js';
 import { useLoad, ErrorMsg, Tag } from '../../ui.jsx';
 import { FraccionChip } from '../../residuos.jsx';
 import { ANIOS } from './Inicio.jsx';
+import { DocumentosRetiro } from '../DocumentosRetiro.jsx';
 
 export default function PortalRetiros() {
   const [anio, setAnio] = useState(ANIOS[0]);
@@ -45,6 +46,7 @@ export default function PortalRetiros() {
                     {r.materiales.map((m) => (
                       <div key={m.nombre}><FraccionChip fraccion={m.fraccion} corriente={m.corriente} /> <span className="muted">· {m.nombre}</span></div>
                     ))}
+                    {r.documentos?.length > 0 && <DocumentosRetiro documentos={r.documentos} base={`/v1/portal/retiros/${r.id}/documentos`} />}
                   </td>
                   <td className="r num">{fmtKg(r.materiales.reduce((a, m) => a + m.kg, 0))}{!r.pesado && <div className="muted small">estimado</div>}</td>
                   <td className="small">{r.cooperativa}</td>

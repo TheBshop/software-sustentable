@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { api, fmtKg, fmtFechaCorta, pad, fileUrl } from '../api.js';
 import { useLoad, Tag, ErrorMsg } from '../ui.jsx';
+import { DocumentosRetiro } from './DocumentosRetiro.jsx';
 
 const peso = (it) => it.pesoRealKg ?? it.pesoEstimadoKg;
 
@@ -92,6 +93,7 @@ export default function Retiros() {
                         {r.fotos.length ? r.fotos.map((f, i) => <a key={f.url} href={fileUrl(f.url)} target="_blank" rel="noreferrer">foto {i + 1} </a>) : 'sin fotos'}
                         {r.observaciones && ` · ${r.observaciones}`}
                       </div>
+                      <DocumentosRetiro documentos={r.documentos} base={`/retiros/${r._id}/documentos`} onUploaded={reload} />
                     </td>
                     <td className="r num">{fmtKg(total)}{estimado && <div className="muted small">estimado</div>}</td>
                     <td>

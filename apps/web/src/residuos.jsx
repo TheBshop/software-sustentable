@@ -20,10 +20,16 @@ export const CORRIENTES = {
 
 export const SUBTIPOS_REGU = {
   pilas_baterias: 'Pilas y baterías',
+  baterias_vehiculos: 'Baterías de vehículos',
   raee: 'Aparatos eléctricos y electrónicos (RAEE)',
-  lamparas: 'Lámparas',
+  lamparas: 'Lámparas (fluorescentes, de bajo consumo, incandescentes)',
   neumaticos: 'Neumáticos fuera de uso',
   aceite_vegetal_usado: 'Aceite vegetal usado',
+  aceite_mineral_usado: 'Aceite mineral usado de automotores',
+  medicamentos: 'Restos de medicamentos',
+  termometros: 'Termómetros',
+  quimicos_domiciliarios: 'Pinturas, solventes, barnices y similares',
+  higiene_personal: 'Pañales y elementos de higiene personal',
   otros: 'Otros REGU',
 };
 

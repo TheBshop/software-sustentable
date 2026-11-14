@@ -1,9 +1,13 @@
+import mongoose from 'mongoose';
 import { Client } from '../clients/client.model.js';
 import { Pickup } from '../pickups/pickup.model.js';
 import { Certificate } from '../certificates/certificate.model.js';
 import { Organization } from '../organizations/organization.model.js';
 import { FRACCIONES } from '../materials/fracciones.js';
 import { calidadSeparacion } from '../movimientos/movimiento.service.js';
+import { Movimiento } from '../movimientos/movimiento.model.js';
+import { Material } from '../materials/material.model.js';
+import { recomendaciones } from './recomendaciones.js';
 import { parseLocalDate, endOfLocalDay, round2, TZ_OFFSET } from '../../lib/validation.js';
 
 // Todo lo del portal cruza cooperativas: corre con runWithoutTenant (ver portal.routes.js)
@@ -46,6 +50,20 @@ export async function resumenAnual(orgId, anio) {
     Certificate.find({ cliente: { $in: ids }, fechaRetiro: { $gte: desde, $lte: hasta }, anulado: false }).select('co2EvitadoKg totalKg'),
     calidadSeparacion(desde, hasta, { clientes: ids, opciones: { sinTenant: true } }),
   ]);
+  const org = await Organization.findById(orgId).select('tipo');
+  const coopIds = [...new Set(clientes.map((c) => String(c.coop)))].map((id) => new mongoose.Types.ObjectId(id));
+  // Factor de CO2 y su fuente por material (metodología del informe). Cada cooperativa tiene
+  // los suyos: un mismo material puede tener factores distintos según quién lo gestionó.
+  const nombresCoop = await nombresCooperativas(coopIds);
+  const factores = new Map();
+  for (const m of await Material.find({ coop: { $in: coopIds } }).setOptions({ sinTenant: true }).select('coop nombre factorCo2 factorCo2Fuente')) {
+    const lista = factores.get(m.nombre) ?? [];
+    lista.push({ cooperativa: nombresCoop.get(String(m.coop)), factorCo2: m.factorCo2, fuente: m.factorCo2Fuente ?? null });
+    factores.set(m.nombre, lista);
+  }
+  // Municipio: lo que entró a las plantas de sus cooperativas por recolección municipal y por
+  // recuperadores (inclusión de recuperadores, Ord. 9233 de Paraná, arts. 34 y 35)
+  const inclusion = org?.tipo === 'municipio' ? await ingresosPorOrigen(coopIds, desde, hasta) : null;
 
   const sumar = (key) => {
     const acc = new Map();
@@ -64,8 +82,9 @@ export async function resumenAnual(orgId, anio) {
   const valorizableKg = items.filter((r) => r._id.valorizable !== false).reduce((a, r) => a + r.kg, 0);
   const porMes = Array.from({ length: 12 }, (_, i) => ({ mes: i + 1, kg: round2(sumar((k) => k.mes).get(i + 1)?.kg ?? 0) }));
 
-  return {
+  const resumen = {
     anio,
+    inclusion,
     totales: {
       retiros: retirosPorSede.reduce((a, s) => a + s.retiros, 0),
       kg: round2(totalKg),
@@ -88,7 +107,7 @@ export async function resumenAnual(orgId, anio) {
     porMaterial: [...sumar((k) => `${k.material}|${k.fraccion ?? ''}|${k.corriente}`)]
       .map(([k, v]) => {
         const [material, fraccion, corriente] = k.split('|');
-        return { material, corriente, fraccion: fraccion ? { codigo: fraccion, ...FRACCIONES[fraccion] } : null, kg: round2(v.kg), co2EvitadoKg: round2(v.co2) };
+        return { material, corriente, fraccion: fraccion ? { codigo: fraccion, ...FRACCIONES[fraccion] } : null, kg: round2(v.kg), co2EvitadoKg: round2(v.co2), factores: factores.get(material) ?? [] };
       })
       .sort((a, b) => b.kg - a.kg),
     porFraccion: [...sumar((k) => k.fraccion ?? `corriente:${k.corriente}`)]
@@ -100,6 +119,24 @@ export async function resumenAnual(orgId, anio) {
     porSede: retirosPorSede
       .map((s) => ({ sede: s._id ?? 'Sin dirección', retiros: s.retiros, kg: round2(sumar((k) => k.sede ?? null).get(s._id ?? null)?.kg ?? 0) }))
       .sort((a, b) => b.kg - a.kg),
+  };
+  resumen.recomendaciones = recomendaciones(resumen);
+  return resumen;
+}
+
+/** kg ingresados a planta por origen (recolección municipal, recuperadores…), por cooperativa. */
+export async function ingresosPorOrigen(coopIds, desde, hasta) {
+  const filas = await Movimiento.aggregate([
+    { $match: { coop: { $in: coopIds }, tipo: 'ingreso', 'origen.tipo': { $in: ['recoleccion_municipal', 'recuperador', 'entrega_voluntaria'] }, fecha: { $gte: desde, $lte: hasta } } },
+    { $group: { _id: { origen: '$origen.tipo', coop: '$coop' }, kg: { $sum: '$kg' } } },
+  ]).option({ sinTenant: true });
+  const nombres = await nombresCooperativas(filas.map((f) => f._id.coop));
+  const total = (o) => round2(filas.filter((f) => f._id.origen === o).reduce((a, f) => a + f.kg, 0));
+  return {
+    recoleccionMunicipalKg: total('recoleccion_municipal'),
+    recuperadoresKg: total('recuperador'),
+    entregaVoluntariaKg: total('entrega_voluntaria'),
+    porCooperativa: filas.map((f) => ({ cooperativa: nombres.get(String(f._id.coop)) ?? '—', origen: f._id.origen, kg: round2(f.kg) })).sort((a, b) => b.kg - a.kg),
   };
 }
 

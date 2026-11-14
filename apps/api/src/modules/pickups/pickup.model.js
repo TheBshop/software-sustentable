@@ -5,6 +5,10 @@ const { ObjectId } = mongoose.Schema.Types;
 
 export const ESTADOS_RETIRO = ['registrado', 'en_planta', 'anulado'];
 
+// Documentos que respaldan el traslado: se adjuntan al retiro para que los kilos se puedan
+// contrastar con el papel ante una auditoría o inspección.
+export const TIPOS_DOCUMENTO = { remito: 'Remito', ticket_pesaje: 'Ticket de pesaje', factura: 'Factura', manifiesto: 'Manifiesto de transporte', otro: 'Otro' };
+
 const itemSchema = new mongoose.Schema(
   {
     material: { type: ObjectId, ref: 'Material', required: true },
@@ -32,6 +36,17 @@ const pickupSchema = new mongoose.Schema(
       validate: { validator: (v) => v.length > 0, message: 'El retiro debe tener al menos un material' },
     },
     fotos: [{ _id: false, url: String, subidaEn: { type: Date, default: Date.now } }],
+    documentos: [
+      {
+        tipo: { type: String, enum: Object.keys(TIPOS_DOCUMENTO), required: true },
+        nombre: String, // nombre del archivo original
+        numero: String, // n° de remito, ticket o factura
+        url: { type: String, required: true },
+        mimetype: String,
+        subidoPor: { type: ObjectId, ref: 'User' },
+        subidoEn: { type: Date, default: Date.now },
+      },
+    ],
     ubicacion: { lat: Number, lng: Number },
     observaciones: String,
     estado: { type: String, enum: ESTADOS_RETIRO, default: 'registrado' },

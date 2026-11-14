@@ -28,6 +28,17 @@
 | Módulos que no se integran | Monolito modular con un único modelo de datos | ✅ Por diseño |
 | Demasiados clics | Acciones frecuentes en la misma fila | ✅ Se mantiene |
 
+## Manglai (analizado en noviembre de 2026)
+
+Plataforma ambiental española para **empresas generadoras**: huella de carbono (alcances 1, 2 y 3, GHG Protocol e ISO 14064), huella hídrica y residuos con normativa europea (códigos LER, memoria anual). Se apoya en IA: lee facturas y documentos de traslado, responde preguntas en lenguaje natural, propone planes de acción y se conecta con asistentes como ChatGPT o Claude.
+
+**Incorporado:**
+- Documentos del traslado adjuntos a cada retiro (remito, ticket de pesaje, factura, manifiesto), descargables por la cooperativa y por el cliente en su portal.
+- Factor de CO₂ con su fuente en cada material, guardado en el certificado y listado por cooperativa en el informe anual. El informe aclara el uso en reportes GHG: los kg son dato de Alcance 3, categoría 5 del generador y lo evitado se informa aparte, sin restarlo del inventario.
+- Recomendaciones automáticas al generador, con reglas explicables a partir de sus rechazos y su tasa de valorización.
+
+**Para más adelante:** lectura de documentos con IA, preguntas en lenguaje natural sobre los datos, calculadora pública de impacto. **No aplica:** huella completa (alcances 1 y 2), huella hídrica, códigos LER.
+
 ## Roadmap posterior (núcleo de mercado que falta)
 
 Ordenado por valor para cooperativas argentinas. Ver historias en [04-backlog.md](04-backlog.md).

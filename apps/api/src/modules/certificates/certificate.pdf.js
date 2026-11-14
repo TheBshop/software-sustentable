@@ -47,6 +47,10 @@ export async function renderCertificatePdf(cert, stream, { mostrarCosto = false 
   if (cert.clienteSnapshot.cuit) doc.text(`CUIT: ${cert.clienteSnapshot.cuit}`);
   doc.text(`Fecha de retiro: ${fmtFecha(cert.fechaRetiro)}`);
   doc.text(`Fecha de emisión: ${fmtFecha(cert.createdAt)}`);
+  // Habilitaciones del emisor (ej. registro municipal de acopios, Ord. 9233 de Paraná, art. 28)
+  for (const r of cert.emisorSnapshot?.registros ?? []) {
+    doc.fontSize(9).fillColor('#555').text(`${r.descripcion} N° ${r.numero}${r.organismo ? ` · ${r.organismo}` : ''}`).fontSize(12).fillColor('black');
+  }
 
   // Tabla de materiales
   doc.moveDown(1.5);
@@ -97,10 +101,17 @@ export async function renderCertificatePdf(cert, stream, { mostrarCosto = false 
     if (cert.emisorSnapshot?.cargo) doc.fontSize(9).fillColor('#555').text(cert.emisorSnapshot.cargo, 400, yf + 94, { width: 145, align: 'center' });
   }
 
-  doc.fontSize(8).fillColor('#777').text(
-    'El CO2 evitado se estima con factores de emisión por material configurados por la cooperativa.',
+  // Metodología: factor y fuente de cada material (trazabilidad del cálculo) y uso en reportes GHG
+  const factores = [...new Map(cert.materiales.filter((m) => m.factorCo2 != null).map((m) => [m.nombre, m])).values()];
+  const lineaFactores = factores.length
+    ? 'Factores: ' + factores.map((m) => `${m.nombre} ${fmtNum(m.factorCo2)} kg CO2e/kg (${m.factorCo2Fuente || 'fuente no indicada'})`).join('; ') + '. '
+    : 'El CO2 evitado se estima con factores de emisión por material configurados por la cooperativa. ';
+  doc.fontSize(7).fillColor('#777').text(
+    lineaFactores +
+      'Para el generador, los kilos son dato de actividad de Alcance 3, categoría 5 (residuos generados en las operaciones) del GHG Protocol. ' +
+      'Las emisiones evitadas por reciclar se informan aparte y no se restan del inventario.',
     50,
-    doc.page.height - 80,
+    doc.page.height - 88,
     { width: 495, align: 'center' },
   );
   doc.end();

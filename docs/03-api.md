@@ -105,3 +105,14 @@ Además, `/dashboard` devuelve `planta.indicadores = { ingresadoKg, valorizadoKg
 | `PATCH /api/planta/organizacion` | admin | `{responsable, cargo}` de los certificados. |
 | `POST /api/planta/organizacion/firma` y `/sello` | admin | Imagen PNG o JPG de hasta 2 MB (campo `imagen`). |
 | `GET /api/v1/portal/resumen` | portal | Suma `separacion { ingresadoKg, rechazadoKg, tasaCorrecta, causas }`. |
+
+### Ordenanza 9233 y herramientas de Manglai
+
+| Método y ruta | Rol | Qué hace |
+|---|---|---|
+| `PUT /api/planta/organizacion/registros` | admin | Inscripciones de la cooperativa (`descripcion`, `organismo`, `numero`, `vence`). Las vigentes se imprimen en el certificado. |
+| `GET/POST/PATCH/DELETE /api/seguridad` y `GET /api/seguridad/resumen` | administración | Entregas de EPP y capacitaciones; el resumen marca a quién hay que renovar (EPP 180 días, capacitación 365). |
+| `POST /api/retiros/:id/documentos` | chofer, planta, administración | Multipart: `tipo` (remito, ticket_pesaje, factura, manifiesto, otro), `numero` y `archivo` (PDF, JPG o PNG, 5 MB). |
+| `GET` y `DELETE /api/retiros/:id/documentos/:docId` | — / planta | Descarga con sesión o baja del documento. |
+| `GET /api/v1/portal/retiros/:id/documentos/:docId` | portal | El cliente descarga los documentos de sus retiros. |
+| `GET /api/v1/portal/resumen` | portal | Suma `recomendaciones`, `porMaterial[].factores` (factor y fuente por cooperativa) e `inclusion` (solo municipios). |

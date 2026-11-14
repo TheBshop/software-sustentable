@@ -28,6 +28,22 @@ plantaRouter.patch('/organizacion', requireRole(), async (req, res) => {
   res.json({ certificado: org.certificado });
 });
 
+// Registros e inscripciones de la cooperativa (van impresos en el certificado). Solo admin.
+const registroInput = z.object({
+  descripcion: z.string().min(2).max(160),
+  organismo: z.string().max(160).optional(),
+  numero: z.string().min(1).max(60),
+  corriente: z.enum(['rsu', 'regu', 'peligroso', 'industrial', 'fitosanitario']).optional(),
+  vence: dateInput.optional(),
+});
+plantaRouter.put('/organizacion/registros', requireRole(), async (req, res) => {
+  const registros = z.array(registroInput).max(10).parse(req.body.registros);
+  const org = await Organization.findById(currentTenant());
+  org.set('habilitaciones.registros', registros);
+  await org.save();
+  res.json({ registros: org.habilitaciones.registros });
+});
+
 // Firma y sello escaneados para el certificado (PNG o JPG, hasta 2 MB).
 const subirImagen = multer({
   storage: multer.memoryStorage(),

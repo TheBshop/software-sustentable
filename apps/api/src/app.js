@@ -18,6 +18,7 @@ import { resolverPesos } from './modules/materials/unidades.js';
 import { anotarReferencias, avisosPrecio, ventasResumenRouter } from './modules/plant/ventas.service.js';
 import { Gasto, gastoInput } from './modules/finanzas/gasto.model.js';
 import { balanceRouter } from './modules/finanzas/balance.routes.js';
+import { RegistroSeguridad, registroInput, registroUpdate, seguridadResumenRouter } from './modules/seguridad/seguridad.js';
 import { accesoPortalRouter } from './modules/clients/acceso.routes.js';
 import { assertHabilitados, assertCorrienteHabilitada, registrarIngreso, registrarVenta } from './modules/movimientos/movimiento.service.js';
 import { pickupsRouter } from './modules/pickups/pickup.routes.js';
@@ -131,6 +132,9 @@ export function createApp(config = {}) {
   coopApi.use('/planta', plantaRouter);
   coopApi.use('/gastos', requireRole('administracion'), crudRouter(Gasto, { createSchema: gastoInput, filters: ['categoria'], sort: '-fecha', writeRoles: ['administracion'] }));
   coopApi.use('/balance', requireRole('administracion'), balanceRouter);
+  // Seguridad e higiene del personal (Ord. 9233 de Paraná, art. 21)
+  coopApi.use('/seguridad', requireRole('administracion'), seguridadResumenRouter);
+  coopApi.use('/seguridad', requireRole('administracion'), crudRouter(RegistroSeguridad, { createSchema: registroInput, updateSchema: registroUpdate, filters: ['tipo', 'persona'], sort: '-fecha', writeRoles: ['administracion'] }));
 
   app.use(notFound);
   app.use(errorHandler);

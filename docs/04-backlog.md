@@ -104,3 +104,17 @@ Personas: **Chofer** (hace los retiros), **Planta** (recibe y pesa), **Administr
   - pesar una vez 5 a 10 fardos y bolsones de cada material para cargar los pesos promedio reales;
   - escanear la firma y el sello;
   - actualizar los precios de referencia cada mes.
+
+## Ordenanza 9233 de Paraná y herramientas de Manglai ✅
+
+- ✅ Residuos de gestión diferenciada del art. 5 como tipos de REGU.
+- ✅ Inscripciones de la cooperativa (registro municipal de acopios, art. 28) impresas en el certificado.
+- ✅ Seguridad e higiene: entregas de EPP y capacitaciones, con aviso de vencimiento (art. 21).
+- ✅ Portal del municipio: kg ingresados por recolección municipal y por recuperadores (arts. 34 y 35).
+- ✅ Documentos del traslado adjuntos al retiro, visibles para el cliente.
+- ✅ Factor de CO₂ con su fuente en certificados e informe, con la aclaración de Alcance 3, categoría 5.
+- ✅ Recomendaciones automáticas al generador en el portal y en el informe anual.
+- ⏳ Pendiente:
+  - encontrar la norma específica de grandes generadores de Paraná;
+  - cargar las fuentes reales de los factores de CO₂;
+  - el número real del registro municipal de la cooperativa.

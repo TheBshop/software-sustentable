@@ -12,7 +12,10 @@ const certificateSchema = new mongoose.Schema(
     retiro: { type: ObjectId, ref: 'Pickup', required: true, unique: true },
     cliente: { type: ObjectId, ref: 'Client', required: true },
     clienteSnapshot: { razonSocial: String, cuit: String },
-    emisorSnapshot: { nombre: String, cuit: String, responsable: String, cargo: String, firmaUrl: String, selloUrl: String }, // quién certifica
+    emisorSnapshot: {
+      nombre: String, cuit: String, responsable: String, cargo: String, firmaUrl: String, selloUrl: String,
+      registros: [{ _id: false, descripcion: String, organismo: String, numero: String }], // habilitaciones vigentes al emitir
+    }, // quién certifica
     // Costo del servicio de ese retiro según la tarifa del cliente (pedido del diagnóstico).
     // Solo se muestra al cliente y a la cooperativa, no en la verificación pública.
     costoServicio: { importe: Number, modalidad: String },
@@ -28,6 +31,8 @@ const certificateSchema = new mongoose.Schema(
         fraccion: String, // Decreto 779/22, Anexo II
         valorizable: Boolean, // false = disposición final
         co2EvitadoKg: Number,
+        factorCo2: Number, // kg CO2e evitados por kg, al momento de emitir
+        factorCo2Fuente: String, // de dónde sale el factor (trazabilidad del cálculo)
       },
     ],
     totalKg: Number,

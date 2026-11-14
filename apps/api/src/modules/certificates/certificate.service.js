@@ -31,6 +31,8 @@ export async function issueCertificate(pickupId) {
       fraccion: it.material.fraccion,
       valorizable: it.material.valorizable !== false,
       co2EvitadoKg: round2(kg * (it.material.factorCo2 ?? 0)),
+      factorCo2: it.material.factorCo2 ?? 0,
+      factorCo2Fuente: it.material.factorCo2Fuente,
     };
   });
 
@@ -40,7 +42,14 @@ export async function issueCertificate(pickupId) {
     retiro: pickup._id,
     cliente: pickup.cliente._id,
     clienteSnapshot: { razonSocial: pickup.cliente.razonSocial, cuit: pickup.cliente.cuit },
-    emisorSnapshot: await Organization.findById(currentTenant()).then((o) => ({ nombre: o?.nombre, cuit: o?.cuit, ...(o?.certificado?.toObject?.() ?? o?.certificado ?? {}) })),
+    emisorSnapshot: await Organization.findById(currentTenant()).then((o) => ({
+      nombre: o?.nombre,
+      cuit: o?.cuit,
+      ...(o?.certificado?.toObject?.() ?? o?.certificado ?? {}),
+      registros: (o?.habilitaciones?.registros ?? [])
+        .filter((r) => !r.vence || r.vence >= new Date())
+        .map(({ descripcion, organismo, numero }) => ({ descripcion, organismo, numero })),
+    })),
     costoServicio: { importe: importeDeRetiro(pickup, pickup.cliente), modalidad: pickup.cliente.tarifa?.modalidad },
     fechaRetiro: pickup.fecha,
     materiales,
@@ -63,7 +72,9 @@ export function publicView(cert) {
     fechaRetiro: cert.fechaRetiro,
     generador: cert.clienteSnapshot,
     emisor: cert.emisorSnapshot,
-    materiales: cert.materiales.map(({ nombre, pesoKg, pesoEstimado, co2EvitadoKg, fraccion, valorizable }) => ({
+    materiales: cert.materiales.map(({ nombre, pesoKg, pesoEstimado, co2EvitadoKg, fraccion, valorizable, factorCo2, factorCo2Fuente }) => ({
+      factorCo2,
+      factorCo2Fuente,
       nombre,
       pesoKg,
       pesoEstimado,
