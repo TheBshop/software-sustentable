@@ -11,6 +11,7 @@ import { requireOrgTipo } from '../../middleware/auth.js';
 import { HttpError } from '../../middleware/error.js';
 import { runWithoutTenant } from '../../lib/tenancy.js';
 import { enviarDocumento } from '../pickups/pickup.routes.js';
+import { clasificadorRouter } from '../normativa/clasificador.js';
 import { datosConstancia, renderConstanciaPdf } from '../certificates/constancia.js';
 import { Solicitud, MOTIVOS_NO_REALIZADO } from '../logistica/solicitud.model.js';
 import { Client } from '../clients/client.model.js';
@@ -31,6 +32,9 @@ async function misClientes(req) {
   req._clientes ??= await clientesDeOrganizacion(req.user.org);
   return req._clientes.map((c) => c._id);
 }
+
+// Clasificador de residuos: el municipio y las empresas generadoras también lo usan
+portalRouter.use('/clasificador', clasificadorRouter);
 
 portalRouter.get('/organizacion', async (req, res) => {
   const org = await Organization.findById(req.user.org).select('nombre cuit tipo');

@@ -160,3 +160,18 @@ Funciones tomadas del análisis de Rubicon, Routeware, Sensoneo, Enevo, Recy y R
 | `PATCH /api/logistica/configuracion` | admin | `kgObjetivoRetiro` y `ubicacion` de la planta. |
 | `GET/POST/PATCH /api/recuperadores`, `GET /api/recuperadores/resumen?mes=` | administración, planta | Registro de recuperadores y lo comprado a cada uno en el mes. |
 | `GET/POST /api/compras`, `PATCH /api/compras/:id`, `GET /api/compras/:id/recibo.pdf` | administración, planta | Compra de material:<br>• entra al stock como ingreso de recuperador;<br>• acepta kg o unidades (fardos, bolsones);<br>• cuando se paga, va al balance como egreso;<br>• sale con un recibo numerado. |
+
+### Clasificador y certificado verde (ver doc 11)
+
+| Método y ruta | Rol | Qué hace |
+|---|---|---|
+| `GET /api/clasificador/catalogo` y `POST /api/clasificador` | cooperativa | Clasifica un residuo en los tres niveles: `{origen, cat, h[], y, riesgo, provincia?}`. |
+| `GET /api/v1/portal/clasificador/catalogo` y `POST` | portal | Lo mismo para municipios y empresas generadoras. |
+| `PATCH /api/planta/organizacion/certificado-verde` | admin | Domicilio, INAES, habilitación municipal, aptitud ambiental, registro provincial, calibración de la báscula, transporte, responsable técnico y procesos. |
+| `GET /api/certificados/requisitos` | cooperativa | Lo que le falta a la organización para que sus certificados sean válidos. |
+| `PATCH /api/retiros/:id` con `traslado` | planta | `{tipo: remito, carta_porte o manifiesto, numero}`, el documento del traslado. |
+
+Los certificados devuelven:
+- `validez` (`completo`, `documento`, `faltan`);
+- `transportistaSnapshot`, `traslado`, `recepcion`, `balance`, `procesos`;
+- la `operacion` R o D de cada material.

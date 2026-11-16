@@ -19,6 +19,7 @@ import Normativa from './pages/Normativa.jsx';
 import Demo from './pages/Demo.jsx';
 import Productividad from './pages/Productividad.jsx';
 import Agenda from './pages/Agenda.jsx';
+import Clasificar from './pages/Clasificar.jsx';
 import Recuperadores from './pages/Recuperadores.jsx';
 import PortalPedidos from './pages/portal/Pedidos.jsx';
 import VerificarCertificado from './pages/VerificarCertificado.jsx';
@@ -65,6 +66,7 @@ function CoopSidebar() {
       <NavLink to="/facturacion">Facturación <Badge n={nAlertas} alert={alertas.data?.vencidas.length > 0} /></NavLink>
       <NavLink to="/clientes">Clientes</NavLink>
       <NavLink to="/materiales">Materiales</NavLink>
+      <NavLink to="/clasificar">Clasificar residuos</NavLink>
       <NavLink to="/normativa">Marco normativo</NavLink>
       {['admin', 'administracion'].includes(getUser()?.rol) && (
         <>
@@ -91,6 +93,7 @@ function PortalSidebar() {
       <NavLink to="/portal/certificados">Certificados</NavLink>
       <NavLink to="/portal/facturas">Facturas</NavLink>
       <NavLink to="/portal/informe">Informe anual</NavLink>
+      <NavLink to="/portal/clasificar">Clasificar residuos</NavLink>
       {user?.rol === 'cliente_admin' && <NavLink to="/portal/usuarios">Usuarios</NavLink>}
       <Salir />
     </nav>
@@ -137,6 +140,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
           <Route path="/configuracion" element={<Configuracion />} />
           <Route path="/seguridad" element={<Seguridad />} />
           <Route path="/normativa" element={<Normativa />} />
+          <Route path="/clasificar" element={<Clasificar />} />
           <Route path="/productividad" element={<Productividad />} />
           <Route path="/agenda" element={<Agenda />} />
           <Route path="/recuperadores" element={<Recuperadores />} />
@@ -144,6 +148,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
         <Route path="/portal" element={<Zona portal />}>
           <Route index element={<PortalInicio />} />
           <Route path="pedidos" element={<PortalPedidos />} />
+          <Route path="clasificar" element={<Clasificar base="/v1/portal/clasificador" />} />
           <Route path="retiros" element={<PortalRetiros />} />
           <Route path="certificados" element={<PortalCertificados />} />
           <Route path="facturas" element={<PortalFacturas />} />

@@ -25,6 +25,19 @@ const organizationSchema = new mongoose.Schema(
       // Ej.: registro municipal de depósitos de acopio (Paraná, Ord. 9233 art. 28), inscripción provincial…
       registros: [{ _id: false, descripcion: String, corriente: { type: String, enum: CORRIENTES }, organismo: String, numero: String, vence: Date }],
     },
+    domicilio: { type: String, trim: true }, // domicilio real de la planta (va en el certificado)
+    // Datos que exige el certificado verde (ver modules/certificates/certificado-verde.js)
+    certificadoVerde: {
+      inaes: String, // matrícula INAES (cooperativas)
+      habilitacionMunicipal: String,
+      caa: String, // certificado de aptitud ambiental provincial
+      registroProvincial: String, // destinos sustentables / registro provincial de operadores
+      basculaVence: Date, // vencimiento de la calibración de la báscula
+      transporte: { propio: { type: Boolean, default: true }, razonSocial: String, cuit: String, habilitacion: String },
+      responsableTecnico: String, // plantas industriales
+      matriculaTecnico: String,
+      procesos: [String], // clasificación, enfardado, molienda, lavado, extrusión
+    },
     // Solo cooperativas: quién firma los certificados, con firma y sello escaneados
     certificado: { responsable: String, cargo: String, firmaUrl: String, selloUrl: String },
     // Dónde opera (define el marco normativo que aplica: ver modules/normativa/jurisdicciones.js)

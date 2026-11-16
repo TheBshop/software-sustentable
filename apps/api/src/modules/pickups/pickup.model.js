@@ -51,7 +51,9 @@ const pickupSchema = new mongoose.Schema(
     observaciones: String,
     estado: { type: String, enum: ESTADOS_RETIRO, default: 'registrado' },
     certificado: { type: ObjectId, ref: 'Certificate', default: null },
-    solicitud: { type: ObjectId, ref: 'Solicitud' }, // pedido de retiro que se cumplió con este retiro
+    solicitud: { type: ObjectId, ref: 'Solicitud' },
+    // Documento del traslado (requisito del certificado verde). Sin él, se usa el número del retiro.
+    traslado: { tipo: { type: String, enum: ['remito', 'carta_porte', 'manifiesto'] }, numero: String }, // pedido de retiro que se cumplió con este retiro
     factura: { type: ObjectId, ref: 'Invoice', default: null },
   },
   { timestamps: true },

@@ -11,11 +11,21 @@ const certificateSchema = new mongoose.Schema(
     numero: Number, // correlativo por cooperativa
     retiro: { type: ObjectId, ref: 'Pickup', required: true, unique: true },
     cliente: { type: ObjectId, ref: 'Client', required: true },
-    clienteSnapshot: { razonSocial: String, cuit: String },
+    clienteSnapshot: { razonSocial: String, cuit: String, domicilio: String },
     emisorSnapshot: {
       nombre: String, cuit: String, responsable: String, cargo: String, firmaUrl: String, selloUrl: String,
       registros: [{ _id: false, descripcion: String, organismo: String, numero: String }], // habilitaciones vigentes al emitir
-    }, // quién certifica
+      domicilio: String, perfil: String, provincia: String,
+      inaes: String, habilitacionMunicipal: String, caa: String, registroProvincial: String,
+      responsableTecnico: String, matriculaTecnico: String,
+    },
+    // Certificado verde: transportista, traslado, recepción, balance de masa, procesos y validez
+    transportistaSnapshot: { razonSocial: String, cuit: String, habilitacion: String },
+    traslado: { tipo: String, numero: String, fecha: Date },
+    recepcion: { fecha: Date, bascula: Boolean },
+    balance: { recibidoKg: Number, recuperadoKg: Number, rechazoKg: Number },
+    procesos: [String],
+    validez: { completo: Boolean, documento: String, faltan: [{ _id: false, grupo: String, texto: String }] }, // quién certifica
     // Costo del servicio de ese retiro según la tarifa del cliente (pedido del diagnóstico).
     // Solo se muestra al cliente y a la cooperativa, no en la verificación pública.
     costoServicio: { importe: Number, modalidad: String },
@@ -31,6 +41,7 @@ const certificateSchema = new mongoose.Schema(
         fraccion: String, // Decreto 779/22, Anexo II
         valorizable: Boolean, // false = disposición final
         tratamiento: String, // reciclado, reuso, compostaje, disposicion_final (Ley 25.612, art. 21)
+        operacion: String, // código R o D del Anexo III de la Ley 24.051
         co2EvitadoKg: Number,
         factorCo2: Number, // kg CO2e evitados por kg, al momento de emitir
         factorCo2Fuente: String, // de dónde sale el factor (trazabilidad del cálculo)

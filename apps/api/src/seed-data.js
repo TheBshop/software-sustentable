@@ -60,10 +60,13 @@ const DAY = 24 * 60 * 60 * 1000;
 /** Carga los datos de ejemplo. Asume una base vacía y ya conectada. */
 export async function seedDatabase() {
   const orgs = {
-    nv: await Organization.create({ tipo: 'cooperativa', perfil: 'cooperativa', jurisdiccion: { provincia: 'entre_rios', municipio: 'parana', ciudad: 'Paraná' }, nombre: 'Cooperativa Nueva Vida', cuit: '30700000014', habilitaciones: { corrientes: ['rsu', 'regu'], registros: [{ descripcion: 'Registro municipal de depósitos de acopio', organismo: 'Municipalidad de Paraná (Ord. 9233, art. 28)', numero: 'EJEMPLO-0001' }] }, certificado: { responsable: 'Responsable de ejemplo', cargo: 'Presidencia' }, planta: { capacidadTnMes: 600, horasTrabajablesMes: 176 } }),
-    litoral: await Organization.create({ tipo: 'cooperativa', nombre: 'Cooperativa Reciclar del Litoral', cuit: '30700000022', habilitaciones: { corrientes: ['rsu'] } }),
-    empresa: await Organization.create({ tipo: 'empresa', nombre: 'Supermercado El Puente SA', cuit: '30712345678' }),
-    municipio: await Organization.create({ tipo: 'municipio', nombre: 'Municipio de Ejemplo', cuit: '30999999991' }),
+    nv: await Organization.create({ tipo: 'cooperativa', perfil: 'cooperativa', jurisdiccion: { provincia: 'entre_rios', municipio: 'parana', ciudad: 'Paraná' }, nombre: 'Cooperativa Nueva Vida', cuit: '30700000016', habilitaciones: { corrientes: ['rsu', 'regu'], registros: [{ descripcion: 'Registro municipal de depósitos de acopio', organismo: 'Municipalidad de Paraná (Ord. 9233, art. 28)', numero: 'EJEMPLO-0001' }] }, certificado: { responsable: 'Responsable de ejemplo', cargo: 'Presidencia' }, planta: { capacidadTnMes: 600, horasTrabajablesMes: 176 },
+      // Datos del certificado verde: valores de EJEMPLO, hay que cargar los reales
+      domicilio: 'Planta de ejemplo, Paraná, Entre Ríos',
+      certificadoVerde: { inaes: 'EJEMPLO-INAES', habilitacionMunicipal: 'EJEMPLO-HM-001', caa: 'EJEMPLO-CAA-001', registroProvincial: 'EJEMPLO-OP-001', basculaVence: new Date(Date.now() + 200 * 864e5), transporte: { propio: true, habilitacion: 'EJEMPLO-HT-001' }, procesos: ['Clasificación', 'Enfardado'] } }),
+    litoral: await Organization.create({ tipo: 'cooperativa', nombre: 'Cooperativa Reciclar del Litoral', cuit: '30700000024', habilitaciones: { corrientes: ['rsu'] } }),
+    empresa: await Organization.create({ tipo: 'empresa', nombre: 'Supermercado El Puente SA', cuit: '30712345671' }),
+    municipio: await Organization.create({ tipo: 'municipio', nombre: 'Municipio de Ejemplo', cuit: '30999999995' }),
   };
   const users = {};
   for (const u of SEED_USUARIOS) {
@@ -83,21 +86,21 @@ async function seedNuevaVida(orgs, chofer) {
   const [superm, hotel, escuela, distri, municipio, acopio] = await Client.insertMany(
     [
       {
-        razonSocial: 'Supermercado El Puente SA', cuit: '30712345678', organizacion: orgs.empresa._id,
+        razonSocial: 'Supermercado El Puente SA', cuit: '30712345671', organizacion: orgs.empresa._id,
         contacto: { nombre: 'Laura', email: 'compras@elpuente.example', telefono: '5493430000001' },
         direcciones: [{ alias: 'Sucursal Centro', direccion: 'Av. Ejemplo 1200, Paraná' }],
         tarifa: { modalidad: 'por_retiro', montoFijo: 15000 },
         contrato: { numero: 'GG-2026-001', inicio: new Date('2026-01-01'), fin: new Date('2026-12-31'), frecuenciaRetiro: 'martes y viernes', diasPagoFactura: 15 },
       },
       {
-        razonSocial: 'Hotel Costa Serena SRL', cuit: '30798765432',
+        razonSocial: 'Hotel Costa Serena SRL', cuit: '30798765430',
         contacto: { nombre: 'Martín', email: 'admin@costaserena.example', telefono: '5493430000002' },
         direcciones: [{ direccion: 'Calle Ribera 455, Paraná' }],
         tarifa: { modalidad: 'por_kg', preciosPorKg: [] },
         contrato: { diasPagoFactura: 10 },
       },
       {
-        razonSocial: 'Escuela Técnica Modelo', cuit: '30700111223',
+        razonSocial: 'Escuela Técnica Modelo', cuit: '30700111225',
         contacto: { email: 'direccion@etmodelo.example', telefono: '5493430000003' },
         direcciones: [{ direccion: 'Pasaje Escolar 80, Paraná' }],
         tarifa: { modalidad: 'abono_mensual', montoFijo: 40000 },
@@ -111,7 +114,7 @@ async function seedNuevaVida(orgs, chofer) {
       },
       {
         // El municipio es un cliente más, con varias sedes (dependencias)
-        razonSocial: 'Municipio de Ejemplo', cuit: '30999999991', organizacion: orgs.municipio._id,
+        razonSocial: 'Municipio de Ejemplo', cuit: '30999999995', organizacion: orgs.municipio._id,
         contacto: { nombre: 'Área de Ambiente', email: 'ambiente@municipio.example', telefono: '5493430000005' },
         direcciones: [
           { alias: 'Palacio municipal', direccion: 'Plaza Central s/n' },
@@ -120,7 +123,7 @@ async function seedNuevaVida(orgs, chofer) {
         ],
         tarifa: { modalidad: 'sin_cargo' },
       },
-      { tipo: 'comprador', razonSocial: 'Acopiadora Litoral (comprador)', cuit: '30711111119' },
+      { tipo: 'comprador', razonSocial: 'Acopiadora Litoral (comprador)', cuit: '30711111111' },
     ].map((c) => new Client(c)),
   );
   hotel.tarifa.preciosPorKg = [{ material: m.VID._id, precio: 25 }];
@@ -291,7 +294,7 @@ async function seedLitoral(orgs, admin) {
   const m = Object.fromEntries(mats.map((x) => [x.codigo, x]));
   const [puente] = await Client.insertMany([
     new Client({
-      razonSocial: 'Supermercado El Puente SA', cuit: '30712345678', organizacion: orgs.empresa._id,
+      razonSocial: 'Supermercado El Puente SA', cuit: '30712345671', organizacion: orgs.empresa._id,
       direcciones: [{ alias: 'Sucursal Santa Fe', direccion: 'Bv. Ejemplo 300, Santa Fe' }],
       tarifa: { modalidad: 'por_retiro', montoFijo: 18000 },
       contrato: { diasPagoFactura: 20 },

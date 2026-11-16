@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { api, apiForm, fileUrl } from '../api.js';
 import { useLoad, ErrorMsg, Tag } from '../ui.jsx';
 import { CORRIENTES } from '../residuos.jsx';
+import CertificadoVerdeConfig from './CertificadoVerdeConfig.jsx';
 
 /** Datos de la cooperativa que aparecen en los certificados: responsable, firma y sello. */
 export default function Configuracion() {
@@ -84,6 +85,7 @@ export default function Configuracion() {
           </div>
         </section>
       </div>
+      {data && <CertificadoVerdeConfig org={data} onSaved={reload} />}
       <Registros registros={data?.habilitaciones?.registros ?? []} onSaved={reload} />
     </>
   );

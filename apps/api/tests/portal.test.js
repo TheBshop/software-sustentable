@@ -110,7 +110,7 @@ describe('Dar acceso al portal desde la cooperativa', () => {
   });
 
   it('otra cooperativa con el mismo CUIT se vincula a la misma organización', async () => {
-    const cli = (await request(app).post('/api/clientes').set(ctx.as(LITORAL)).send({ razonSocial: 'Hotel Costa Serena SRL', cuit: '30-79876543-2' }).expect(201)).body;
+    const cli = (await request(app).post('/api/clientes').set(ctx.as(LITORAL)).send({ razonSocial: 'Hotel Costa Serena SRL', cuit: '30-79876543-0' }).expect(201)).body;
     const res = await request(app).post(`/api/clientes/${cli._id}/acceso-portal`).set(ctx.as(LITORAL)).send({ email: 'otra@hotel.local', nombre: 'Otra persona' }).expect(201);
     expect(res.body.vinculadaExistente).toBe(true);
     expect(res.body.organizacion.nombre).toBe('Hotel Costa Serena SRL');

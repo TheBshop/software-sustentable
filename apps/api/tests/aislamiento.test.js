@@ -57,7 +57,7 @@ describe('Aislamiento entre cooperativas', () => {
     await request(app).post('/api/materiales').set(ctx.as(LITORAL)).send({ codigo: 'ALU', nombre: 'Aluminio', categoria: 'metales' }).expect(201);
     await request(app).post('/api/materiales').set(ctx.as(LITORAL)).send({ codigo: 'ALU', nombre: 'Otro', categoria: 'metales' }).expect(409);
     // El Puente ya es cliente de Litoral con ese CUIT
-    await request(app).post('/api/clientes').set(ctx.as(LITORAL)).send({ razonSocial: 'Duplicado', cuit: '30-71234567-8' }).expect(409);
+    await request(app).post('/api/clientes').set(ctx.as(LITORAL)).send({ razonSocial: 'Duplicado', cuit: '30-71234567-1' }).expect(409);
   });
 
   it('cada cooperativa tiene su propia numeración', async () => {

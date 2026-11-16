@@ -1,7 +1,10 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import { Certificate } from './certificate.model.js';
-import { publicView, sendCertificate } from './certificate.service.js';
+import { publicView, sendCertificate, validezDe } from './certificate.service.js';
+import { requisitosOrganizacion, reglasJurisdiccion } from './certificado-verde.js';
+import { Organization } from '../organizations/organization.model.js';
+import { currentTenant } from '../../lib/tenancy.js';
 import { renderCertificatePdf } from './certificate.pdf.js';
 import { requireRole } from '../../middleware/auth.js';
 import { HttpError } from '../../middleware/error.js';
@@ -11,7 +14,15 @@ export const certificatesRouter = Router();
 
 certificatesRouter.get('/', async (req, res) => {
   const query = typeof req.query.cliente === 'string' ? { cliente: req.query.cliente } : {};
-  res.json({ items: await Certificate.find(query).sort('-createdAt').limit(200) });
+  const items = await Certificate.find(query).sort('-createdAt').limit(200);
+  res.json({ items: items.map((c) => ({ ...c.toJSON(), validez: validezDe(c) })) });
+});
+
+// Lo que le falta a la organización para que sus certificados sean certificados verdes válidos
+certificatesRouter.get('/requisitos', async (_req, res) => {
+  const org = await Organization.findById(currentTenant());
+  const items = requisitosOrganizacion(org);
+  res.json({ documento: reglasJurisdiccion(org?.jurisdiccion?.provincia).documento, provincia: org?.jurisdiccion?.provincia ?? null, completo: items.every((i) => i.ok), items });
 });
 
 certificatesRouter.get('/:id/pdf', async (req, res) => {

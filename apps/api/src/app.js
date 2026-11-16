@@ -22,6 +22,7 @@ import { RegistroSeguridad, registroInput, registroUpdate, seguridadResumenRoute
 import { accesoPortalRouter } from './modules/clients/acceso.routes.js';
 import { constanciaRouter } from './modules/certificates/constancia.js';
 import { normativaRouter } from './modules/normativa/normativa.routes.js';
+import { clasificadorRouter } from './modules/normativa/clasificador.js';
 import { productividadRouter } from './modules/productividad/productividad.routes.js';
 import { solicitudesRouter, hojaDeRutaRouter, logisticaRouter } from './modules/logistica/logistica.routes.js';
 import { Recuperador, recuperadorInput, comprasRouter, recuperadoresResumenRouter } from './modules/recuperadores/recuperadores.js';
@@ -88,6 +89,7 @@ export function createApp(config = {}) {
   coopApi.use('/clientes', accesoPortalRouter);
   coopApi.use('/clientes', constanciaRouter); // constancia anual de reciclado (Ley 25.612)
   coopApi.use('/normativa', normativaRouter); // marco normativo según la jurisdicción
+  coopApi.use('/clasificador', clasificadorRouter); // clasificación de residuos en los tres niveles
   coopApi.use('/productividad', productividadRouter); // indicadores de la guía de productividad de plantas
   coopApi.use('/solicitudes', solicitudesRouter); // pedidos de retiro
   coopApi.use('/hoja-de-ruta', hojaDeRutaRouter); // paradas del día, en orden sugerido

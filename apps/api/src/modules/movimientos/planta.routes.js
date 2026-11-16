@@ -16,7 +16,7 @@ export const plantaRouter = Router();
 // Datos de la cooperativa del usuario (nombre, habilitaciones): los usan la web y la app.
 plantaRouter.get('/organizacion', async (_req, res) => {
   const org = await Organization.findById(currentTenant());
-  res.json({ id: org._id, nombre: org.nombre, cuit: org.cuit, tipo: org.tipo, perfil: org.perfil, planta: org.planta, jurisdiccion: org.jurisdiccion, prototipo: org.prototipo, habilitaciones: org.habilitaciones, certificado: org.certificado ?? {} });
+  res.json({ id: org._id, nombre: org.nombre, cuit: org.cuit, tipo: org.tipo, perfil: org.perfil, planta: org.planta, domicilio: org.domicilio, certificadoVerde: org.certificadoVerde ?? {}, jurisdiccion: org.jurisdiccion, prototipo: org.prototipo, habilitaciones: org.habilitaciones, certificado: org.certificado ?? {} });
 });
 
 // Datos que firman los certificados (responsable y cargo). Solo admin.
@@ -26,6 +26,30 @@ plantaRouter.patch('/organizacion', requireRole(), async (req, res) => {
   org.set({ 'certificado.responsable': data.responsable, 'certificado.cargo': data.cargo });
   await org.save();
   res.json({ certificado: org.certificado });
+});
+
+// Datos del certificado verde (domicilio, habilitaciones, báscula, transporte, firma técnica)
+const cvInput = z.object({
+  domicilio: z.string().max(200).optional(),
+  cuit: z.string().max(20).optional(),
+  inaes: z.string().max(40).optional(),
+  habilitacionMunicipal: z.string().max(60).optional(),
+  caa: z.string().max(60).optional(),
+  registroProvincial: z.string().max(60).optional(),
+  basculaVence: dateInput.nullable().optional(),
+  transporte: z.object({ propio: z.boolean(), razonSocial: z.string().max(160).optional(), cuit: z.string().max(20).optional(), habilitacion: z.string().max(60).optional() }).optional(),
+  responsableTecnico: z.string().max(120).optional(),
+  matriculaTecnico: z.string().max(60).optional(),
+  procesos: z.array(z.enum(['Clasificación', 'Enfardado', 'Molienda', 'Lavado', 'Extrusión', 'Compostaje'])).max(6).optional(),
+});
+plantaRouter.patch('/organizacion/certificado-verde', requireRole(), async (req, res) => {
+  const { domicilio, cuit, ...cv } = cvInput.parse(req.body);
+  const org = await Organization.findById(currentTenant());
+  if (domicilio !== undefined) org.domicilio = domicilio;
+  if (cuit && !org.cuit) org.cuit = cuit.replace(/\D/g, ''); // el CUIT solo se carga si faltaba
+  for (const [k, v] of Object.entries(cv)) org.set('certificadoVerde.' + k, v ?? undefined);
+  await org.save();
+  res.json({ domicilio: org.domicilio, cuit: org.cuit, certificadoVerde: org.certificadoVerde });
 });
 
 // Registros e inscripciones de la cooperativa (van impresos en el certificado). Solo admin.

@@ -29,7 +29,7 @@ export default function Retiros() {
         if (!(real >= 0) || editing.pesos[i] === '') throw new Error('Completá el peso de todos los materiales.');
         return { material: it.material._id, pesoEstimadoKg: it.pesoEstimadoKg, pesoRealKg: real };
       });
-      await api(`/retiros/${r._id}`, { method: 'PATCH', body: { items, estado: 'en_planta' } });
+      await api(`/retiros/${r._id}`, { method: 'PATCH', body: { items, estado: 'en_planta', ...(editing.trNumero.trim() && { traslado: { tipo: editing.trTipo, numero: editing.trNumero.trim() } }) } });
       setEditing(null);
       setFlash(r._id);
       await reload();
@@ -108,7 +108,7 @@ export default function Retiros() {
                     <td>
                       <div className="actions">
                         {!r.factura && r.estado !== 'anulado' && (
-                          <button type="button" className="secondary sm" onClick={() => setEditing({ id: r._id, pesos: Object.fromEntries(r.items.map((it, i) => [i, String(it.pesoRealKg ?? it.pesoEstimadoKg)])) })}>
+                          <button type="button" className="secondary sm" onClick={() => setEditing({ id: r._id, pesos: Object.fromEntries(r.items.map((it, i) => [i, String(it.pesoRealKg ?? it.pesoEstimadoKg)])), trTipo: r.traslado?.tipo ?? 'remito', trNumero: r.traslado?.numero ?? '' })}>
                             {r.estado === 'en_planta' ? 'Corregir peso' : 'Pesar'}
                           </button>
                         )}
@@ -135,6 +135,16 @@ export default function Retiros() {
                               <span className="muted small">estimado: {fmtKg(it.pesoEstimadoKg)}</span>
                             </label>
                           ))}
+                          <label>
+                            Documento del traslado
+                            <select value={editing.trTipo} onChange={(e) => setEditing({ ...editing, trTipo: e.target.value })}>
+                              <option value="remito">Remito</option><option value="carta_porte">Carta de porte</option><option value="manifiesto">Manifiesto</option>
+                            </select>
+                          </label>
+                          <label>
+                            Número
+                            <input value={editing.trNumero} onChange={(e) => setEditing({ ...editing, trNumero: e.target.value })} placeholder="Para el certificado verde" />
+                          </label>
                           <div className="row">
                             <button type="button" onClick={() => guardarPeso(r)}>Guardar peso</button>
                             <button type="button" className="secondary" onClick={() => setEditing(null)}>Cancelar</button>

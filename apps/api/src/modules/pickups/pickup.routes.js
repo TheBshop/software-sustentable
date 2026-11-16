@@ -34,6 +34,7 @@ const createInput = z.object({
   ubicacion: z.object({ lat: z.number(), lng: z.number() }).optional(),
   observaciones: z.string().max(1000).optional(),
   solicitud: objectId.optional(), // pedido de retiro de la hoja de ruta
+  traslado: z.object({ tipo: z.enum(['remito', 'carta_porte', 'manifiesto']), numero: z.string().min(1).max(60) }).optional(),
 });
 
 const updateInput = z.object({
@@ -41,6 +42,7 @@ const updateInput = z.object({
   estado: z.enum(ESTADOS_RETIRO).optional(),
   observaciones: z.string().max(1000).optional(),
   direccion: z.string().optional(),
+  traslado: z.object({ tipo: z.enum(['remito', 'carta_porte', 'manifiesto']), numero: z.string().min(1).max(60) }).optional(),
 });
 
 const POPULATE = [

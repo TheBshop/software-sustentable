@@ -25,7 +25,7 @@ export default function Certificados() {
             {certs.map((c) => (
               <li key={c._id}>
                 <button type="button" className={`list-item ${c._id === cert._id ? 'active' : ''}`} onClick={() => setParams({ id: c._id })}>
-                  <span className="mono">N° {pad(c.numero, 6)}</span> {c.anulado && <Tag tone="red">Anulado</Tag>}
+                  <span className="mono">N° {pad(c.numero, 6)}</span> {c.anulado ? <Tag tone="red">Anulado</Tag> : !c.validez?.completo && <Tag tone="sun">Constancia</Tag>}
                   <br />
                   {c.clienteSnapshot?.razonSocial}
                   <br />
@@ -86,10 +86,15 @@ function Detalle({ cert, onChange }) {
             {cert.clienteSnapshot?.razonSocial} · CUIT {cert.clienteSnapshot?.cuit ?? '—'} · retiro del {fmtFecha(cert.fechaRetiro)}
           </p>
         </div>
-        {cert.anulado ? <Tag tone="red">Anulado</Tag> : <Tag tone="green">Válido</Tag>}
+        {cert.anulado ? <Tag tone="red">Anulado</Tag> : cert.validez?.completo ? <Tag tone="green">{cert.validez.documento}</Tag> : <Tag tone="sun">Constancia: no vale como certificado verde</Tag>}
       </div>
 
       <div className="kpis">
+        {!cert.anulado && !cert.validez?.completo && cert.validez?.faltan?.length > 0 && (
+          <div className="strip alert-strip" style={{ gridColumn: '1 / -1' }}>
+            <b>Para que valga como certificado verde falta:</b> {cert.validez.faltan.map((f) => f.texto).join(' · ')}
+          </div>
+        )}
         <div className="kpi"><span>Material recuperado</span><strong>{fmtKg(cert.totalKg)}</strong></div>
         <div className="kpi green"><span>CO₂ evitado</span><strong>{fmtKg(cert.co2EvitadoKg)}</strong></div>
       </div>
