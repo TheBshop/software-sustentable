@@ -5,7 +5,7 @@ import morgan from 'morgan';
 import rateLimit from 'express-rate-limit';
 import { env } from './config/env.js';
 import { requireAuth, requireOrgTipo, requireRole } from './middleware/auth.js';
-import { withTenant } from './lib/tenancy.js';
+import { withTenant, runWithoutTenant } from './lib/tenancy.js';
 import { errorHandler, notFound } from './middleware/error.js';
 import { crudRouter } from './lib/crud.js';
 import { authRouter, usersRouter } from './modules/users/auth.routes.js';
@@ -21,6 +21,8 @@ import { balanceRouter } from './modules/finanzas/balance.routes.js';
 import { RegistroSeguridad, registroInput, registroUpdate, seguridadResumenRouter } from './modules/seguridad/seguridad.js';
 import { accesoPortalRouter } from './modules/clients/acceso.routes.js';
 import { constanciaRouter } from './modules/certificates/constancia.js';
+import { normativaRouter } from './modules/normativa/normativa.routes.js';
+import { demoRouter } from './demo/demo.routes.js';
 import { assertHabilitados, assertCorrienteHabilitada, registrarIngreso, registrarVenta } from './modules/movimientos/movimiento.service.js';
 import { pickupsRouter } from './modules/pickups/pickup.routes.js';
 import { certificatesRouter, publicCertificatesRouter } from './modules/certificates/certificate.routes.js';
@@ -66,6 +68,7 @@ export function createApp(config = {}) {
   );
   app.use('/api/auth', authRouter);
   app.use('/api/public/certificados', publicCertificatesRouter);
+  if (env.demoMode) app.use('/api/demo', (_req, _res, next) => runWithoutTenant(next), demoRouter);
 
   // ---- Privadas ----
   // requireAuth identifica al usuario; withTenant fija su cooperativa para todo el request
@@ -81,6 +84,7 @@ export function createApp(config = {}) {
   app.use('/api', coopApi);
   coopApi.use('/clientes', accesoPortalRouter);
   coopApi.use('/clientes', constanciaRouter); // constancia anual de reciclado (Ley 25.612)
+  coopApi.use('/normativa', normativaRouter); // marco normativo según la jurisdicción
   coopApi.use(
     '/clientes',
     crudRouter(Client, { createSchema: clientInput, searchFields: ['razonSocial', 'cuit'], filters: ['tipo'], sort: 'razonSocial', writeRoles: ['administracion'] }),

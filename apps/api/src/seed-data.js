@@ -57,7 +57,7 @@ const DAY = 24 * 60 * 60 * 1000;
 /** Carga los datos de ejemplo. Asume una base vacía y ya conectada. */
 export async function seedDatabase() {
   const orgs = {
-    nv: await Organization.create({ tipo: 'cooperativa', nombre: 'Cooperativa Nueva Vida', cuit: '30700000014', habilitaciones: { corrientes: ['rsu', 'regu'], registros: [{ descripcion: 'Registro municipal de depósitos de acopio', organismo: 'Municipalidad de Paraná (Ord. 9233, art. 28)', numero: 'EJEMPLO-0001' }] }, certificado: { responsable: 'Responsable de ejemplo', cargo: 'Presidencia' } }),
+    nv: await Organization.create({ tipo: 'cooperativa', perfil: 'cooperativa', jurisdiccion: { provincia: 'entre_rios', municipio: 'parana', ciudad: 'Paraná' }, nombre: 'Cooperativa Nueva Vida', cuit: '30700000014', habilitaciones: { corrientes: ['rsu', 'regu'], registros: [{ descripcion: 'Registro municipal de depósitos de acopio', organismo: 'Municipalidad de Paraná (Ord. 9233, art. 28)', numero: 'EJEMPLO-0001' }] }, certificado: { responsable: 'Responsable de ejemplo', cargo: 'Presidencia' } }),
     litoral: await Organization.create({ tipo: 'cooperativa', nombre: 'Cooperativa Reciclar del Litoral', cuit: '30700000022', habilitaciones: { corrientes: ['rsu'] } }),
     empresa: await Organization.create({ tipo: 'empresa', nombre: 'Supermercado El Puente SA', cuit: '30712345678' }),
     municipio: await Organization.create({ tipo: 'municipio', nombre: 'Municipio de Ejemplo', cuit: '30999999991' }),

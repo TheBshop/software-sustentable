@@ -94,6 +94,10 @@ APK para instalar directo en los teléfonos (requiere cuenta de Expo y completar
 npx eas-cli build -p android --profile preview
 ```
 
+## Prototipos para otras organizaciones
+
+`npm run dev:demo` levanta la API con los prototipos de las 33 organizaciones relevadas. Cada uno tiene sus materiales, el marco normativo de su provincia y su municipio, y datos de ejemplo. Se eligen en `http://localhost:5173/demo`. Para crear uno en una base real: `npm run crear-prototipo -- <slug>`. Ver `docs/10-normativa-por-jurisdiccion.md`.
+
 ## Documentación
 
 1. [Stack y arquitectura](docs/01-stack-y-arquitectura.md) — incluye simplificaciones para el MVP

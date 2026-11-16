@@ -6,7 +6,7 @@ import { HttpError } from '../../middleware/error.js';
 
 export const authRouter = Router();
 
-const sesion = (user, org) => ({
+export const sesion = (user, org) => ({
   token: signToken(user, org),
   user: { id: user._id, nombre: user.nombre, rol: user.rol, organizacion: { id: org._id, nombre: org.nombre, tipo: org.tipo } },
 });

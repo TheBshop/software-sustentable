@@ -23,6 +23,8 @@ export const env = {
       publicUrl: process.env.STORAGE_PUBLIC_URL, // R2: dominio público del bucket
     },
   },
+  // Modo demostración: entrar a los prototipos sin contraseña (demo/demo.routes.js). Nunca en producción.
+  demoMode: (process.env.DEMO_MODE === 'true' || process.argv.includes('--demo')) && nodeEnv !== 'production',
   loginRateLimit: Number(process.env.LOGIN_RATE_LIMIT ?? 10), // intentos por IP cada 15 minutos
   smtp: {
     host: process.env.SMTP_HOST || null,

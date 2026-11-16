@@ -27,6 +27,12 @@ const organizationSchema = new mongoose.Schema(
     },
     // Solo cooperativas: quién firma los certificados, con firma y sello escaneados
     certificado: { responsable: String, cargo: String, firmaUrl: String, selloUrl: String },
+    // Dónde opera (define el marco normativo que aplica: ver modules/normativa/jurisdicciones.js)
+    jurisdiccion: { provincia: String, municipio: String, ciudad: String },
+    // Solo prestadores: cooperativa, empresa recicladora, planta pública o asociación
+    perfil: { type: String, enum: ["cooperativa", "empresa", "planta_publica", "asociacion"] },
+    // Prototipo de demostración armado para mostrarle el sistema a la organización
+    prototipo: { slug: String, notas: String, tambien: String },
     activo: { type: Boolean, default: true },
   },
   { timestamps: true },

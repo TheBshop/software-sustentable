@@ -15,6 +15,8 @@ import Ventas from './pages/Ventas.jsx';
 import Balance from './pages/Balance.jsx';
 import Configuracion from './pages/Configuracion.jsx';
 import Seguridad from './pages/Seguridad.jsx';
+import Normativa from './pages/Normativa.jsx';
+import Demo from './pages/Demo.jsx';
 import VerificarCertificado from './pages/VerificarCertificado.jsx';
 import PortalInicio from './pages/portal/Inicio.jsx';
 import PortalRetiros from './pages/portal/Retiros.jsx';
@@ -54,6 +56,7 @@ function CoopSidebar() {
       <NavLink to="/facturacion">Facturación <Badge n={nAlertas} alert={alertas.data?.vencidas.length > 0} /></NavLink>
       <NavLink to="/clientes">Clientes</NavLink>
       <NavLink to="/materiales">Materiales</NavLink>
+      <NavLink to="/normativa">Marco normativo</NavLink>
       {['admin', 'administracion'].includes(getUser()?.rol) && (
         <>
           <span className="nav-group">Administración</span>
@@ -107,6 +110,8 @@ ReactDOM.createRoot(document.getElementById('root')).render(
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={<Login />} />
+        {/* Selector de prototipos: solo responde con la API en modo demostración */}
+        <Route path="/demo" element={<main className="demo-main"><Demo /></main>} />
         {/* Página pública a la que apunta el QR del certificado */}
         <Route path="/verificar/:codigo" element={<VerificarCertificado />} />
         <Route element={<Zona />}>
@@ -121,6 +126,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
           <Route path="/balance" element={<Balance />} />
           <Route path="/configuracion" element={<Configuracion />} />
           <Route path="/seguridad" element={<Seguridad />} />
+          <Route path="/normativa" element={<Normativa />} />
         </Route>
         <Route path="/portal" element={<Zona portal />}>
           <Route index element={<PortalInicio />} />

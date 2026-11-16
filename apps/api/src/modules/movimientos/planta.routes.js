@@ -16,7 +16,7 @@ export const plantaRouter = Router();
 // Datos de la cooperativa del usuario (nombre, habilitaciones): los usan la web y la app.
 plantaRouter.get('/organizacion', async (_req, res) => {
   const org = await Organization.findById(currentTenant());
-  res.json({ id: org._id, nombre: org.nombre, cuit: org.cuit, tipo: org.tipo, habilitaciones: org.habilitaciones, certificado: org.certificado ?? {} });
+  res.json({ id: org._id, nombre: org.nombre, cuit: org.cuit, tipo: org.tipo, perfil: org.perfil, jurisdiccion: org.jurisdiccion, prototipo: org.prototipo, habilitaciones: org.habilitaciones, certificado: org.certificado ?? {} });
 });
 
 // Datos que firman los certificados (responsable y cargo). Solo admin.

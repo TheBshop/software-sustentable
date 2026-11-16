@@ -12,7 +12,9 @@
     "importar": "node --env-file-if-exists=.env src/import/cli.js",
     "crear-usuario": "node --env-file-if-exists=.env src/scripts/crear-usuario.js",
     "test": "vitest run",
-    "crear-cooperativa": "node --env-file-if-exists=.env src/scripts/crear-cooperativa.js"
+    "crear-cooperativa": "node --env-file-if-exists=.env src/scripts/crear-cooperativa.js",
+    "crear-prototipo": "node src/scripts/crear-prototipo.js",
+    "dev:demo": "node src/dev-memory.js --demo"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1168.0",

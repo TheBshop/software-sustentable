@@ -179,3 +179,12 @@ label.check input { width: auto; }
 .reco.media { border-color: #d9a400; }
 .reco.info { border-color: var(--azul); }
 .reco p { margin-top: 2px; }
+
+/* ---- Prototipos y marco normativo ---- */
+.demo-main { max-width: 1100px; margin: 0 auto; padding: 24px 16px; display: flex; flex-direction: column; gap: 18px; }
+.demo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px; }
+.demo-card { display: flex; flex-direction: column; gap: 6px; padding: 14px; }
+.normas { list-style: none; padding: 0 !important; display: flex; flex-direction: column; gap: 12px !important; }
+.norma { border-bottom: 1px solid var(--borde); padding-bottom: 10px; }
+.norma:last-child { border-bottom: none; }
+.norma p { margin-top: 4px; }

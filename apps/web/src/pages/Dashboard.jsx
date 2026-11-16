@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { api, fmtKg, fmtPeso } from '../api.js';
+import { useLoad } from '../ui.jsx';
 
 function Bars({ rows, label, value, format }) {
   const max = Math.max(...rows.map((r) => r[value]), 1);
@@ -33,6 +34,7 @@ export default function Dashboard() {
 
   return (
     <>
+      <AvisoPrototipo />
       <h2>Resumen del mes</h2>
       <div className="kpis">
         <div className="kpi"><span>Retiros</span><strong>{t.retiros}</strong></div>
@@ -70,5 +72,18 @@ export default function Dashboard() {
         </section>
       </div>
     </>
+  );
+}
+
+/** Si la organización es un prototipo de demostración, lo dice: los datos son de ejemplo. */
+function AvisoPrototipo() {
+  const { data } = useLoad('/planta/organizacion');
+  if (!data?.prototipo?.slug) return null;
+  return (
+    <div className="strip info-strip">
+      <b>Prototipo de demostración para {data.nombre}.</b> Los clientes, retiros y ventas son datos de ejemplo; los materiales son los que recibe la organización.
+      {data.prototipo.tambien && ` También relevada en esta fila: ${data.prototipo.tambien}.`}
+      {data.prototipo.notas && <div className="small" style={{ marginTop: 4 }}>{data.prototipo.notas}</div>}
+    </div>
   );
 }
