@@ -30,6 +30,7 @@ const certificateSchema = new mongoose.Schema(
         corriente: String, // rsu, regu… (docs/08-marco-normativo.md)
         fraccion: String, // Decreto 779/22, Anexo II
         valorizable: Boolean, // false = disposición final
+        tratamiento: String, // reciclado, reuso, compostaje, disposicion_final (Ley 25.612, art. 21)
         co2EvitadoKg: Number,
         factorCo2: Number, // kg CO2e evitados por kg, al momento de emitir
         factorCo2Fuente: String, // de dónde sale el factor (trazabilidad del cálculo)

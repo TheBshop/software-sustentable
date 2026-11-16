@@ -64,6 +64,47 @@ plantaRouter.get('/stock', async (_req, res) => {
   res.json({ items: await stock() });
 });
 
+// Registro de operaciones permanente de la planta (Ley 25.612, art. 34; Decreto 779/22,
+// trazabilidad): exporta el libro de movimientos del período para presentarlo ante la
+// autoridad. CSV con ";" y coma decimal, como lo abre Excel en español.
+const TIPOS_CSV = { ingreso: 'Ingreso', clasificacion: 'Clasificación', venta: 'Venta', rechazo: 'Rechazo a disposición final', ajuste: 'Ajuste' };
+plantaRouter.get('/movimientos/csv', requireRole('administracion', 'operador_planta'), async (req, res) => {
+  const { desde, hasta } = z.object({ desde: dateInput.default(startOfLocalMonth()), hasta: dateInput.optional() }).parse(req.query);
+  const fin = hasta ? endOfLocalDay(hasta) : new Date();
+  const movs = await Movimiento.find({ fecha: { $gte: desde, $lte: fin } })
+    .sort('fecha')
+    .populate('material', 'codigo nombre corriente')
+    .populate('origen.cliente', 'razonSocial cuit')
+    .populate('usuario', 'nombre')
+    .populate('ref.retiro', 'numero')
+    .populate({ path: 'ref.venta', select: 'remito comprador', populate: { path: 'comprador', select: 'razonSocial' } });
+  const esc = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
+  const num = (n) => String(n).replace('.', ',');
+  const filas = [
+    ['Fecha', 'Tipo', 'Etapa (Ley 25.916)', 'Código', 'Material', 'Corriente', 'Kg', 'Origen', 'Generador', 'CUIT generador', 'Destino / comprador', 'Causa', 'Referencia', 'Detalle', 'Usuario'],
+    ...movs.map((m) => [
+      m.fecha.toISOString().slice(0, 10),
+      TIPOS_CSV[m.tipo] ?? m.tipo,
+      m.etapa,
+      m.material?.codigo,
+      m.material?.nombre,
+      m.material?.corriente,
+      num(m.kg),
+      m.origen?.tipo,
+      m.origen?.cliente?.razonSocial,
+      m.origen?.cliente?.cuit,
+      m.ref?.venta?.comprador?.razonSocial,
+      m.causa,
+      m.ref?.retiro?.numero ? `Retiro N° ${m.ref.retiro.numero}` : m.ref?.venta?.remito ? `Remito ${m.ref.venta.remito}` : '',
+      m.motivo,
+      m.usuario?.nombre,
+    ]),
+  ];
+  const csv = '\uFEFF' + filas.map((f) => f.map(esc).join(';')).join('\r\n'); // BOM para que Excel lea los acentos
+  res.type('text/csv; charset=utf-8').setHeader('Content-Disposition', `attachment; filename="libro-de-movimientos-${desde.toISOString().slice(0, 10)}.csv"`);
+  res.send(csv);
+});
+
 plantaRouter.get('/movimientos', async (req, res) => {
   const query = {};
   if (typeof req.query.material === 'string') query.material = objectId.parse(req.query.material);

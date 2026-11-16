@@ -39,7 +39,7 @@ export async function resumenAnual(orgId, anio) {
       { $set: { m: { $first: '$m' }, kg: PESO, mes: { $month: { date: '$fecha', timezone: TZ_OFFSET } } } },
       {
         $group: {
-          _id: { material: '$m.nombre', fraccion: '$m.fraccion', corriente: '$m.corriente', valorizable: '$m.valorizable', mes: '$mes', coop: '$coop', sede: '$direccion' },
+          _id: { material: '$m.nombre', fraccion: '$m.fraccion', corriente: '$m.corriente', valorizable: '$m.valorizable', tratamiento: '$m.tratamiento', mes: '$mes', coop: '$coop', sede: '$direccion' },
           kg: { $sum: '$kg' },
           co2: { $sum: { $multiply: ['$kg', { $ifNull: ['$m.factorCo2', 0] }] } },
         },
@@ -104,10 +104,10 @@ export async function resumenAnual(orgId, anio) {
       return { ingresadoKg, rechazadoKg, tasaCorrecta: ingresadoKg ? round2(100 - (rechazadoKg / ingresadoKg) * 100) : null, causas };
     })(),
     porMes,
-    porMaterial: [...sumar((k) => `${k.material}|${k.fraccion ?? ''}|${k.corriente}`)]
+    porMaterial: [...sumar((k) => `${k.material}|${k.fraccion ?? ''}|${k.corriente}|${k.tratamiento ?? (k.valorizable === false ? 'disposicion_final' : 'reciclado')}`)]
       .map(([k, v]) => {
-        const [material, fraccion, corriente] = k.split('|');
-        return { material, corriente, fraccion: fraccion ? { codigo: fraccion, ...FRACCIONES[fraccion] } : null, kg: round2(v.kg), co2EvitadoKg: round2(v.co2), factores: factores.get(material) ?? [] };
+        const [material, fraccion, corriente, tratamiento] = k.split('|');
+        return { material, corriente, tratamiento, fraccion: fraccion ? { codigo: fraccion, ...FRACCIONES[fraccion] } : null, kg: round2(v.kg), co2EvitadoKg: round2(v.co2), factores: factores.get(material) ?? [] };
       })
       .sort((a, b) => b.kg - a.kg),
     porFraccion: [...sumar((k) => k.fraccion ?? `corriente:${k.corriente}`)]

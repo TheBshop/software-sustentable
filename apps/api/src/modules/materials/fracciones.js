@@ -37,6 +37,18 @@ export const SUBTIPOS_REGU = {
   otros: 'Otros REGU',
 };
 
+/**
+ * Qué se hace con el material. Lo pide el manifiesto de la Ley 25.612 (art. 21: "procesos de
+ * tratamiento o eliminación") y define hasta dónde llega la responsabilidad del generador:
+ * termina cuando el residuo se usa como insumo de otro proceso productivo (art. 43 inc. b).
+ */
+export const TRATAMIENTOS = {
+  reciclado: 'Reciclado (insumo de otro proceso productivo)',
+  reuso: 'Reúso',
+  compostaje: 'Compostaje',
+  disposicion_final: 'Disposición final',
+};
+
 /** Etapas de la gestión integral según la Ley 25.916, art. 3. */
 export const ETAPAS = ['generacion', 'disposicion_inicial', 'recoleccion', 'transferencia', 'transporte', 'tratamiento', 'disposicion_final'];
 

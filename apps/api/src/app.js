@@ -20,6 +20,7 @@ import { Gasto, gastoInput } from './modules/finanzas/gasto.model.js';
 import { balanceRouter } from './modules/finanzas/balance.routes.js';
 import { RegistroSeguridad, registroInput, registroUpdate, seguridadResumenRouter } from './modules/seguridad/seguridad.js';
 import { accesoPortalRouter } from './modules/clients/acceso.routes.js';
+import { constanciaRouter } from './modules/certificates/constancia.js';
 import { assertHabilitados, assertCorrienteHabilitada, registrarIngreso, registrarVenta } from './modules/movimientos/movimiento.service.js';
 import { pickupsRouter } from './modules/pickups/pickup.routes.js';
 import { certificatesRouter, publicCertificatesRouter } from './modules/certificates/certificate.routes.js';
@@ -79,6 +80,7 @@ export function createApp(config = {}) {
   coopApi.use(requireOrgTipo('cooperativa'));
   app.use('/api', coopApi);
   coopApi.use('/clientes', accesoPortalRouter);
+  coopApi.use('/clientes', constanciaRouter); // constancia anual de reciclado (Ley 25.612)
   coopApi.use(
     '/clientes',
     crudRouter(Client, { createSchema: clientInput, searchFields: ['razonSocial', 'cuit'], filters: ['tipo'], sort: 'razonSocial', writeRoles: ['administracion'] }),

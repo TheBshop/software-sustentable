@@ -1,10 +1,13 @@
 import PDFDocument from 'pdfkit';
 import QRCode from 'qrcode';
 import { verificationUrl } from './certificate.service.js';
-import { FRACCIONES } from '../materials/fracciones.js';
+import { FRACCIONES, TRATAMIENTOS } from '../materials/fracciones.js';
 import { leerArchivo } from '../../lib/storage.js';
 
 const VERDE = '#2f7d32';
+const CORTO = { reciclado: 'Reciclado', reuso: 'Reúso', compostaje: 'Compostaje', disposicion_final: 'Disp. final' };
+/** Destino del material; los certificados viejos no tienen tratamiento. */
+const destino = (m) => CORTO[m.tratamiento] ?? (m.valorizable === false ? 'Disp. final' : 'Valorización');
 const fmtFecha = (d) => new Date(d).toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
 const fmtNum = (n) => Number(n).toLocaleString('es-AR', { maximumFractionDigits: 2 });
 
@@ -65,7 +68,7 @@ export async function renderCertificatePdf(cert, stream, { mostrarCosto = false 
     if (fr) doc.rect(cols[0], y + 1, 8, 8).fillAndStroke(fr.hex, '#999').fillColor('black');
     doc.text(m.nombre + (m.pesoEstimado ? ' *' : ''), cols[0] + (fr ? 13 : 0), y);
     if (fr) doc.fontSize(8).fillColor('#666').text(fr.nombre, cols[0] + 13, y + 12).fontSize(12).fillColor('black');
-    doc.text(fmtNum(m.pesoKg), cols[1], y).text(fmtNum(m.co2EvitadoKg), cols[2], y).text(m.valorizable === false ? 'Disp. final' : 'Valorización', cols[3], y);
+    doc.text(fmtNum(m.pesoKg), cols[1], y).text(fmtNum(m.co2EvitadoKg), cols[2], y).text(destino(m), cols[3], y, { width: 105 });
     y += fr ? 26 : 18;
   }
   doc.moveTo(50, y).lineTo(545, y).stroke();

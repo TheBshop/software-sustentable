@@ -51,7 +51,7 @@ describe('Corrientes y habilitaciones', () => {
     const pub = (await request(app).get(`/api/public/certificados/${cert.codigo}`)).body;
     expect(pub.emisor.nombre).toBe('Cooperativa Nueva Vida');
     expect(pub.materiales[0].fraccion).toMatchObject({ codigo: expect.any(String), color: expect.any(String) });
-    expect(pub.materiales[0].destino).toBe('Valorización');
+    expect(pub.materiales[0].destino).toBe('Reciclado') // tratamiento del material (Ley 25.612, art. 21);
   });
 });
 

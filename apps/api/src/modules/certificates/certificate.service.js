@@ -6,7 +6,8 @@ import { nextSeq } from '../../lib/counters.js';
 import { round2 } from '../../lib/validation.js';
 import { HttpError } from '../../middleware/error.js';
 import { env } from '../../config/env.js';
-import { FRACCIONES } from '../materials/fracciones.js';
+import { FRACCIONES, TRATAMIENTOS } from '../materials/fracciones.js';
+import { tratamientoPorDefecto } from '../materials/material.model.js';
 import { Organization } from '../organizations/organization.model.js';
 import { currentTenant } from '../../lib/tenancy.js';
 import { importeDeRetiro } from '../invoices/invoice.service.js';
@@ -30,6 +31,7 @@ export async function issueCertificate(pickupId) {
       corriente: it.material.corriente ?? 'rsu',
       fraccion: it.material.fraccion,
       valorizable: it.material.valorizable !== false,
+      tratamiento: it.material.tratamiento ?? tratamientoPorDefecto(it.material),
       co2EvitadoKg: round2(kg * (it.material.factorCo2 ?? 0)),
       factorCo2: it.material.factorCo2 ?? 0,
       factorCo2Fuente: it.material.factorCo2Fuente,
@@ -72,7 +74,7 @@ export function publicView(cert) {
     fechaRetiro: cert.fechaRetiro,
     generador: cert.clienteSnapshot,
     emisor: cert.emisorSnapshot,
-    materiales: cert.materiales.map(({ nombre, pesoKg, pesoEstimado, co2EvitadoKg, fraccion, valorizable, factorCo2, factorCo2Fuente }) => ({
+    materiales: cert.materiales.map(({ nombre, pesoKg, pesoEstimado, co2EvitadoKg, fraccion, valorizable, factorCo2, factorCo2Fuente, tratamiento }) => ({
       factorCo2,
       factorCo2Fuente,
       nombre,
@@ -80,7 +82,8 @@ export function publicView(cert) {
       pesoEstimado,
       co2EvitadoKg,
       fraccion: fraccion ? { codigo: fraccion, ...FRACCIONES[fraccion] } : null,
-      destino: valorizable === false ? 'Disposición final' : 'Valorización',
+      destino: TRATAMIENTOS[tratamiento]?.split(' (')[0] ?? (valorizable === false ? 'Disposición final' : 'Valorización'),
+      tratamiento,
     })),
     totalKg: cert.totalKg,
     co2EvitadoKg: cert.co2EvitadoKg,

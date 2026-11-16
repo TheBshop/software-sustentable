@@ -118,3 +118,13 @@ Personas: **Chofer** (hace los retiros), **Planta** (recibe y pesa), **Administr
   - encontrar la norma específica de grandes generadores de Paraná;
   - cargar las fuentes reales de los factores de CO₂;
   - el número real del registro municipal de la cooperativa.
+
+## Ley 25.612 (residuos industriales) ✅
+
+- ✅ Tratamiento por material en certificados e informe (arts. 21 y 43 inc. b).
+- ✅ Libro de movimientos exportable (art. 34).
+- ✅ Constancia anual de reciclado firmada, para la declaración jurada del generador (arts. 11 inc. e y 12).
+- ⏳ Solo si la cooperativa se habilita para residuos industriales:
+  - nivel de riesgo por material;
+  - manifiesto obligatorio antes de certificar;
+  - etiquetas para recipientes.

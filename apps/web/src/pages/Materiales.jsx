@@ -11,7 +11,8 @@ export const CATEGORIAS = {
   electronicos: 'Electrónicos',
   otros: 'Otros',
 };
-const VACIO = { codigo: '', nombre: '', categoria: 'papel_carton', corriente: 'rsu', fraccion: '', subtipoRegu: '', factorCo2: '', tarifaRetiroKg: '', precioVentaKg: '', unidades: '', refMin: '', refMax: '', mezcla: false, factorCo2Fuente: '' };
+const VACIO = { codigo: '', nombre: '', categoria: 'papel_carton', corriente: 'rsu', fraccion: '', subtipoRegu: '', factorCo2: '', tarifaRetiroKg: '', precioVentaKg: '', unidades: '', refMin: '', refMax: '', mezcla: false, factorCo2Fuente: '', tratamiento: '' };
+export const TRATAMIENTOS = { reciclado: 'Reciclado', reuso: 'Reúso', compostaje: 'Compostaje', disposicion_final: 'Disposición final' };
 
 // "fardo=60; bolsón=25" ⇄ [{ nombre, kg }]
 const unidadesATexto = (u = []) => u.map((x) => `${x.nombre}=${x.kg}`).join('; ');
@@ -50,6 +51,7 @@ export default function Materiales() {
       tarifaRetiroKg: Number(form.tarifaRetiroKg) || 0,
       precioVentaKg: Number(form.precioVentaKg) || 0,
       mezcla: Boolean(form.mezcla),
+      ...(form.tratamiento && { tratamiento: form.tratamiento }),
       unidades: textoAUnidades(form.unidades),
       ...((form.refMin || form.refMax) && { precioReferencia: { minKg: Number(form.refMin) || 0, maxKg: Number(form.refMax) || undefined, fecha: new Date().toISOString().slice(0, 10) } }),
     };
@@ -65,7 +67,7 @@ export default function Materiales() {
   }
 
   const edit = (m) =>
-    setForm({ _id: m._id, codigo: m.codigo, nombre: m.nombre, categoria: m.categoria, corriente: m.corriente ?? 'rsu', fraccion: m.fraccion ?? '', subtipoRegu: m.subtipoRegu ?? '', factorCo2: String(m.factorCo2), tarifaRetiroKg: String(m.tarifaRetiroKg), precioVentaKg: String(m.precioVentaKg), unidades: unidadesATexto(m.unidades), refMin: m.precioReferencia?.minKg ?? '', refMax: m.precioReferencia?.maxKg ?? '', mezcla: Boolean(m.mezcla), factorCo2Fuente: m.factorCo2Fuente ?? '' });
+    setForm({ _id: m._id, codigo: m.codigo, nombre: m.nombre, categoria: m.categoria, corriente: m.corriente ?? 'rsu', fraccion: m.fraccion ?? '', subtipoRegu: m.subtipoRegu ?? '', factorCo2: String(m.factorCo2), tarifaRetiroKg: String(m.tarifaRetiroKg), precioVentaKg: String(m.precioVentaKg), unidades: unidadesATexto(m.unidades), refMin: m.precioReferencia?.minKg ?? '', refMax: m.precioReferencia?.maxKg ?? '', mezcla: Boolean(m.mezcla), factorCo2Fuente: m.factorCo2Fuente ?? '', tratamiento: m.tratamiento ?? '' });
 
   return (
     <>
@@ -115,6 +117,13 @@ export default function Materiales() {
                 </select>
               </label>
             )}
+            <label>
+              Tratamiento
+              <select value={form.tratamiento} onChange={set('tratamiento')}>
+                <option value="">Automático</option>
+                {Object.entries(TRATAMIENTOS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+              </select>
+            </label>
             <label>Factor CO₂ (kg por kg)<input type="number" min="0" step="any" value={form.factorCo2} onChange={set('factorCo2')} /></label>
             <label>Tarifa de retiro ($/kg)<input type="number" min="0" step="any" value={form.tarifaRetiroKg} onChange={set('tarifaRetiroKg')} /></label>
             <label>Precio de venta ($/kg)<input type="number" min="0" step="any" value={form.precioVentaKg} onChange={set('precioVentaKg')} /></label>
@@ -157,7 +166,7 @@ export default function Materiales() {
                   <td>{m.nombre}</td>
                   <td>
                     <FraccionChip fraccion={m.fraccion} corriente={m.corriente} />
-                    <div className="muted small">{m.corriente === 'regu' ? SUBTIPOS_REGU[m.subtipoRegu] : CATEGORIAS[m.categoria]}{m.valorizable === false && ' · no valorizable'}</div>
+                    <div className="muted small">{m.corriente === 'regu' ? SUBTIPOS_REGU[m.subtipoRegu] : CATEGORIAS[m.categoria]}{m.tratamiento && ` · ${TRATAMIENTOS[m.tratamiento]}`}</div>
                   </td>
                   <td className="r num" title={m.factorCo2Fuente ?? 'Sin fuente'}>{m.factorCo2.toLocaleString('es-AR')}{!m.factorCo2Fuente && <div className="muted small">sin fuente</div>}</td>
                   <td className="r num">{m.tarifaRetiroKg ? fmtPeso(m.tarifaRetiroKg) : <span className="muted">sin cargo</span>}</td>

@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 import { tenantPlugin } from '../../lib/tenancy.js';
 import { z } from 'zod';
 import { CORRIENTES } from '../organizations/organization.model.js';
-import { FRACCIONES, SUBTIPOS_REGU, FRACCION_POR_CATEGORIA } from './fracciones.js';
+import { FRACCIONES, SUBTIPOS_REGU, FRACCION_POR_CATEGORIA, TRATAMIENTOS } from './fracciones.js';
 
 export const CATEGORIAS = ['papel_carton', 'plasticos', 'vidrio', 'metales', 'electronicos', 'otros'];
 
@@ -16,6 +16,7 @@ const materialSchema = new mongoose.Schema(
     fraccion: { type: String, enum: Object.keys(FRACCIONES) }, // solo corriente "rsu" (Decreto 779/22, Anexo II)
     subtipoRegu: { type: String, enum: Object.keys(SUBTIPOS_REGU) }, // solo corriente "regu"
     valorizable: { type: Boolean, default: true }, // false = va a disposición final
+    tratamiento: { type: String, enum: Object.keys(TRATAMIENTOS) }, // se completa solo si no se indica
     // Residuo mezclado que todavía no se clasificó (ej. lo que trae el camión municipal).
     // No tiene fracción: se reparte en materiales con una "clasificación".
     mezcla: { type: Boolean, default: false },
@@ -52,7 +53,17 @@ materialSchema.pre('validate', function () {
     if (this.corriente !== 'regu') this.subtipoRegu = undefined;
   }
   if (this.fraccion === 'basura') this.valorizable = false;
+  if (this.tratamiento === 'disposicion_final') this.valorizable = false;
+  if (!this.tratamiento) this.tratamiento = tratamientoPorDefecto(this);
 });
+
+/** Tratamiento por defecto: lo no valorizable va a disposición final; los orgánicos, a compostaje. */
+export function tratamientoPorDefecto(m) {
+  if (m.mezcla) return undefined; // se define al clasificarlo
+  if (m.valorizable === false) return 'disposicion_final';
+  if (m.fraccion === 'organicos') return 'compostaje';
+  return 'reciclado';
+}
 
 materialSchema.plugin(tenantPlugin);
 materialSchema.index({ coop: 1, codigo: 1 }, { unique: true });
@@ -67,6 +78,7 @@ const materialBase = z.object({
     fraccion: z.enum(Object.keys(FRACCIONES)).optional(),
     subtipoRegu: z.enum(Object.keys(SUBTIPOS_REGU)).optional(),
     valorizable: z.boolean().optional(),
+    tratamiento: z.enum(Object.keys(TRATAMIENTOS)).optional(),
     factorCo2: z.number().min(0).default(0),
     factorCo2Fuente: z.string().max(200).optional(),
     tarifaRetiroKg: z.number().min(0).default(0),

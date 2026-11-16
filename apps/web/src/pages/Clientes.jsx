@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { api, fmtPeso } from '../api.js';
+import { api, fmtPeso, openPdf } from '../api.js';
 import { ConfirmButton, Tag } from '../ui.jsx';
 import AccesoPortal from './AccesoPortal.jsx';
 
@@ -89,6 +89,11 @@ export default function Clientes() {
                     <button className="link" onClick={() => edit(c)}>Editar</button>
                     {c.tipo !== 'comprador' && (
                       <button className="link" onClick={() => setAcceso(c)}>{c.organizacion ? 'Sumar usuario al portal' : 'Dar acceso al portal'}</button>
+                    )}
+                    {c.tipo !== 'comprador' && (
+                      <button className="link" title="Respaldo de la declaración jurada del generador (Ley 25.612)" onClick={() => openPdf(`/clientes/${c._id}/constancia-reciclado.pdf?anio=${new Date().getFullYear()}`).catch(() => alert('No se pudo generar la constancia'))}>
+                        Constancia de reciclado {new Date().getFullYear()}
+                      </button>
                     )}
                     <ConfirmButton onConfirm={() => remove(c._id)} confirmLabel="Sí, dar de baja">Baja</ConfirmButton>
                   </td>

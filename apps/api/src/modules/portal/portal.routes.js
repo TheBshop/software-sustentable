@@ -11,6 +11,7 @@ import { requireOrgTipo } from '../../middleware/auth.js';
 import { HttpError } from '../../middleware/error.js';
 import { runWithoutTenant } from '../../lib/tenancy.js';
 import { enviarDocumento } from '../pickups/pickup.routes.js';
+import { datosConstancia, renderConstanciaPdf } from '../certificates/constancia.js';
 
 // Portal de clientes generadores (empresas y municipios): /api/v1/portal
 // Solo lectura de SUS datos, en todas las cooperativas que los atienden. Nunca expone
@@ -114,6 +115,26 @@ portalRouter.get('/facturas', async (req, res) => {
       comprobanteFiscal: f.comprobanteFiscal?.numero ? f.comprobanteFiscal : null,
     })),
   });
+});
+
+// Constancias anuales de reciclado: una por cada cooperativa que atiende a la organización.
+portalRouter.get('/constancias', async (req, res) => {
+  const anio = anioInput.default(anioActual()).parse(req.query.anio);
+  const clientes = await clientesDeOrganizacion(req.user.org);
+  const items = [];
+  for (const c of clientes) {
+    const d = await datosConstancia(c._id, anio, { sinTenant: true });
+    if (d.retiros) items.push({ cliente: c._id, cooperativa: d.emisor?.nombre, razonSocial: c.razonSocial, kg: d.total, retiros: d.retiros, porTratamiento: d.porTratamiento });
+  }
+  res.json({ anio, items });
+});
+
+portalRouter.get('/constancias/:cliente.pdf', async (req, res) => {
+  const anio = anioInput.default(anioActual()).parse(req.query.anio);
+  if (!(await misClientes(req)).some((id) => String(id) === req.params.cliente)) throw new HttpError(404, 'Constancia no encontrada');
+  const d = await datosConstancia(req.params.cliente, anio, { sinTenant: true });
+  res.type('application/pdf').setHeader('Content-Disposition', `attachment; filename="constancia-reciclado-${anio}.pdf"`);
+  await renderConstanciaPdf(d, res);
 });
 
 portalRouter.get('/informe-anual.pdf', async (req, res) => {

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { api, fmtKg, fmtFecha } from '../api.js';
+import { api, fmtKg, fmtFecha, descargar, isoDate } from '../api.js';
 import { useLoad, ErrorMsg, Tag } from '../ui.jsx';
 import { FraccionChip } from '../residuos.jsx';
 import { CalidadSeparacion, FormClasificacion, CAUSAS } from './CalidadSeparacion.jsx';
@@ -47,6 +47,14 @@ export default function StockPlanta({ materiales, refreshKey }) {
         </div>
         <div className="row">
           <button type="button" className="secondary sm" onClick={() => setVerMovs(!verMovs)}>{verMovs ? 'Ocultar movimientos' : 'Ver movimientos'}</button>
+          <button
+            type="button"
+            className="secondary sm"
+            title="Registro de operaciones de la planta (Ley 25.612, art. 34), para presentar ante una inspección"
+            onClick={() => descargar(`/planta/movimientos/csv?desde=${new Date().getFullYear()}-01-01&hasta=${isoDate()}`, `libro-de-movimientos-${new Date().getFullYear()}.csv`)}
+          >
+            Descargar libro (Excel)
+          </button>
           {!clasificando && <button type="button" className="secondary sm" onClick={() => setClasificando(true)}>Clasificar lo recibido</button>}
           {!form && <button type="button" className="secondary sm" onClick={() => setForm({ material: '', kg: '', motivo: '', causa: 'humedad', cliente: '' })}>Registrar rechazo</button>}
         </div>

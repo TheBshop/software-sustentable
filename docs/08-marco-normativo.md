@@ -15,6 +15,20 @@ Relevamiento hecho en noviembre de 2026 sobre la normativa argentina de residuos
 | Ley de envases con responsabilidad extendida del productor | **Sin sancionar.** El proyecto de 2021 perdió estado parlamentario. | El modelo de organizaciones admite sumar un tipo "productor" si la ley se aprueba. |
 | [ENGIRSU](https://www.argentina.gob.ar/node/161297): Estrategia Nacional de Gestión Integral de RSU | Estrategia federal, en actualización con COFEMA. | Los indicadores (kilos valorizados, dispuestos y desvío) se pueden exportar para informes municipales y provinciales. |
 
+## Ley 25.612: residuos industriales y de actividades de servicio
+
+[Texto oficial](https://www.argentina.gob.ar/normativa/nacional/norma-76349/texto). Excluye los residuos domiciliarios (art. 5): lo que una empresa genera "asimilable a domiciliario" sigue siendo RSU. El Decreto 1343/2002 **vetó el art. 60, que derogaba la Ley 24.051**, y el capítulo penal: la Ley 24.051 de peligrosos sigue vigente. No encontré una reglamentación general de la ley; en 2007 el Defensor del Pueblo recomendó dictarla.
+
+| Artículo | Qué dice | Cómo lo cubre el sistema |
+|---|---|---|
+| 21 y 43 inc. b | El manifiesto documenta el tratamiento. La responsabilidad del generador termina cuando el residuo se usa como insumo de otro proceso productivo | `tratamiento` por material (reciclado, reúso, compostaje, disposición final), impreso en el certificado y el informe |
+| 11 inc. e y 12 | Si el generador recicla, su declaración jurada la firma también quien recicla | Constancia anual de reciclado firmada y sellada por la cooperativa, desde el panel y el portal |
+| 34 | Las plantas llevan un registro de operaciones permanente | Libro de movimientos exportable a CSV |
+| 8 | Niveles de riesgo bajo, medio y alto | Pendiente; solo si la cooperativa se habilita para industriales |
+| 11 inc. c y 21 a 23 | Recipientes identificados y fechados; manifiesto obligatorio | Pendiente; el manifiesto ya se puede adjuntar al retiro |
+
+**Para confirmar con la Secretaría de Ambiente de Entre Ríos:** si el descarte de embalajes de las industrias de la zona cuenta como RSU o como industrial, y qué formato de declaración jurada y de manifiesto pide la provincia.
+
 ## Entre Ríos y Paraná
 
 - **[Ley provincial 10.311](https://faolex.fao.org/docs/pdf/arg162565.pdf)** (gestión integral de RSU, 2014): prioriza la reducción en origen y la clasificación domiciliaria.

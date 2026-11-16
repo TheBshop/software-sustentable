@@ -8,6 +8,7 @@ export default function PortalInforme() {
   const [err, setErr] = useState(null);
   const [descargando, setDescargando] = useState(false);
   const { data } = useLoad(`/v1/portal/resumen?anio=${anio}`);
+  const constancias = useLoad(`/v1/portal/constancias?anio=${anio}`);
 
   async function descargar() {
     setErr(null);
@@ -54,6 +55,21 @@ export default function PortalInforme() {
           </button>
           {data && !data.totales.retiros && <span className="muted small">No hay retiros en {anio}.</span>}
         </div>
+      </section>
+
+      <section className="card stack" style={{ maxWidth: 560 }}>
+        <h3>Constancias de reciclado {anio}</h3>
+        <p className="muted small">
+          Firmadas por cada cooperativa: qué recibió y qué tratamiento le dio. Sirven de respaldo a la declaración jurada sobre reúso o reciclado de residuos
+          que piden las autoridades ambientales (Ley 25.612, arts. 11 y 12).
+        </p>
+        {constancias.data?.items.map((c) => (
+          <div key={c.cliente} className="row" style={{ justifyContent: 'space-between' }}>
+            <span>{c.cooperativa} <span className="muted small">· {fmtKg(c.kg)} · {c.retiros} retiros</span></span>
+            <button type="button" className="secondary sm" onClick={() => openPdf(`/v1/portal/constancias/${c.cliente}.pdf?anio=${anio}`).catch((e) => setErr(e.message))}>Descargar</button>
+          </div>
+        ))}
+        {constancias.data && !constancias.data.items.length && <p className="muted small">No hay retiros en {anio}.</p>}
       </section>
     </>
   );

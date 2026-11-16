@@ -85,7 +85,8 @@ export function renderInformeAnual(org, r, stream) {
     r.porFraccion.map((f) => [{ hex: f.hex, texto: f.nombre }, f.color, `${n(f.kg)} kg`]),
     [['Fracción', 50], ['Color', 300], ['Kilos', 420]],
   );
-  tabla('Por material', r.porMaterial.map((m) => [m.material, `${n(m.kg)} kg`, `${n(m.co2EvitadoKg)} kg`]), [['Material', 50], ['Kilos', 300], ['CO2 evitado', 420]]);
+  const TRAT = { reciclado: 'Reciclado', reuso: 'Reúso', compostaje: 'Compostaje', disposicion_final: 'Disposición final' };
+  tabla('Por material y tratamiento', r.porMaterial.map((m) => [m.material, TRAT[m.tratamiento] ?? '—', `${n(m.kg)} kg`, `${n(m.co2EvitadoKg)} kg`]), [['Material', 50], ['Tratamiento', 230], ['Kilos', 340], ['CO2 evitado', 430]]);
   if (r.porSede.length > 1) {
     tabla('Por sede', r.porSede.map((s) => [s.sede, n(s.retiros, 0), `${n(s.kg)} kg`]), [['Sede', 50], ['Retiros', 340], ['Kilos', 420]]);
   }

@@ -116,3 +116,13 @@ Además, `/dashboard` devuelve `planta.indicadores = { ingresadoKg, valorizadoKg
 | `GET` y `DELETE /api/retiros/:id/documentos/:docId` | — / planta | Descarga con sesión o baja del documento. |
 | `GET /api/v1/portal/retiros/:id/documentos/:docId` | portal | El cliente descarga los documentos de sus retiros. |
 | `GET /api/v1/portal/resumen` | portal | Suma `recomendaciones`, `porMaterial[].factores` (factor y fuente por cooperativa) e `inclusion` (solo municipios). |
+
+### Ley 25.612
+
+| Método y ruta | Rol | Qué hace |
+|---|---|---|
+| `GET /api/planta/movimientos/csv?desde&hasta` | administración, planta | Libro de movimientos del período (registro de operaciones, art. 34). |
+| `GET /api/clientes/:id/constancia-reciclado.pdf?anio=` | administración | Constancia anual de reciclado firmada por la cooperativa. |
+| `GET /api/v1/portal/constancias?anio=` y `/constancias/:cliente.pdf` | portal | Una constancia por cada cooperativa que atiende a la organización. |
+
+Los materiales suman `tratamiento`: `reciclado`, `reuso`, `compostaje` o `disposicion_final`. Si no se indica, se completa solo.
