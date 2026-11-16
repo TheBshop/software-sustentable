@@ -1,6 +1,8 @@
 // Da de alta una cooperativa en la plataforma con su primer administrador.
 //
-//   npm run crear-cooperativa -- <cuit> "<nombre>" <email-admin> "<nombre-admin>" [corrientes]
+//   npm run crear-cooperativa -- <cuit> "<nombre>" <email-admin> "<nombre-admin>" [corrientes] [provincia] [municipio] [perfil]
+//   provincia y municipio: claves de modules/normativa/jurisdicciones.js (ej. entre_rios parana)
+//   perfil: cooperativa (por defecto), empresa, planta_publica o asociacion
 //   corrientes habilitadas, separadas por coma (por defecto: rsu). Ej: rsu,regu
 //
 // La contraseña del admin se genera al azar y se muestra una sola vez.
@@ -9,16 +11,25 @@ import { env } from '../config/env.js';
 import { Organization, CORRIENTES } from '../modules/organizations/organization.model.js';
 import { User } from '../modules/users/user.model.js';
 import { randomPassword, normalizarCuit } from '../lib/passwords.js';
+import { PROVINCIAS } from '../modules/normativa/jurisdicciones.js';
 
-const [cuit, nombre, email, nombreAdmin, corrientesArg = 'rsu'] = process.argv.slice(2);
+const [cuit, nombre, email, nombreAdmin, corrientesArg = 'rsu', provincia, municipio, perfil = 'cooperativa'] = process.argv.slice(2);
 if (!cuit || !nombre || !email || !nombreAdmin) {
-  console.error('Uso: npm run crear-cooperativa -- <cuit> "<nombre>" <email-admin> "<nombre-admin>" [rsu,regu,...]');
+  console.error('Uso: npm run crear-cooperativa -- <cuit> "<nombre>" <email-admin> "<nombre-admin>" [rsu,regu,...] [provincia] [municipio] [perfil]');
   process.exit(1);
 }
 const corrientes = corrientesArg.split(',').map((c) => c.trim());
 const invalidas = corrientes.filter((c) => !CORRIENTES.includes(c));
 if (invalidas.length) {
   console.error(`Corrientes inválidas: ${invalidas.join(', ')}. Opciones: ${CORRIENTES.join(', ')}`);
+  process.exit(1);
+}
+if (provincia && !PROVINCIAS[provincia]) {
+  console.error(`Provincia desconocida: ${provincia}. Opciones: ${Object.keys(PROVINCIAS).join(', ')}`);
+  process.exit(1);
+}
+if (!['cooperativa', 'empresa', 'planta_publica', 'asociacion'].includes(perfil)) {
+  console.error('Perfil inválido: cooperativa, empresa, planta_publica o asociacion');
   process.exit(1);
 }
 if (corrientes.includes('peligroso')) {
@@ -29,7 +40,7 @@ await mongoose.connect(env.mongoUri);
 try {
   if (await Organization.exists({ cuit: normalizarCuit(cuit) })) throw new Error(`Ya existe una organización con CUIT ${cuit}`);
   if (await User.exists({ email: email.toLowerCase() })) throw new Error(`Ya existe un usuario con email ${email}`);
-  const coop = await Organization.create({ tipo: 'cooperativa', nombre, cuit: normalizarCuit(cuit), habilitaciones: { corrientes } });
+  const coop = await Organization.create({ tipo: 'cooperativa', perfil, nombre, cuit: normalizarCuit(cuit), habilitaciones: { corrientes }, ...(provincia && { jurisdiccion: { provincia, municipio } }) });
   const password = randomPassword();
   await User.create({ nombre: nombreAdmin, email, rol: 'admin', organizacion: coop._id, passwordHash: await User.hashPassword(password) });
   console.log(`✓ Cooperativa creada: ${nombre} (habilitada para: ${corrientes.join(', ')})`);

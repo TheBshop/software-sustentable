@@ -66,7 +66,8 @@ Desde la computadora de quien despliega, con acceso a Atlas:
 
 ```bash
 cd apps/api
-MONGO_URI="mongodb+srv://api:...@.../nueva-vida" npm run crear-cooperativa -- 30-12345678-9 "Cooperativa Nueva Vida" admin@coopenuevavida.org.ar "Nombre Apellido" rsu,regu
+MONGO_URI="mongodb+srv://api:...@.../nueva-vida" npm run crear-cooperativa -- 30-12345678-9 "Cooperativa Nueva Vida" admin@coopenuevavida.org.ar "Nombre Apellido" rsu,regu entre_rios parana
+# Los tres últimos datos son opcionales: provincia y municipio (definen el marco normativo y el certificado) y el perfil (cooperativa, empresa, planta_publica o asociacion).
 ```
 
 El último parámetro son las corrientes que la cooperativa está habilitada a gestionar (ver [08-marco-normativo.md](08-marco-normativo.md)). Cada cooperativa nueva de la plataforma se da de alta igual.
