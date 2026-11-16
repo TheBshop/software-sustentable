@@ -3,7 +3,7 @@ import { api, fmtFecha, isoDate } from '../api.js';
 import { useLoad, ErrorMsg, ConfirmButton, Tag } from '../ui.jsx';
 
 const ELEMENTOS = ['guantes', 'botines', 'barbijo', 'antiparras', 'chaleco reflectivo', 'ropa de trabajo', 'protector auditivo', 'casco'];
-const nuevo = () => ({ tipo: 'epp', fecha: isoDate(), persona: '', documento: '', elementos: [], tema: '', horas: '', dictadaPor: '' });
+const nuevo = () => ({ tipo: 'epp', fecha: isoDate(), persona: '', documento: '', elementos: [], tema: '', horas: '', dictadaPor: '', diasPerdidos: '', observaciones: '' });
 
 /**
  * Seguridad e higiene: entregas de elementos de protección y capacitaciones.
@@ -26,13 +26,15 @@ export default function Seguridad() {
       fecha: form.fecha,
       persona: form.persona.trim(),
       ...(form.documento.trim() && { documento: form.documento.trim() }),
+      ...(form.tipo === 'accidente' && { observaciones: form.observaciones.trim(), diasPerdidos: Number(form.diasPerdidos) || 0 }),
       ...(form.tipo === 'epp'
         ? { elementos: form.elementos }
-        : { tema: form.tema.trim(), ...(Number(form.horas) > 0 && { horas: Number(form.horas) }), ...(form.dictadaPor.trim() && { dictadaPor: form.dictadaPor.trim() }) }),
+        : form.tipo === 'accidente' ? {} : { tema: form.tema.trim(), ...(Number(form.horas) > 0 && { horas: Number(form.horas) }), ...(form.dictadaPor.trim() && { dictadaPor: form.dictadaPor.trim() }) }),
     };
     if (body.persona.length < 2) return setErr('Indicá a quién.');
     if (form.tipo === 'epp' && !form.elementos.length) return setErr('Marcá qué elementos se entregaron.');
     if (form.tipo === 'capacitacion' && !body.tema) return setErr('Indicá el tema de la capacitación.');
+    if (form.tipo === 'accidente' && !body.observaciones) return setErr('Contá brevemente qué pasó.');
     try {
       await api('/seguridad', { method: 'POST', body });
       setForm({ ...nuevo(), tipo: form.tipo, fecha: form.fecha });
@@ -49,7 +51,7 @@ export default function Seguridad() {
         <div>
           <h2>Seguridad e higiene</h2>
           <p className="muted">
-            Entregas de elementos de protección y capacitaciones del personal (Ordenanza 9233 de Paraná, art. 21). Sirve de constancia ante una inspección.
+            Entregas de elementos de protección, capacitaciones y accidentes del personal (Ordenanza 9233 de Paraná, art. 21). Sirve de constancia ante una inspección.
           </p>
         </div>
       </div>
@@ -91,6 +93,7 @@ export default function Seguridad() {
           <div className="row">
             <button type="button" className={form.tipo === 'epp' ? '' : 'secondary'} onClick={() => setForm({ ...form, tipo: 'epp' })}>Entrega de EPP</button>
             <button type="button" className={form.tipo === 'capacitacion' ? '' : 'secondary'} onClick={() => setForm({ ...form, tipo: 'capacitacion' })}>Capacitación</button>
+            <button type="button" className={form.tipo === 'accidente' ? '' : 'secondary'} onClick={() => setForm({ ...form, tipo: 'accidente' })}>Accidente</button>
           </div>
           <div className="form-grid">
             <label>Fecha<input type="date" value={form.fecha} onChange={set('fecha')} /></label>
@@ -98,7 +101,12 @@ export default function Seguridad() {
             <label>DNI (opcional)<input value={form.documento} onChange={set('documento')} /></label>
           </div>
           <datalist id="personas-seguridad">{r?.items.map((p) => <option key={p.persona} value={p.persona} />)}</datalist>
-          {form.tipo === 'epp' ? (
+          {form.tipo === 'accidente' ? (
+            <div className="form-grid">
+              <label>Qué pasó<input value={form.observaciones} onChange={set('observaciones')} placeholder="Corte en la mano en la cinta" /></label>
+              <label>Días de trabajo perdidos<input type="number" min="0" step="1" value={form.diasPerdidos} onChange={set('diasPerdidos')} /></label>
+            </div>
+          ) : form.tipo === 'epp' ? (
             <div className="tags" role="group" aria-label="Elementos entregados">
               {ELEMENTOS.map((el) => (
                 <label key={el} className="check">
@@ -129,8 +137,8 @@ export default function Seguridad() {
                 <tr key={x._id}>
                   <td className="num">{fmtFecha(x.fecha)}</td>
                   <td>{x.persona}</td>
-                  <td>{x.tipo === 'epp' ? 'Entrega de EPP' : 'Capacitación'}</td>
-                  <td>{x.tipo === 'epp' ? x.elementos.join(', ') : `${x.tema}${x.horas ? ` · ${x.horas} h` : ''}`}</td>
+                  <td>{x.tipo === 'epp' ? 'Entrega de EPP' : x.tipo === 'accidente' ? 'Accidente' : 'Capacitación'}</td>
+                  <td>{x.tipo === 'epp' ? x.elementos.join(', ') : x.tipo === 'accidente' ? `${x.observaciones} · ${x.diasPerdidos ?? 0} días perdidos` : `${x.tema}${x.horas ? ` · ${x.horas} h` : ''}`}</td>
                   <td><ConfirmButton onConfirm={() => api(`/seguridad/${x._id}`, { method: 'DELETE' }).then(reload)} confirmLabel="Sí, borrar">Borrar</ConfirmButton></td>
                 </tr>
               ))}

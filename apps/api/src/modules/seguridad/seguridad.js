@@ -8,7 +8,7 @@ import { dateInput } from '../../lib/validation.js';
 // trabaja en contacto con residuos tenga elementos de protección y reciba capacitación.
 // Este registro sirve de constancia ante una inspección y avisa a quién le falta algo.
 
-export const TIPOS_REGISTRO = { epp: 'Entrega de elementos de protección', capacitacion: 'Capacitación' };
+export const TIPOS_REGISTRO = { epp: 'Entrega de elementos de protección', capacitacion: 'Capacitación', accidente: 'Accidente' };
 export const ELEMENTOS_EPP = ['guantes', 'botines', 'barbijo', 'antiparras', 'chaleco reflectivo', 'ropa de trabajo', 'protector auditivo', 'casco'];
 
 /** Cada cuántos días hay que renovar la entrega de EPP o repetir la capacitación (alerta). */
@@ -24,6 +24,7 @@ const registroSchema = new mongoose.Schema(
     tema: String, // solo capacitación
     horas: Number,
     dictadaPor: String,
+    diasPerdidos: Number, // solo accidentes: días de trabajo perdidos
     observaciones: String,
   },
   { timestamps: true },
@@ -43,10 +44,12 @@ export const registroInput = z
     tema: z.string().max(200).optional(),
     horas: z.number().positive().max(100).optional(),
     dictadaPor: z.string().max(120).optional(),
+    diasPerdidos: z.number().min(0).max(366).optional(),
     observaciones: z.string().max(500).optional(),
   })
   .refine((r) => r.tipo !== 'epp' || r.elementos?.length, { message: 'Indicá qué elementos se entregaron', path: ['elementos'] })
-  .refine((r) => r.tipo !== 'capacitacion' || r.tema, { message: 'Indicá el tema de la capacitación', path: ['tema'] });
+  .refine((r) => r.tipo !== 'capacitacion' || r.tema, { message: 'Indicá el tema de la capacitación', path: ['tema'] })
+  .refine((r) => r.tipo !== 'accidente' || r.observaciones, { message: 'Contá brevemente qué pasó', path: ['observaciones'] });
 
 // Una vez cargado solo se corrigen datos menores; si el registro está mal, se borra y se carga de nuevo.
 export const registroUpdate = z.object({ documento: z.string().max(20).optional(), observaciones: z.string().max(500).optional(), dictadaPor: z.string().max(120).optional() });
@@ -58,6 +61,7 @@ seguridadResumenRouter.get('/resumen', async (_req, res) => {
   const hoy = Date.now();
   const personas = new Map();
   for (const r of registros) {
+    if (r.tipo === 'accidente') continue;
     const p = personas.get(r.persona) ?? { persona: r.persona, epp: null, capacitacion: null };
     if (!p[r.tipo]) p[r.tipo] = { fecha: r.fecha, detalle: r.tipo === 'epp' ? r.elementos.join(', ') : r.tema };
     personas.set(r.persona, p);

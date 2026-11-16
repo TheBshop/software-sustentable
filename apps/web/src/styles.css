@@ -188,3 +188,12 @@ label.check input { width: auto; }
 .norma { border-bottom: 1px solid var(--borde); padding-bottom: 10px; }
 .norma:last-child { border-bottom: none; }
 .norma p { margin-top: 4px; }
+
+/* ---- Productividad ---- */
+.ip-card { background: var(--verde-oscuro); color: white; border-color: var(--verde-oscuro); display: flex; flex-direction: column; gap: 4px; justify-content: center; }
+.ip-card strong { font-size: 40px; font-variant-numeric: tabular-nums; line-height: 1.1; }
+.ip-card span { opacity: 0.85; }
+.prod-grupos { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; align-items: start; }
+.ind-valor { font-size: 17px; font-weight: 700; }
+.lista-simple { list-style: none; padding: 0 !important; margin: 0; display: flex; flex-direction: column; gap: 6px; font-size: 14px; }
+.lista-simple li { display: flex; justify-content: space-between; gap: 8px; align-items: center; border-top: 1px solid var(--borde); padding-top: 6px; }

@@ -17,6 +17,7 @@ import Configuracion from './pages/Configuracion.jsx';
 import Seguridad from './pages/Seguridad.jsx';
 import Normativa from './pages/Normativa.jsx';
 import Demo from './pages/Demo.jsx';
+import Productividad from './pages/Productividad.jsx';
 import VerificarCertificado from './pages/VerificarCertificado.jsx';
 import PortalInicio from './pages/portal/Inicio.jsx';
 import PortalRetiros from './pages/portal/Retiros.jsx';
@@ -51,6 +52,7 @@ function CoopSidebar() {
       <NavLink to="/retiros">Retiros <Badge n={sinPesar.data?.total} /></NavLink>
       <NavLink to="/ingresos">Planta y stock</NavLink>
       <NavLink to="/ventas">Ventas</NavLink>
+      {['admin', 'administracion', 'operador_planta'].includes(getUser()?.rol) && <NavLink to="/productividad">Productividad</NavLink>}
       <span className="nav-group">Clientes</span>
       <NavLink to="/certificados">Certificados</NavLink>
       <NavLink to="/facturacion">Facturación <Badge n={nAlertas} alert={alertas.data?.vencidas.length > 0} /></NavLink>
@@ -127,6 +129,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
           <Route path="/configuracion" element={<Configuracion />} />
           <Route path="/seguridad" element={<Seguridad />} />
           <Route path="/normativa" element={<Normativa />} />
+          <Route path="/productividad" element={<Productividad />} />
         </Route>
         <Route path="/portal" element={<Zona portal />}>
           <Route index element={<PortalInicio />} />

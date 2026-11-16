@@ -126,3 +126,20 @@ Además, `/dashboard` devuelve `planta.indicadores = { ingresadoKg, valorizadoKg
 | `GET /api/v1/portal/constancias?anio=` y `/constancias/:cliente.pdf` | portal | Una constancia por cada cooperativa que atiende a la organización. |
 
 Los materiales suman `tratamiento`: `reciclado`, `reuso`, `compostaje` o `disposicion_final`. Si no se indica, se completa solo.
+
+### Productividad de la planta
+
+Son los indicadores de la *Guía de productividad para plantas de valorización de residuos*, agrupados en procesamiento, personal y comercialización.
+
+| Método y ruta | Rol | Qué hace |
+|---|---|---|
+| `GET /api/productividad?mes=AAAA-MM` | administración, planta | Devuelve:<br>• los datos del mes: t ingresadas, separadas, rechazadas y vendidas, facturación, tipos de material, horas de parada y accidentes;<br>• el índice de productividad (t vendidas por persona);<br>• los 11 indicadores, con su fórmula y qué dato falta;<br>• la evolución de los últimos 6 meses. |
+| `PATCH /api/productividad/planta` | admin | Capacidad instalada (t/mes) y horas trabajables por mes. |
+| `PUT /api/productividad/personal/:mes` | administración | Resumen del personal del mes: personas, formalizadas, días trabajados y perdidos, bajas, ingreso promedio y SMVM. |
+| `GET/POST/DELETE /api/productividad/paradas` | administración, planta | Paradas de máquina con su causa. |
+
+Los accidentes se registran en `POST /api/seguridad` con `tipo: "accidente"`, `diasPerdidos` y `observaciones`.
+
+**"Separado y acopiado"** suma dos cosas:
+- lo que ingresa ya separado por material, sin contar la mezcla ni el rechazo;
+- lo que sale de clasificar la mezcla.

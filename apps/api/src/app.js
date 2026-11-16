@@ -22,6 +22,7 @@ import { RegistroSeguridad, registroInput, registroUpdate, seguridadResumenRoute
 import { accesoPortalRouter } from './modules/clients/acceso.routes.js';
 import { constanciaRouter } from './modules/certificates/constancia.js';
 import { normativaRouter } from './modules/normativa/normativa.routes.js';
+import { productividadRouter } from './modules/productividad/productividad.routes.js';
 import { demoRouter } from './demo/demo.routes.js';
 import { assertHabilitados, assertCorrienteHabilitada, registrarIngreso, registrarVenta } from './modules/movimientos/movimiento.service.js';
 import { pickupsRouter } from './modules/pickups/pickup.routes.js';
@@ -85,6 +86,7 @@ export function createApp(config = {}) {
   coopApi.use('/clientes', accesoPortalRouter);
   coopApi.use('/clientes', constanciaRouter); // constancia anual de reciclado (Ley 25.612)
   coopApi.use('/normativa', normativaRouter); // marco normativo según la jurisdicción
+  coopApi.use('/productividad', productividadRouter); // indicadores de la guía de productividad de plantas
   coopApi.use(
     '/clientes',
     crudRouter(Client, { createSchema: clientInput, searchFields: ['razonSocial', 'cuit'], filters: ['tipo'], sort: 'razonSocial', writeRoles: ['administracion'] }),

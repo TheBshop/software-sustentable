@@ -128,3 +128,14 @@ Personas: **Chofer** (hace los retiros), **Planta** (recibe y pesa), **Administr
   - nivel de riesgo por material;
   - manifiesto obligatorio antes de certificar;
   - etiquetas para recipientes.
+
+## Productividad de la planta ✅
+
+- ✅ Indicadores de la guía de productividad, mes a mes, con la evolución de los últimos 6 meses.
+- ✅ Los que salen solos de los registros: productividad, utilización, rechazo, eficiencia de venta y precio promedio.
+- ✅ Registros nuevos: personal del mes, paradas de máquina y accidentes.
+- ⏳ Pendiente:
+  - control de asistencia diario;
+  - liquidación de sueldos;
+  - agenda de mantenimiento;
+  - no conformidades.

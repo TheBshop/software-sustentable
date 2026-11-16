@@ -19,6 +19,7 @@ import { resolverPesos } from './modules/materials/unidades.js';
 import { anotarReferencias } from './modules/plant/ventas.service.js';
 import { Gasto } from './modules/finanzas/gasto.model.js';
 import { RegistroSeguridad } from './modules/seguridad/seguridad.js';
+import { PersonalMes, ParadaMaquina } from './modules/productividad/productividad.models.js';
 import { runWithTenant } from './lib/tenancy.js';
 
 export const SEED_USUARIOS = [
@@ -57,7 +58,7 @@ const DAY = 24 * 60 * 60 * 1000;
 /** Carga los datos de ejemplo. Asume una base vacía y ya conectada. */
 export async function seedDatabase() {
   const orgs = {
-    nv: await Organization.create({ tipo: 'cooperativa', perfil: 'cooperativa', jurisdiccion: { provincia: 'entre_rios', municipio: 'parana', ciudad: 'Paraná' }, nombre: 'Cooperativa Nueva Vida', cuit: '30700000014', habilitaciones: { corrientes: ['rsu', 'regu'], registros: [{ descripcion: 'Registro municipal de depósitos de acopio', organismo: 'Municipalidad de Paraná (Ord. 9233, art. 28)', numero: 'EJEMPLO-0001' }] }, certificado: { responsable: 'Responsable de ejemplo', cargo: 'Presidencia' } }),
+    nv: await Organization.create({ tipo: 'cooperativa', perfil: 'cooperativa', jurisdiccion: { provincia: 'entre_rios', municipio: 'parana', ciudad: 'Paraná' }, nombre: 'Cooperativa Nueva Vida', cuit: '30700000014', habilitaciones: { corrientes: ['rsu', 'regu'], registros: [{ descripcion: 'Registro municipal de depósitos de acopio', organismo: 'Municipalidad de Paraná (Ord. 9233, art. 28)', numero: 'EJEMPLO-0001' }] }, certificado: { responsable: 'Responsable de ejemplo', cargo: 'Presidencia' }, planta: { capacidadTnMes: 600, horasTrabajablesMes: 176 } }),
     litoral: await Organization.create({ tipo: 'cooperativa', nombre: 'Cooperativa Reciclar del Litoral', cuit: '30700000022', habilitaciones: { corrientes: ['rsu'] } }),
     empresa: await Organization.create({ tipo: 'empresa', nombre: 'Supermercado El Puente SA', cuit: '30712345678' }),
     municipio: await Organization.create({ tipo: 'municipio', nombre: 'Municipio de Ejemplo', cuit: '30999999991' }),
@@ -216,6 +217,18 @@ async function seedNuevaVida(orgs, chofer) {
       [60, 'capacitacion', 'Socio de ejemplo 2', { tema: 'Manejo seguro de la enfardadora', horas: 2, dictadaPor: 'Responsable de planta' }],
     ].map(([d, tipo, persona, extra]) => new RegistroSeguridad({ fecha: new Date(now - d * DAY), tipo, persona, ...extra })),
   );
+
+  // Productividad: personal de los últimos meses, paradas de máquina y un accidente (datos de ejemplo)
+  const mesDe = (d) => { const x = new Date(d - 3 * 3600_000); return `${x.getUTCFullYear()}-${String(x.getUTCMonth() + 1).padStart(2, '0')}`; };
+  for (let i = 5; i >= 0; i--) {
+    const fecha = new Date(now); fecha.setUTCDate(15); fecha.setUTCMonth(fecha.getUTCMonth() - i);
+    await PersonalMes.create({ mes: mesDe(fecha), personas: 24 + (i % 3), formalizadas: 16 + (5 - i), diasTrabajados: 500 + i * 7, diasAusencia: 28 + i * 2, bajas: i === 2 ? 2 : i === 4 ? 1 : 0, ingresoPromedio: 380000 + (5 - i) * 15000 });
+  }
+  await ParadaMaquina.insertMany([
+    { fecha: new Date(now - 9 * DAY), maquina: 'cinta', horas: 6, causa: 'rotura', detalle: 'Se cortó la banda' },
+    { fecha: new Date(now - 3 * DAY), maquina: 'prensa', horas: 4, causa: 'falta_energia' },
+  ].map((p) => new ParadaMaquina(p)));
+  await RegistroSeguridad.create({ fecha: new Date(now - 7 * DAY), tipo: 'accidente', persona: 'Socio de ejemplo 2', diasPerdidos: 3, observaciones: 'Corte en la mano con un vidrio en la cinta (ejemplo)' });
 
   // Liquidaciones del mes anterior: una vencida, una por vencer y una pagada
   const snap = (c) => ({ razonSocial: c.razonSocial, cuit: c.cuit, condicionIva: c.condicionIva });
