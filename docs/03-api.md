@@ -143,3 +143,20 @@ Los accidentes se registran en `POST /api/seguridad` con `tipo: "accidente"`, `d
 **"Separado y acopiado"** suma dos cosas:
 - lo que ingresa ya separado por material, sin contar la mezcla ni el rechazo;
 - lo que sale de clasificar la mezcla.
+
+### Logística de retiros y recuperadores
+
+Funciones tomadas del análisis de Rubicon, Routeware, Sensoneo, Enevo, Recy y Reaquila. No usan sensores ni servicios de mapas.
+
+| Método y ruta | Rol | Qué hace |
+|---|---|---|
+| `POST /api/v1/portal/solicitudes` y `GET` | portal | El cliente pide un retiro (`cliente` es uno de sus servicios: `GET /api/v1/portal/organizacion` → `servicios`) y sigue sus pedidos. `POST .../:id/cancelar` lo cancela. |
+| `GET/POST /api/solicitudes`, `PATCH /api/solicitudes/:id` | administración, planta | Bandeja de pedidos: programar con fecha y chofer, rechazar o cancelar. `GET /api/solicitudes/choferes` lista los choferes. |
+| `POST /api/solicitudes/:id/no-realizado` | chofer | Visita fallida con `motivo` (cerrado, sin_material, material_mezclado, acceso_bloqueado, falta_tiempo, otro), `detalle` y `foto` opcional. |
+| `POST /api/retiros` con `solicitud` | chofer | El retiro cierra el pedido. Se rechaza si el pedido es de otro cliente o fue cancelado. |
+| `GET /api/hoja-de-ruta?fecha=` | todos | Paradas del día en orden por cercanía, desde la ubicación de la planta o desde la primera parada. Usa la última ubicación GPS de los retiros de cada cliente; las paradas sin ubicación van al final. |
+| `GET /api/solicitudes/sugeridos` | administración, planta | Frecuencia sugerida por cliente (3 o más retiros en 120 días): kg por retiro, intervalo, próximo retiro y estado. |
+| `GET /api/logistica?mes=` | administración, planta | Retiros por día, kg por retiro, combustible por tonelada, pedidos cumplidos con los motivos de las visitas fallidas, y datos por chofer. |
+| `PATCH /api/logistica/configuracion` | admin | `kgObjetivoRetiro` y `ubicacion` de la planta. |
+| `GET/POST/PATCH /api/recuperadores`, `GET /api/recuperadores/resumen?mes=` | administración, planta | Registro de recuperadores y lo comprado a cada uno en el mes. |
+| `GET/POST /api/compras`, `PATCH /api/compras/:id`, `GET /api/compras/:id/recibo.pdf` | administración, planta | Compra de material:<br>• entra al stock como ingreso de recuperador;<br>• acepta kg o unidades (fardos, bolsones);<br>• cuando se paga, va al balance como egreso;<br>• sale con un recibo numerado. |

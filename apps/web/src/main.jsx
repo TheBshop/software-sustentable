@@ -18,6 +18,9 @@ import Seguridad from './pages/Seguridad.jsx';
 import Normativa from './pages/Normativa.jsx';
 import Demo from './pages/Demo.jsx';
 import Productividad from './pages/Productividad.jsx';
+import Agenda from './pages/Agenda.jsx';
+import Recuperadores from './pages/Recuperadores.jsx';
+import PortalPedidos from './pages/portal/Pedidos.jsx';
 import VerificarCertificado from './pages/VerificarCertificado.jsx';
 import PortalInicio from './pages/portal/Inicio.jsx';
 import PortalRetiros from './pages/portal/Retiros.jsx';
@@ -44,13 +47,17 @@ function CoopSidebar() {
   const sinPesar = useLoad('/retiros?estado=registrado&limit=1');
   const alertas = useLoad('/facturas/alertas?dias=7');
   const nAlertas = (alertas.data?.vencidas.length ?? 0) + (alertas.data?.porVencer.length ?? 0);
+  const gestiona = ['admin', 'administracion', 'operador_planta'].includes(getUser()?.rol);
+  const pedidos = useLoad(gestiona ? '/solicitudes?estado=pendiente' : null);
   return (
     <nav className="sidebar">
       <h1>♻ {getUser()?.organizacion?.nombre}</h1>
       <span className="nav-group">Operación</span>
       <NavLink to="/" end>Inicio</NavLink>
+      {gestiona && <NavLink to="/agenda">Agenda de retiros <Badge n={pedidos.data?.items.length} alert /></NavLink>}
       <NavLink to="/retiros">Retiros <Badge n={sinPesar.data?.total} /></NavLink>
       <NavLink to="/ingresos">Planta y stock</NavLink>
+      {gestiona && <NavLink to="/recuperadores">Recuperadores</NavLink>}
       <NavLink to="/ventas">Ventas</NavLink>
       {['admin', 'administracion', 'operador_planta'].includes(getUser()?.rol) && <NavLink to="/productividad">Productividad</NavLink>}
       <span className="nav-group">Clientes</span>
@@ -79,6 +86,7 @@ function PortalSidebar() {
       <h1>♻ {user?.organizacion?.nombre}</h1>
       <span className="nav-group">{user?.organizacion?.tipo === 'municipio' ? 'Portal del municipio' : 'Portal de la empresa'}</span>
       <NavLink to="/portal" end>Impacto</NavLink>
+      <NavLink to="/portal/pedidos">Pedir un retiro</NavLink>
       <NavLink to="/portal/retiros">Retiros</NavLink>
       <NavLink to="/portal/certificados">Certificados</NavLink>
       <NavLink to="/portal/facturas">Facturas</NavLink>
@@ -130,9 +138,12 @@ ReactDOM.createRoot(document.getElementById('root')).render(
           <Route path="/seguridad" element={<Seguridad />} />
           <Route path="/normativa" element={<Normativa />} />
           <Route path="/productividad" element={<Productividad />} />
+          <Route path="/agenda" element={<Agenda />} />
+          <Route path="/recuperadores" element={<Recuperadores />} />
         </Route>
         <Route path="/portal" element={<Zona portal />}>
           <Route index element={<PortalInicio />} />
+          <Route path="pedidos" element={<PortalPedidos />} />
           <Route path="retiros" element={<PortalRetiros />} />
           <Route path="certificados" element={<PortalCertificados />} />
           <Route path="facturas" element={<PortalFacturas />} />

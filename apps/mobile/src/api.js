@@ -88,3 +88,27 @@ export async function fotosFormData(uris) {
   }
   return fd;
 }
+
+// ---------- Hoja de ruta ----------
+
+/** Paradas del día en orden sugerido. Se guardan en el teléfono para verlas sin señal. */
+export async function getHojaDeRuta() {
+  try {
+    const hoja = await api('/hoja-de-ruta');
+    await AsyncStorage.setItem('hojaDeRuta', JSON.stringify({ ...hoja, guardada: new Date().toISOString() }));
+    return { ...hoja, sinConexion: false };
+  } catch (err) {
+    if (err.status === 401) throw err;
+    const cached = await AsyncStorage.getItem('hojaDeRuta');
+    return cached ? { ...JSON.parse(cached), sinConexion: true } : { paradas: [], sinConexion: true };
+  }
+}
+
+/** Foto de una visita fallida como multipart (campo "foto"). */
+export async function fotoFormData(uri, campos) {
+  const fd = new FormData();
+  for (const [k, v] of Object.entries(campos)) if (v != null) fd.append(k, v);
+  if (Platform.OS === 'web') fd.append('foto', await (await fetch(uri)).blob(), 'visita.jpg');
+  else fd.append('foto', { uri, name: 'visita.jpg', type: 'image/jpeg' });
+  return fd;
+}

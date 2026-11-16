@@ -1,11 +1,12 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import NetInfo from '@react-native-community/netinfo';
-import { api, fotosFormData } from '../api';
+import { api, fotosFormData, fotoFormData } from '../api';
 
 // Cola offline: el chofer siempre guarda en el teléfono primero y la app sincroniza
 // cuando hay conexión. Cada retiro lleva un `localId` (UUID) y el backend es idempotente
 // por ese campo, así que reintentar nunca duplica retiros.
 const KEY = 'pendingPickups';
+const VISITAS = 'pendingVisitas'; // pedidos que no se pudieron retirar (con motivo), a informar
 const listeners = new Set();
 let syncing = false;
 
@@ -18,14 +19,31 @@ async function savePending(list) {
   notify(list);
 }
 
+let visitasCache = [];
 function notify(list) {
-  listeners.forEach((fn) => fn({ pending: list, syncing }));
+  listeners.forEach((fn) => fn({ pending: list, visitas: visitasCache, syncing }));
+}
+
+export async function getVisitas() {
+  visitasCache = JSON.parse((await AsyncStorage.getItem(VISITAS)) ?? '[]');
+  return visitasCache;
+}
+async function saveVisitas(list) {
+  visitasCache = list;
+  await AsyncStorage.setItem(VISITAS, JSON.stringify(list));
+  notify(await getPending());
+}
+
+/** Visita en la que no se pudo retirar: se guarda y se informa cuando hay señal. */
+export async function enqueueVisita(visita) {
+  await saveVisitas([...(await getVisitas()), visita]);
+  syncNow();
 }
 
 /** fn recibe { pending: [...], syncing: bool } cada vez que cambia la cola. */
 export function onQueueChange(fn) {
   listeners.add(fn);
-  getPending().then((pending) => fn({ pending, syncing }));
+  Promise.all([getPending(), getVisitas()]).then(([pending, visitas]) => fn({ pending, visitas, syncing }));
   return () => listeners.delete(fn);
 }
 
@@ -64,6 +82,22 @@ export async function syncNow() {
           continue;
         }
         break; // sin conexión o sesión vencida: se reintenta más tarde
+      }
+    }
+    // Visitas fallidas (después de los retiros)
+    for (const v of [...(await getVisitas())]) {
+      if (v.error) continue;
+      try {
+        const campos = { motivo: v.motivo, detalle: v.detalle };
+        await api(`/solicitudes/${v.solicitud}/no-realizado`, v.foto ? { method: 'POST', formData: await fotoFormData(v.foto, campos) } : { method: 'POST', body: campos });
+        await saveVisitas(visitasCache.filter((x) => x.localId !== v.localId));
+      } catch (err) {
+        if (err.status && err.status < 500 && err.status !== 401) {
+          // El pedido ya estaba cerrado o no existe: no se reintenta
+          await saveVisitas(visitasCache.map((x) => (x.localId === v.localId ? { ...x, error: err.message } : x)));
+          continue;
+        }
+        break;
       }
     }
   } finally {

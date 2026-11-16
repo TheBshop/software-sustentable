@@ -20,6 +20,8 @@ import { anotarReferencias } from './modules/plant/ventas.service.js';
 import { Gasto } from './modules/finanzas/gasto.model.js';
 import { RegistroSeguridad } from './modules/seguridad/seguridad.js';
 import { PersonalMes, ParadaMaquina } from './modules/productividad/productividad.models.js';
+import { Solicitud } from './modules/logistica/solicitud.model.js';
+import { Recuperador, Compra } from './modules/recuperadores/recuperadores.js';
 import { runWithTenant } from './lib/tenancy.js';
 
 export const SEED_USUARIOS = [
@@ -134,6 +136,8 @@ async function seedNuevaVida(orgs, chofer) {
     [municipio.id]: (i) => [['PAP', 60 + ((i * 7) % 30)], ['CART', 40], ['RAEE', i % 2 ? 15 : 0]].filter(([, kg]) => kg > 0),
   };
   const orden = [superm, hotel, municipio, distri, superm, escuela, municipio, hotel, superm, distri, municipio];
+  // Puntos de ejemplo en Paraná (no son direcciones reales de nadie)
+  const GPS = { [superm.id]: { lat: -31.7333, lng: -60.5297 }, [hotel.id]: { lat: -31.7185, lng: -60.5232 }, [escuela.id]: { lat: -31.7442, lng: -60.5141 }, [distri.id]: { lat: -31.7701, lng: -60.4825 }, [municipio.id]: { lat: -31.7313, lng: -60.5376 } };
   const now = Date.now();
   for (let i = 0; i < 20; i++) {
     const cliente = orden[i % orden.length];
@@ -146,6 +150,7 @@ async function seedNuevaVida(orgs, chofer) {
       direccion: sede?.alias ? `${sede.alias} — ${sede.direccion}` : sede?.direccion,
       fecha: new Date(now - diasAtras * DAY),
       chofer: chofer._id,
+      ubicacion: GPS[cliente.id],
       estado: pesado ? 'en_planta' : 'registrado',
       items: plan[cliente.id](i).map(([cod, kg]) => ({
         material: m[cod]._id,
@@ -229,6 +234,32 @@ async function seedNuevaVida(orgs, chofer) {
     { fecha: new Date(now - 3 * DAY), maquina: 'prensa', horas: 4, causa: 'falta_energia' },
   ].map((p) => new ParadaMaquina(p)));
   await RegistroSeguridad.create({ fecha: new Date(now - 7 * DAY), tipo: 'accidente', persona: 'Socio de ejemplo 2', diasPerdidos: 3, observaciones: 'Corte en la mano con un vidrio en la cinta (ejemplo)' });
+
+  // Pedidos de retiro: uno del portal sin programar, dos para hoy en la hoja de ruta y una visita fallida
+  const hoy = new Date(now);
+  await Solicitud.insertMany([
+    { cliente: superm._id, sede: 'Sucursal Centro — Av. Ejemplo 1200, Paraná', detalle: '12 bolsones de cartón y 3 de film', kgEstimados: 300, origen: 'portal', estado: 'pendiente', fechaPreferida: new Date(now + DAY) },
+    { cliente: hotel._id, sede: 'Calle Ribera 455, Paraná', detalle: 'Vidrio de la semana', kgEstimados: 90, origen: 'cooperativa', estado: 'programada', fechaProgramada: hoy, chofer: chofer._id },
+    { cliente: distri._id, sede: 'Ruta 12 km 5, Paraná', detalle: 'Cartón de devoluciones', kgEstimados: 400, origen: 'cooperativa', estado: 'programada', fechaProgramada: hoy, chofer: chofer._id },
+    { cliente: escuela._id, detalle: 'Papel de archivo', origen: 'portal', estado: 'no_realizada', fechaProgramada: new Date(now - 2 * DAY), chofer: chofer._id, resultado: { motivo: 'cerrado', detalle: 'Feriado escolar', fecha: new Date(now - 2 * DAY), chofer: chofer._id } },
+  ].map((x) => new Solicitud(x)));
+
+  // Recuperadores urbanos y compras de material (datos de ejemplo)
+  const [rec1, rec2] = await Recuperador.insertMany([
+    { nombre: 'Recuperador de ejemplo 1', zona: 'Barrio Centro', vehiculo: 'carro' },
+    { nombre: 'Recuperadora de ejemplo 2', zona: 'Barrio Norte', vehiculo: 'bicicleta', asociado: true },
+  ].map((x) => new Recuperador(x)));
+  for (const [rec, dias, items, pagada] of [
+    [rec1, 9, [['CART', 120, 70], ['ALU', 3, 900]], true],
+    [rec2, 5, [['PET', 40, 160]], true],
+    [rec1, 2, [['CART', 95, 70]], false],
+  ]) {
+    const fecha = new Date(now - dias * DAY);
+    const its = items.map(([c, kg, p]) => ({ material: m[c]._id, pesoKg: kg, precioKg: p }));
+    const ingreso = await Intake.create({ fecha, origen: 'recuperador', detalleOrigen: `Compra a ${rec.nombre}`, items: its.map(({ material, pesoKg }) => ({ material, pesoKg })) });
+    await registrarIngreso(ingreso);
+    await Compra.create({ numero: await nextSeq('compra'), fecha, recuperador: rec._id, items: its, pagada, ...(pagada && { fechaPago: fecha, medioPago: 'efectivo' }), ingreso: ingreso._id });
+  }
 
   // Liquidaciones del mes anterior: una vencida, una por vencer y una pagada
   const snap = (c) => ({ razonSocial: c.razonSocial, cuit: c.cuit, condicionIva: c.condicionIva });

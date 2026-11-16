@@ -4,12 +4,13 @@ import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import NuevoRetiroScreen from './src/screens/NuevoRetiroScreen';
 import MisRetirosScreen from './src/screens/MisRetirosScreen';
+import HoyScreen from './src/screens/HoyScreen';
 import LoginScreen from './src/screens/LoginScreen';
 import { getSession, logout, onUnauthorized } from './src/api';
 import { startAutoSync, onQueueChange } from './src/offline/syncQueue';
 import { C } from './src/theme';
 
-const TABS = { nuevo: 'Nuevo retiro', mios: 'Mis retiros' };
+const TABS = { hoy: 'Hoy', nuevo: 'Nuevo retiro', mios: 'Mis retiros' };
 
 export default function Root() {
   return (
@@ -22,8 +23,9 @@ export default function Root() {
 function App() {
   const [user, setUser] = useState(undefined); // undefined = cargando, null = sin sesión
   const [aviso, setAviso] = useState(null);
-  const [tab, setTab] = useState('nuevo');
-  const [cola, setCola] = useState({ pending: [], syncing: false });
+  const [tab, setTab] = useState('hoy');
+  const [preset, setPreset] = useState(null); // retiro que se registra desde la hoja de ruta
+  const [cola, setCola] = useState({ pending: [], visitas: [], syncing: false });
   const [toast, setToast] = useState(null);
   const [menu, setMenu] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
@@ -57,8 +59,9 @@ function App() {
 
   async function salir() {
     setMenu(false);
-    if (cola.pending.length) {
-      notify(`Hay ${cola.pending.length} retiro(s) sin enviar. Conectate y enviálos antes de salir.`);
+    const n = cola.pending.length + (cola.visitas?.length ?? 0);
+    if (n) {
+      notify(`Hay ${n} registro(s) sin enviar. Conectate y enviálos antes de salir.`);
       return;
     }
     await logout();
@@ -77,12 +80,12 @@ function App() {
     return (
       <SafeAreaView style={s.root}>
         <StatusBar style="dark" />
-        <LoginScreen onLogin={(u) => { setAviso(null); setUser(u); setTab('nuevo'); }} aviso={aviso} />
+        <LoginScreen onLogin={(u) => { setAviso(null); setUser(u); setTab('hoy'); }} aviso={aviso} />
       </SafeAreaView>
     );
   }
 
-  const n = cola.pending.length;
+  const n = cola.pending.length + (cola.visitas?.length ?? 0);
   return (
     <SafeAreaView style={s.root}>
       <StatusBar style="light" />
@@ -106,8 +109,10 @@ function App() {
       )}
 
       <View style={{ flex: 1 }}>
-        {tab === 'nuevo' ? (
-          <NuevoRetiroScreen notify={notify} onSaved={() => setRefreshKey((k) => k + 1)} />
+        {tab === 'hoy' ? (
+          <HoyScreen notify={notify} refreshKey={refreshKey} onRegistrar={(p) => { setPreset({ clienteId: p.cliente.id, clienteNombre: p.cliente.razonSocial, sede: p.sede, solicitud: p.id }); setTab('nuevo'); }} />
+        ) : tab === 'nuevo' ? (
+          <NuevoRetiroScreen notify={notify} preset={preset} onPresetUsado={() => setPreset(null)} onSaved={() => setRefreshKey((k) => k + 1)} />
         ) : (
           <MisRetirosScreen notify={notify} refreshKey={refreshKey} />
         )}
@@ -123,7 +128,7 @@ function App() {
           <TouchableOpacity key={k} style={[s.tab, tab === k && s.tabActive]} onPress={() => { setTab(k); setMenu(false); }} accessibilityRole="tab" accessibilityState={{ selected: tab === k }}>
             <Text style={[s.tabText, tab === k && s.tabTextActive]}>
               {label}
-              {k === 'mios' && n ? ` (${n})` : ''}
+              {k === 'mios' && cola.pending.length ? ` (${cola.pending.length})` : ''}
             </Text>
           </TouchableOpacity>
         ))}

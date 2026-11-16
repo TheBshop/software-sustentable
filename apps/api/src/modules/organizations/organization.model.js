@@ -32,7 +32,12 @@ const organizationSchema = new mongoose.Schema(
     // Solo prestadores: cooperativa, empresa recicladora, planta pública o asociación
     perfil: { type: String, enum: ["cooperativa", "empresa", "planta_publica", "asociacion"] },
     // Capacidad instalada y horas trabajables: base de los indicadores de productividad
-    planta: { capacidadTnMes: Number, horasTrabajablesMes: Number },
+    planta: {
+      capacidadTnMes: Number,
+      horasTrabajablesMes: Number,
+      kgObjetivoRetiro: Number, // carga que conviene juntar por retiro (frecuencia sugerida)
+      ubicacion: { lat: Number, lng: Number }, // punto de partida de la hoja de ruta
+    },
     // Prototipo de demostración armado para mostrarle el sistema a la organización
     prototipo: { slug: String, notas: String, tambien: String },
     activo: { type: Boolean, default: true },

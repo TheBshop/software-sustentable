@@ -139,3 +139,16 @@ Personas: **Chofer** (hace los retiros), **Planta** (recibe y pesa), **Administr
   - liquidación de sueldos;
   - agenda de mantenimiento;
   - no conformidades.
+
+## Logística y recuperadores ✅ (análisis de plataformas)
+
+- ✅ Pedido de retiro desde el portal, con bandeja en la cooperativa (Sensoneo, Reaquila, Routeware).
+- ✅ Hoja de ruta del chofer en la app ("Hoy"): orden por cercanía y visitas fallidas con motivo y foto. Funciona sin señal (Rubicon, Routeware).
+- ✅ Frecuencia sugerida por cliente, a partir del historial y sin sensores (Enevo, Sensoneo).
+- ✅ Indicadores de los recorridos: kg por retiro, combustible por tonelada y pedidos cumplidos (Sensoneo).
+- ✅ Registro de recuperadores y compras de material con recibo (Recy, Reaquila, guía del BID).
+- ⏳ Más adelante:
+  - optimización de rutas con un servicio de mapas;
+  - pago en línea de facturas;
+  - aviso al cliente por WhatsApp cuando se programa su retiro;
+  - integración con Tonelada Justa.

@@ -10,6 +10,7 @@ import { storage, leerArchivo } from '../../lib/storage.js';
 import { issueCertificate } from '../certificates/certificate.service.js';
 import { assertHabilitados, sincronizarIngresoDeRetiro } from '../movimientos/movimiento.service.js';
 import { resolverPesos } from '../materials/unidades.js';
+import { cerrarSolicitudConRetiro, validarSolicitudParaRetiro } from '../logistica/logistica.routes.js';
 
 export const pickupsRouter = Router();
 
@@ -32,6 +33,7 @@ const createInput = z.object({
   items: z.array(itemInput).min(1),
   ubicacion: z.object({ lat: z.number(), lng: z.number() }).optional(),
   observaciones: z.string().max(1000).optional(),
+  solicitud: objectId.optional(), // pedido de retiro de la hoja de ruta
 });
 
 const updateInput = z.object({
@@ -79,11 +81,13 @@ pickupsRouter.post('/', requireRole('chofer', 'operador_planta', 'administracion
   const data = createInput.parse(req.body);
   await assertHabilitados(data.items.map((i) => i.material));
   data.items = await resolverPesos(data.items, 'pesoEstimadoKg');
+  if (data.solicitud) await validarSolicitudParaRetiro(data.solicitud, data.cliente);
   if (data.localId) {
     const existing = await Pickup.findOne({ localId: data.localId });
     if (existing) return res.status(200).json(existing);
   }
   const pickup = await Pickup.create({ ...data, chofer: req.user.sub, numero: await nextSeq('retiro') });
+  if (data.solicitud) await cerrarSolicitudConRetiro(data.solicitud, pickup);
   res.status(201).json(pickup);
 });
 

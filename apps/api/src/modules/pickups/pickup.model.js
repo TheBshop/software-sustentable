@@ -51,6 +51,7 @@ const pickupSchema = new mongoose.Schema(
     observaciones: String,
     estado: { type: String, enum: ESTADOS_RETIRO, default: 'registrado' },
     certificado: { type: ObjectId, ref: 'Certificate', default: null },
+    solicitud: { type: ObjectId, ref: 'Solicitud' }, // pedido de retiro que se cumplió con este retiro
     factura: { type: ObjectId, ref: 'Invoice', default: null },
   },
   { timestamps: true },

@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { Gasto, CATEGORIAS_GASTO } from './gasto.model.js';
 import { Sale } from '../plant/plant.models.js';
 import { Invoice } from '../invoices/invoice.model.js';
+import { Compra } from '../recuperadores/recuperadores.js';
 import { dateInput, endOfLocalDay, startOfLocalMonth, round2 } from '../../lib/validation.js';
 
 export const balanceRouter = Router();
@@ -20,7 +21,7 @@ const periodo = (q) => {
  * Las ventas se imputan a su fecha (el sistema no guarda la fecha de cobro de la venta).
  */
 async function calcularBalance(desde, hasta) {
-  const [ventas, pagos, gastos, pendientes] = await Promise.all([
+  const [ventas, pagos, gastos, pendientes, compras] = await Promise.all([
     Sale.find({ fecha: { $gte: desde, $lte: hasta } }).populate('comprador', 'razonSocial'),
     Invoice.aggregate([
       { $unwind: '$pagos' },
@@ -29,16 +30,19 @@ async function calcularBalance(desde, hasta) {
     ]),
     Gasto.find({ fecha: { $gte: desde, $lte: hasta } }).sort('fecha'),
     Invoice.find({ estado: 'pendiente' }),
+    // Compras de material a recuperadores: se imputan a la fecha de pago
+    Compra.find({ pagada: true, fechaPago: { $gte: desde, $lte: hasta } }).populate('recuperador', 'nombre'),
   ]);
   const ventasCobradas = ventas.filter((v) => v.cobrada);
   const sum = (arr, f) => round2(arr.reduce((a, x) => a + f(x), 0));
   const porCategoria = Object.entries(CATEGORIAS_GASTO)
     .map(([k, nombre]) => ({ categoria: k, nombre, monto: sum(gastos.filter((g) => g.categoria === k), (g) => g.monto) }))
+    .concat([{ categoria: 'compras_material', nombre: 'Compras de material a recuperadores', monto: sum(compras, (c) => c.total) }])
     .filter((c) => c.monto > 0)
     .sort((a, b) => b.monto - a.monto);
   const ingresos = { ventasMaterial: sum(ventasCobradas, (v) => v.total), cobrosServicio: sum(pagos, (p) => p.monto) };
   const totalIngresos = round2(ingresos.ventasMaterial + ingresos.cobrosServicio);
-  const totalEgresos = sum(gastos, (g) => g.monto);
+  const totalEgresos = round2(sum(gastos, (g) => g.monto) + sum(compras, (c) => c.total));
   return {
     periodo: { desde, hasta },
     ingresos: { ...ingresos, total: totalIngresos },
@@ -52,6 +56,7 @@ async function calcularBalance(desde, hasta) {
       ...ventasCobradas.map((v) => ({ fecha: v.fecha, tipo: 'ingreso', concepto: `Venta de material${v.remito ? ` (${v.remito})` : ''}`, detalle: v.comprador?.razonSocial, categoria: 'ventas', monto: v.total })),
       ...pagos.map((p) => ({ fecha: p.fecha, tipo: 'ingreso', concepto: `Cobro liquidación N° ${p.numero}`, detalle: p.cliente, categoria: 'cobros', monto: p.monto })),
       ...gastos.map((g) => ({ fecha: g.fecha, tipo: 'egreso', concepto: g.descripcion, detalle: g.proveedor, categoria: g.categoria, monto: g.monto })),
+      ...compras.map((c) => ({ fecha: c.fechaPago, tipo: 'egreso', concepto: `Compra de material N° ${c.numero}`, detalle: c.recuperador?.nombre, categoria: 'compras_material', monto: c.total })),
     ].sort((a, b) => a.fecha - b.fecha),
   };
 }
@@ -69,7 +74,7 @@ balanceRouter.get('/csv', async (req, res) => {
   const num = (n) => String(n).replace('.', ',');
   const filas = [
     ['Fecha', 'Tipo', 'Concepto', 'Detalle', 'Categoría', 'Monto'],
-    ...b.movimientos.map((m) => [m.fecha.toISOString().slice(0, 10), m.tipo, m.concepto, m.detalle, CATEGORIAS_GASTO[m.categoria] ?? m.categoria, (m.tipo === 'egreso' ? '-' : '') + num(m.monto)]),
+    ...b.movimientos.map((m) => [m.fecha.toISOString().slice(0, 10), m.tipo, m.concepto, m.detalle, CATEGORIAS_GASTO[m.categoria] ?? (m.categoria === 'compras_material' ? 'Compras de material' : m.categoria), (m.tipo === 'egreso' ? '-' : '') + num(m.monto)]),
     [],
     ['', '', 'Total ingresos', '', '', num(b.ingresos.total)],
     ['', '', 'Total egresos', '', '', '-' + num(b.egresos.total)],

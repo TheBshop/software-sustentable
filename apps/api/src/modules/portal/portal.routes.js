@@ -12,6 +12,9 @@ import { HttpError } from '../../middleware/error.js';
 import { runWithoutTenant } from '../../lib/tenancy.js';
 import { enviarDocumento } from '../pickups/pickup.routes.js';
 import { datosConstancia, renderConstanciaPdf } from '../certificates/constancia.js';
+import { Solicitud, MOTIVOS_NO_REALIZADO } from '../logistica/solicitud.model.js';
+import { Client } from '../clients/client.model.js';
+import { dateInput, objectId } from '../../lib/validation.js';
 
 // Portal de clientes generadores (empresas y municipios): /api/v1/portal
 // Solo lectura de SUS datos, en todas las cooperativas que los atienden. Nunca expone
@@ -33,7 +36,13 @@ portalRouter.get('/organizacion', async (req, res) => {
   const org = await Organization.findById(req.user.org).select('nombre cuit tipo');
   const clientes = await clientesDeOrganizacion(req.user.org);
   const coops = await nombresCooperativas(clientes.map((c) => c.coop));
-  res.json({ ...org.toJSON(), cooperativas: [...coops.values()], sedes: clientes.flatMap((c) => c.direcciones.map((d) => d.alias ?? d.direccion)) });
+  res.json({
+    ...org.toJSON(),
+    cooperativas: [...coops.values()],
+    sedes: clientes.flatMap((c) => c.direcciones.map((d) => d.alias ?? d.direccion)),
+    // Un servicio por cooperativa que la atiende (para pedir retiros)
+    servicios: clientes.map((c) => ({ cliente: c._id, cooperativa: coops.get(String(c.coop)), sedes: c.direcciones.map((d) => (d.alias ? `${d.alias} — ${d.direccion}` : d.direccion)) })),
+  });
 });
 
 portalRouter.get('/resumen', async (req, res) => {
@@ -70,6 +79,44 @@ portalRouter.get('/retiros/:id/documentos/:docId', async (req, res) => {
   const doc = retiro?.documentos.id(req.params.docId);
   if (!doc) throw new HttpError(404, 'Documento no encontrado');
   await enviarDocumento(res, doc);
+});
+
+// ---- Pedidos de retiro ----
+portalRouter.get('/solicitudes', async (req, res) => {
+  const items = await Solicitud.find({ cliente: { $in: await misClientes(req) } }).sort('-createdAt').limit(100);
+  const coops = await nombresCooperativas(items.map((s) => s.coop));
+  res.json({
+    items: items.map((s) => ({
+      id: s._id,
+      cooperativa: coops.get(String(s.coop)),
+      sede: s.sede,
+      detalle: s.detalle,
+      kgEstimados: s.kgEstimados,
+      fechaPreferida: s.fechaPreferida,
+      estado: s.estado,
+      fechaProgramada: s.fechaProgramada,
+      motivoRechazo: s.motivoRechazo,
+      noRealizado: s.resultado?.motivo ? MOTIVOS_NO_REALIZADO[s.resultado.motivo] : null,
+      creado: s.createdAt,
+    })),
+  });
+});
+
+portalRouter.post('/solicitudes', async (req, res) => {
+  const data = z.object({ cliente: objectId, sede: z.string().max(200).optional(), detalle: z.string().min(2).max(500), kgEstimados: z.number().min(0).max(100000).optional(), fechaPreferida: dateInput.optional() }).parse(req.body);
+  if (!(await misClientes(req)).some((id) => String(id) === data.cliente)) throw new HttpError(404, 'No encontramos ese servicio');
+  const cliente = await Client.findById(data.cliente).select('coop');
+  const s = await Solicitud.create({ ...data, coop: cliente.coop, origen: 'portal', pedidaPor: req.user.sub, estado: 'pendiente' });
+  res.status(201).json({ id: s._id, estado: s.estado });
+});
+
+portalRouter.post('/solicitudes/:id/cancelar', async (req, res) => {
+  const s = await Solicitud.findOne({ _id: req.params.id, cliente: { $in: await misClientes(req) } });
+  if (!s) throw new HttpError(404, 'Pedido no encontrado');
+  if (!['pendiente', 'programada'].includes(s.estado)) throw new HttpError(409, 'El pedido ya no se puede cancelar');
+  s.estado = 'cancelada';
+  await s.save();
+  res.json({ id: s._id, estado: s.estado });
 });
 
 portalRouter.get('/certificados', async (req, res) => {

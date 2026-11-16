@@ -23,6 +23,8 @@ import { accesoPortalRouter } from './modules/clients/acceso.routes.js';
 import { constanciaRouter } from './modules/certificates/constancia.js';
 import { normativaRouter } from './modules/normativa/normativa.routes.js';
 import { productividadRouter } from './modules/productividad/productividad.routes.js';
+import { solicitudesRouter, hojaDeRutaRouter, logisticaRouter } from './modules/logistica/logistica.routes.js';
+import { Recuperador, recuperadorInput, comprasRouter, recuperadoresResumenRouter } from './modules/recuperadores/recuperadores.js';
 import { demoRouter } from './demo/demo.routes.js';
 import { assertHabilitados, assertCorrienteHabilitada, registrarIngreso, registrarVenta } from './modules/movimientos/movimiento.service.js';
 import { pickupsRouter } from './modules/pickups/pickup.routes.js';
@@ -87,6 +89,13 @@ export function createApp(config = {}) {
   coopApi.use('/clientes', constanciaRouter); // constancia anual de reciclado (Ley 25.612)
   coopApi.use('/normativa', normativaRouter); // marco normativo según la jurisdicción
   coopApi.use('/productividad', productividadRouter); // indicadores de la guía de productividad de plantas
+  coopApi.use('/solicitudes', solicitudesRouter); // pedidos de retiro
+  coopApi.use('/hoja-de-ruta', hojaDeRutaRouter); // paradas del día, en orden sugerido
+  coopApi.use('/logistica', logisticaRouter); // indicadores de los recorridos
+  // Recuperadores urbanos (registro) y compras de material con recibo
+  coopApi.use('/recuperadores', recuperadoresResumenRouter);
+  coopApi.use('/recuperadores', requireRole('administracion', 'operador_planta'), crudRouter(Recuperador, { createSchema: recuperadorInput, searchFields: ['nombre', 'zona'], sort: 'nombre', writeRoles: ['administracion', 'operador_planta'] }));
+  coopApi.use('/compras', comprasRouter);
   coopApi.use(
     '/clientes',
     crudRouter(Client, { createSchema: clientInput, searchFields: ['razonSocial', 'cuit'], filters: ['tipo'], sort: 'razonSocial', writeRoles: ['administracion'] }),

@@ -12,7 +12,7 @@ import { C, ui } from '../theme';
  * Pensada para usarse con una mano, al sol y con guantes: botones grandes, pocos campos,
  * y funciona sin señal (guarda local y sincroniza después).
  */
-export default function NuevoRetiroScreen({ notify, onSaved }) {
+export default function NuevoRetiroScreen({ notify, onSaved, preset, onPresetUsado }) {
   const [catalog, setCatalog] = useState({ clientes: [], materiales: [] });
   const [busqueda, setBusqueda] = useState('');
   const [cliente, setCliente] = useState(null);
@@ -25,6 +25,18 @@ export default function NuevoRetiroScreen({ notify, onSaved }) {
   useEffect(() => {
     getCatalog().then(setCatalog);
   }, []);
+
+  // Desde la hoja de ruta: llega con el cliente y el pedido ya elegidos
+  const [solicitud, setSolicitud] = useState(null);
+  useEffect(() => {
+    if (!preset) return;
+    const c = catalog.clientes.find((x) => x._id === preset.clienteId);
+    if (c || !catalog.clientes.length) {
+      setCliente(c ?? { _id: preset.clienteId, razonSocial: preset.clienteNombre, direcciones: preset.sede ? [{ direccion: preset.sede }] : [] });
+      setSolicitud(preset.solicitud);
+      onPresetUsado?.();
+    }
+  }, [preset, catalog.clientes]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const clientesFiltrados = useMemo(
     () => catalog.clientes.filter((c) => c.razonSocial.toLowerCase().includes(busqueda.trim().toLowerCase())).slice(0, 5),
@@ -81,6 +93,7 @@ export default function NuevoRetiroScreen({ notify, onSaved }) {
       cliente: cliente._id,
       clienteNombre: cliente.razonSocial, // solo para mostrarlo en "Mis retiros" mientras no se envía
       direccion: cliente.direcciones?.[0]?.direccion,
+      ...(solicitud && { solicitud }),
       fecha: new Date().toISOString(),
       items,
       fotos,
@@ -89,6 +102,7 @@ export default function NuevoRetiroScreen({ notify, onSaved }) {
     });
     notify(`Retiro guardado · ${cliente.razonSocial} · ${totalKg.toLocaleString('es-AR')} kg`);
     setCliente(null);
+    setSolicitud(null);
     setPesos({});
     setUnidades({});
     setFotos([]);
@@ -102,9 +116,10 @@ export default function NuevoRetiroScreen({ notify, onSaved }) {
       <ScrollView contentContainerStyle={s.body} keyboardShouldPersistTaps="handled">
         <Text style={[ui.label, { marginTop: 0 }]}>1. Cliente</Text>
         {cliente ? (
-          <TouchableOpacity style={s.selected} onPress={() => setCliente(null)} accessibilityRole="button">
+          <TouchableOpacity style={s.selected} onPress={() => { setCliente(null); setSolicitud(null); }} accessibilityRole="button">
             <Text style={s.selectedName}>{cliente.razonSocial}</Text>
             <Text style={ui.muted}>{cliente.direcciones?.[0]?.direccion ?? 'Sin dirección'} · tocá para cambiar</Text>
+            {solicitud && <Text style={[ui.muted, { color: C.verde }]}>Pedido de la hoja de ruta</Text>}
           </TouchableOpacity>
         ) : (
           <>
