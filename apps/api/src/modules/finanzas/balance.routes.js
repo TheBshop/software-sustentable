@@ -3,7 +3,8 @@ import { z } from 'zod';
 import { Gasto, CATEGORIAS_GASTO } from './gasto.model.js';
 import { Sale } from '../plant/plant.models.js';
 import { Invoice } from '../invoices/invoice.model.js';
-import { Compra } from '../recuperadores/recuperadores.js';
+import { Compra, vendedorDe } from '../recuperadores/recuperadores.js';
+import { IngresoCaja } from '../comercial/comercial.models.js';
 import { dateInput, endOfLocalDay, startOfLocalMonth, round2 } from '../../lib/validation.js';
 
 export const balanceRouter = Router();
@@ -21,7 +22,7 @@ const periodo = (q) => {
  * Las ventas se imputan a su fecha (el sistema no guarda la fecha de cobro de la venta).
  */
 async function calcularBalance(desde, hasta) {
-  const [ventas, pagos, gastos, pendientes, compras] = await Promise.all([
+  const [ventas, pagos, gastos, pendientes, compras, otrosIngresos] = await Promise.all([
     Sale.find({ fecha: { $gte: desde, $lte: hasta } }).populate('comprador', 'razonSocial'),
     Invoice.aggregate([
       { $unwind: '$pagos' },
@@ -31,17 +32,18 @@ async function calcularBalance(desde, hasta) {
     Gasto.find({ fecha: { $gte: desde, $lte: hasta } }).sort('fecha'),
     Invoice.find({ estado: 'pendiente' }),
     // Compras de material a recuperadores: se imputan a la fecha de pago
-    Compra.find({ pagada: true, fechaPago: { $gte: desde, $lte: hasta } }).populate('recuperador', 'nombre'),
+    Compra.find({ pagada: true, fechaPago: { $gte: desde, $lte: hasta } }).populate('recuperador', 'nombre').populate('proveedor', 'razonSocial'),
+    IngresoCaja.find({ fecha: { $gte: desde, $lte: hasta } }).sort('fecha'),
   ]);
   const ventasCobradas = ventas.filter((v) => v.cobrada);
   const sum = (arr, f) => round2(arr.reduce((a, x) => a + f(x), 0));
   const porCategoria = Object.entries(CATEGORIAS_GASTO)
     .map(([k, nombre]) => ({ categoria: k, nombre, monto: sum(gastos.filter((g) => g.categoria === k), (g) => g.monto) }))
-    .concat([{ categoria: 'compras_material', nombre: 'Compras de material a recuperadores', monto: sum(compras, (c) => c.total) }])
+    .concat([{ categoria: 'compras_material', nombre: 'Compras de material', monto: sum(compras, (c) => c.total) }])
     .filter((c) => c.monto > 0)
     .sort((a, b) => b.monto - a.monto);
-  const ingresos = { ventasMaterial: sum(ventasCobradas, (v) => v.total), cobrosServicio: sum(pagos, (p) => p.monto) };
-  const totalIngresos = round2(ingresos.ventasMaterial + ingresos.cobrosServicio);
+  const ingresos = { ventasMaterial: sum(ventasCobradas, (v) => v.total), cobrosServicio: sum(pagos, (p) => p.monto), otros: sum(otrosIngresos, (i) => i.monto) };
+  const totalIngresos = round2(ingresos.ventasMaterial + ingresos.cobrosServicio + ingresos.otros);
   const totalEgresos = round2(sum(gastos, (g) => g.monto) + sum(compras, (c) => c.total));
   return {
     periodo: { desde, hasta },
@@ -55,8 +57,9 @@ async function calcularBalance(desde, hasta) {
     movimientos: [
       ...ventasCobradas.map((v) => ({ fecha: v.fecha, tipo: 'ingreso', concepto: `Venta de material${v.remito ? ` (${v.remito})` : ''}`, detalle: v.comprador?.razonSocial, categoria: 'ventas', monto: v.total })),
       ...pagos.map((p) => ({ fecha: p.fecha, tipo: 'ingreso', concepto: `Cobro liquidación N° ${p.numero}`, detalle: p.cliente, categoria: 'cobros', monto: p.monto })),
+      ...otrosIngresos.map((i) => ({ fecha: i.fecha, tipo: 'ingreso', concepto: i.concepto, detalle: i.detalle, categoria: 'otros_ingresos', monto: i.monto })),
       ...gastos.map((g) => ({ fecha: g.fecha, tipo: 'egreso', concepto: g.descripcion, detalle: g.proveedor, categoria: g.categoria, monto: g.monto })),
-      ...compras.map((c) => ({ fecha: c.fechaPago, tipo: 'egreso', concepto: `Compra de material N° ${c.numero}`, detalle: c.recuperador?.nombre, categoria: 'compras_material', monto: c.total })),
+      ...compras.map((c) => ({ fecha: c.fechaPago, tipo: 'egreso', concepto: `Compra de material N° ${c.numero}`, detalle: vendedorDe(c), categoria: 'compras_material', monto: c.total })),
     ].sort((a, b) => a.fecha - b.fecha),
   };
 }

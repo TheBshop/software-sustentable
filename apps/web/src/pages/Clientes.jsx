@@ -4,7 +4,7 @@ import { ConfirmButton, Tag } from '../ui.jsx';
 import AccesoPortal from './AccesoPortal.jsx';
 
 const VACIO = { tipo: 'generador', razonSocial: '', cuit: '', email: '', telefono: '', direccion: '', modalidad: 'por_retiro', montoFijo: 0 };
-const TIPOS = { generador: 'Generador', comprador: 'Comprador', ambos: 'Generador y comprador' };
+const TIPOS = { generador: 'Generador', comprador: 'Comprador', proveedor: 'Proveedor (le compramos)', ambos: 'Generador y comprador' };
 const MODALIDADES = { por_retiro: 'Por retiro', por_kg: 'Por kg', abono_mensual: 'Abono mensual', sin_cargo: 'Sin cargo' };
 
 export default function Clientes() {
@@ -87,10 +87,10 @@ export default function Clientes() {
                   </td>
                   <td className="actions">
                     <button className="link" onClick={() => edit(c)}>Editar</button>
-                    {c.tipo !== 'comprador' && (
+                    {['generador', 'ambos'].includes(c.tipo) && (
                       <button className="link" onClick={() => setAcceso(c)}>{c.organizacion ? 'Sumar usuario al portal' : 'Dar acceso al portal'}</button>
                     )}
-                    {c.tipo !== 'comprador' && (
+                    {['generador', 'ambos'].includes(c.tipo) && (
                       <button className="link" title="Respaldo de la declaración jurada del generador (Ley 25.612)" onClick={() => openPdf(`/clientes/${c._id}/constancia-reciclado.pdf?anio=${new Date().getFullYear()}`).catch(() => alert('No se pudo generar la constancia'))}>
                         Constancia de reciclado {new Date().getFullYear()}
                       </button>

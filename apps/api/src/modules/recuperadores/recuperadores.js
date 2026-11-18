@@ -5,6 +5,8 @@
 import mongoose from 'mongoose';
 import PDFDocument from 'pdfkit';
 import { Router } from 'express';
+import { Client } from '../clients/client.model.js';
+import { enTransaccion } from '../../lib/transacciones.js';
 import { z } from 'zod';
 import { tenantPlugin } from '../../lib/tenancy.js';
 import { objectId, dateInput, round2, parseLocalDate, endOfLocalDay } from '../../lib/validation.js';
@@ -51,7 +53,8 @@ const compraSchema = new mongoose.Schema(
   {
     numero: Number,
     fecha: { type: Date, default: Date.now },
-    recuperador: { type: ObjectId, ref: 'Recuperador', required: true },
+    recuperador: { type: ObjectId, ref: 'Recuperador' }, // compra a un recuperador urbano…
+    proveedor: { type: ObjectId, ref: 'Client' }, // …o a un proveedor (cooperativa, acopiador, industria)
     items: [{ _id: false, material: { type: ObjectId, ref: 'Material', required: true }, pesoKg: { type: Number, min: 0 }, precioKg: { type: Number, min: 0 }, cantidad: Number, unidad: String, estimado: Boolean }],
     total: Number,
     pagada: { type: Boolean, default: false },
@@ -71,7 +74,8 @@ export const Compra = mongoose.model('Compra', compraSchema);
 
 const compraInput = z.object({
   fecha: dateInput.optional(),
-  recuperador: objectId,
+  recuperador: objectId.optional(),
+  proveedor: objectId.optional(),
   items: z
     .array(
       z
@@ -81,15 +85,20 @@ const compraInput = z.object({
     .min(1),
   pagada: z.boolean().optional(),
   medioPago: z.enum(['efectivo', 'transferencia', 'billetera', 'otro']).optional(),
-});
+}).refine((d) => Boolean(d.recuperador) !== Boolean(d.proveedor), 'Indicá a quién se le compró: un recuperador o un proveedor');
 
-const POPULATE = [{ path: 'recuperador', select: 'nombre documento zona' }, { path: 'items.material', select: 'nombre codigo' }];
+const POPULATE = [{ path: 'recuperador', select: 'nombre documento zona' }, { path: 'proveedor', select: 'razonSocial cuit' }, { path: 'items.material', select: 'nombre codigo' }];
+/** Nombre de quien vendió el material (recuperador o proveedor). */
+export const vendedorDe = (c) => c.recuperador?.nombre ?? c.proveedor?.razonSocial ?? '—';
 
 export const comprasRouter = Router();
 
 comprasRouter.get('/', requireRole('administracion', 'operador_planta'), async (req, res) => {
   const query = {};
   if (typeof req.query.recuperador === 'string') query.recuperador = objectId.parse(req.query.recuperador);
+  if (typeof req.query.proveedor === 'string') query.proveedor = objectId.parse(req.query.proveedor);
+  if (req.query.de === 'proveedores') query.proveedor = { $exists: true };
+  if (req.query.de === 'recuperadores') query.recuperador = { $exists: true };
   if (typeof req.query.mes === 'string') {
     const { desde, hasta } = rangoMes(mesInput.parse(req.query.mes));
     query.fecha = { $gte: desde, $lte: hasta };
@@ -100,14 +109,19 @@ comprasRouter.get('/', requireRole('administracion', 'operador_planta'), async (
 // Registrar una compra: entra al stock como ingreso de recuperador
 comprasRouter.post('/', requireRole('administracion', 'operador_planta'), async (req, res) => {
   const data = compraInput.parse(req.body);
-  const rec = await Recuperador.findById(data.recuperador);
-  if (!rec) throw new HttpError(404, 'Recuperador no encontrado');
+  const rec = data.recuperador ? await Recuperador.findById(data.recuperador) : null;
+  const prov = data.proveedor ? await Client.findById(data.proveedor) : null;
+  if (data.recuperador && !rec) throw new HttpError(404, 'Recuperador no encontrado');
+  if (data.proveedor && !prov) throw new HttpError(404, 'Proveedor no encontrado');
   await assertHabilitados(data.items.map((i) => i.material));
   data.items = await resolverPesos(data.items, 'pesoKg');
   const fecha = data.fecha ?? new Date();
-  const ingreso = await Intake.create({ fecha, origen: 'recuperador', detalleOrigen: `Compra a ${rec.nombre}`, items: data.items.map(({ material, pesoKg, cantidad, unidad, estimado }) => ({ material, pesoKg, cantidad, unidad, estimado })) });
-  await registrarIngreso(ingreso, req.user.sub);
-  const compra = await Compra.create({ ...data, fecha, numero: await nextSeq('compra'), ingreso: ingreso._id, usuario: req.user.sub, ...(data.pagada && { fechaPago: fecha }) });
+  // Compra + ingreso + lotes + movimientos: todo o nada
+  const compra = await enTransaccion(async () => {
+    const ingreso = await Intake.create({ fecha, origen: rec ? 'recuperador' : 'otro', detalleOrigen: `Compra a ${rec?.nombre ?? prov.razonSocial}`, items: data.items.map(({ material, pesoKg, cantidad, unidad, estimado }) => ({ material, pesoKg, cantidad, unidad, estimado })) });
+    await registrarIngreso(ingreso, req.user.sub, prov?._id);
+    return Compra.create({ ...data, fecha, numero: await nextSeq('compra'), ingreso: ingreso._id, usuario: req.user.sub, ...(data.pagada && { fechaPago: fecha }) });
+  });
   res.status(201).json(await compra.populate(POPULATE));
 });
 
@@ -137,7 +151,7 @@ comprasRouter.get('/:id/recibo.pdf', requireRole('administracion', 'operador_pla
   doc.fontSize(14).text(org?.nombre ?? 'Cooperativa').fontSize(9).fillColor('#555').text(org?.cuit ? `CUIT ${org.cuit}` : '');
   doc.moveDown().fillColor('black').fontSize(13).text(`Recibo de compra de material N° ${String(c.numero).padStart(6, '0')}`);
   doc.fontSize(10).text(`Fecha: ${c.fecha.toLocaleDateString('es-AR')}`);
-  doc.text(`Vendió: ${c.recuperador?.nombre}${c.recuperador?.documento ? ` · DNI ${c.recuperador.documento}` : ''}`);
+  doc.text(`Vendió: ${vendedorDe(c)}${c.recuperador?.documento ? ` · DNI ${c.recuperador.documento}` : ''}${c.proveedor?.cuit ? ` · CUIT ${c.proveedor.cuit}` : ''}`);
   doc.moveDown();
   for (const it of c.items) doc.text(`${it.material?.nombre}: ${fmt(it.pesoKg)} kg${it.estimado ? ' (estimado)' : ''} × ${pesos(it.precioKg)} = ${pesos(it.pesoKg * it.precioKg)}`);
   doc.moveDown().fontSize(12).text(`Total: ${pesos(c.total)}`);
@@ -157,7 +171,7 @@ export const recuperadoresResumenRouter = Router();
 recuperadoresResumenRouter.get('/resumen', requireRole('administracion', 'operador_planta'), async (req, res) => {
   const mes = mesInput.default(new Date(Date.now() - 3 * 3600_000).toISOString().slice(0, 7)).parse(req.query.mes);
   const { desde, hasta } = rangoMes(mes);
-  const compras = await Compra.find({ fecha: { $gte: desde, $lte: hasta } }).populate('recuperador', 'nombre asociado');
+  const compras = await Compra.find({ fecha: { $gte: desde, $lte: hasta }, recuperador: { $exists: true } }).populate('recuperador', 'nombre asociado');
   const por = new Map();
   for (const c of compras) {
     const k = String(c.recuperador?._id);

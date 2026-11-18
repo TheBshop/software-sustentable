@@ -184,7 +184,7 @@ export async function frecuenciaSugerida() {
   const conPedido = new Map(abiertos.map((s) => [String(s.cliente), s]));
   const porCliente = new Map();
   for (const r of retiros) {
-    if (!r.cliente || r.cliente.tipo === 'comprador' || r.cliente.activo === false) continue;
+    if (!r.cliente || !['generador', 'ambos'].includes(r.cliente.tipo ?? 'generador') || r.cliente.activo === false) continue;
     const k = String(r.cliente._id);
     const c = porCliente.get(k) ?? { cliente: r.cliente, fechas: [], kg: 0 };
     c.fechas.push(r.fecha.getTime());

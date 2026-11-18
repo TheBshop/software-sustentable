@@ -103,7 +103,7 @@ function NuevaLiquidacion({ onCreated }) {
           Cliente
           <select value={form.cliente} onChange={set('cliente')}>
             <option value="">Elegí un cliente</option>
-            {clientes.data?.items.filter((c) => c.tipo !== 'comprador').map((c) => (
+            {clientes.data?.items.filter((c) => ['generador', 'ambos'].includes(c.tipo)).map((c) => (
               <option key={c._id} value={c._id}>{c.razonSocial} · {MODALIDADES[c.tarifa?.modalidad] ?? 'sin tarifa'}</option>
             ))}
           </select>

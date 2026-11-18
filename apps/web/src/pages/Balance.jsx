@@ -61,7 +61,7 @@ export default function Balance() {
       <ErrorMsg error={balance.error || err} />
       {b && (
         <div className="kpis">
-          <div className="kpi green"><span>Ingresos</span><strong>{fmtPeso(b.ingresos.total)}</strong><span className="small">Ventas {fmtPeso(b.ingresos.ventasMaterial)} · Cobros {fmtPeso(b.ingresos.cobrosServicio)}</span></div>
+          <div className="kpi green"><span>Ingresos</span><strong>{fmtPeso(b.ingresos.total)}</strong><span className="small">Ventas {fmtPeso(b.ingresos.ventasMaterial)} · Cobros {fmtPeso(b.ingresos.cobrosServicio)}{b.ingresos.otros ? ` · Otros ${fmtPeso(b.ingresos.otros)}` : ''}</span></div>
           <div className="kpi"><span>Gastos</span><strong>{fmtPeso(b.egresos.total)}</strong></div>
           <div className={`kpi ${b.resultado < 0 ? 'alert' : 'green'}`}><span>Resultado del mes</span><strong>{fmtPeso(b.resultado)}</strong></div>
           <div className="kpi"><span>Pendiente de cobro</span><strong>{fmtPeso(b.pendiente.ventasSinCobrar + b.pendiente.liquidacionesImpagas)}</strong><span className="small">Ventas {fmtPeso(b.pendiente.ventasSinCobrar)} · Servicio {fmtPeso(b.pendiente.liquidacionesImpagas)}</span></div>

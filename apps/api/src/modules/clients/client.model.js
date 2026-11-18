@@ -5,7 +5,11 @@ import { objectId, dateInput } from '../../lib/validation.js';
 
 const { ObjectId } = mongoose.Schema.Types;
 
-export const TIPOS_CLIENTE = ['generador', 'comprador', 'ambos'];
+// generador: le retiramos residuos · comprador: le vendemos material · proveedor: le compramos
+// material (cooperativa, acopiador, industria) · ambos: generador y comprador.
+export const TIPOS_CLIENTE = ['generador', 'comprador', 'proveedor', 'ambos'];
+/** Clientes a los que se les retira residuo (portal, agenda, facturación del servicio). */
+export const esGenerador = (c) => ['generador', 'ambos'].includes(c?.tipo ?? 'generador');
 export const CONDICIONES_IVA = ['responsable_inscripto', 'monotributo', 'exento', 'consumidor_final'];
 export const MODALIDADES = ['por_retiro', 'por_kg', 'abono_mensual', 'sin_cargo'];
 
@@ -13,6 +17,7 @@ const clientSchema = new mongoose.Schema(
   {
     tipo: { type: String, enum: TIPOS_CLIENTE, default: 'generador' },
     razonSocial: { type: String, required: true, trim: true },
+    rubro: { type: String, trim: true }, // cooperativa, acopiador, industria, gran generador…
     cuit: { type: String, trim: true }, // único por cooperativa (ver índice abajo)
     // Organización (empresa o municipio) con acceso al portal. Una misma organización puede
     // ser cliente de varias cooperativas: cada una tiene su propio registro Client vinculado.
@@ -53,6 +58,7 @@ export const Client = mongoose.model('Client', clientSchema);
 export const clientInput = z.object({
   tipo: z.enum(TIPOS_CLIENTE).default('generador'),
   razonSocial: z.string().min(2),
+  rubro: z.string().max(80).optional(),
   cuit: z
     .string()
     .regex(/^\d{2}-?\d{8}-?\d$/, 'CUIT inválido')

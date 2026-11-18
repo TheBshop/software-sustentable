@@ -55,7 +55,7 @@ const OPCIONES = {
     Electrónicos: 'electronicos',
     Otros: 'otros',
   },
-  tipo: { Generador: 'generador', Comprador: 'comprador', Ambos: 'ambos' },
+  tipo: { Generador: 'generador', Comprador: 'comprador', Proveedor: 'proveedor', Ambos: 'ambos' },
   condicionIva: {
     'Responsable inscripto': 'responsable_inscripto',
     Monotributo: 'monotributo',

@@ -7,7 +7,7 @@ import { Organization } from '../organizations/organization.model.js';
 import { renderCertificatePdf } from '../certificates/certificate.pdf.js';
 import { clientesDeOrganizacion, resumenAnual, rangoAnio, nombresCooperativas } from './portal.service.js';
 import { renderInformeAnual } from './informe.pdf.js';
-import { requireOrgTipo } from '../../middleware/auth.js';
+import { requireGenerador } from '../../middleware/auth.js';
 import { HttpError } from '../../middleware/error.js';
 import { runWithoutTenant } from '../../lib/tenancy.js';
 import { enviarDocumento } from '../pickups/pickup.routes.js';
@@ -21,7 +21,7 @@ import { dateInput, objectId } from '../../lib/validation.js';
 // Solo lectura de SUS datos, en todas las cooperativas que los atienden. Nunca expone
 // tarifas, otros clientes ni datos internos de la cooperativa.
 export const portalRouter = Router();
-portalRouter.use(requireOrgTipo('empresa', 'municipio'));
+portalRouter.use(requireGenerador());
 portalRouter.use((_req, _res, next) => runWithoutTenant(next));
 
 const anioActual = () => new Date().getFullYear();

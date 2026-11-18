@@ -91,7 +91,7 @@ export default function Agenda() {
 
         <section className="card stack">
           <h3>Nuevo pedido</h3>
-          <NuevoPedido clientes={(clientes.data?.items ?? []).filter((c) => c.tipo !== 'comprador')} choferes={listaChoferes} onSaved={recargar} />
+          <NuevoPedido clientes={(clientes.data?.items ?? []).filter((c) => ['generador', 'ambos'].includes(c.tipo))} choferes={listaChoferes} onSaved={recargar} />
         </section>
       </div>
 
