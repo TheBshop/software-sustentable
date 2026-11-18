@@ -10,13 +10,34 @@ import { Organization } from '../organizations/organization.model.js';
 import { objectId, dateInput } from '../../lib/validation.js';
 import { currentTenant } from '../../lib/tenancy.js';
 import { requireRole } from '../../middleware/auth.js';
+import { PROV, MUNI, RESIDUOS, CORR } from '@nueva-vida/catalogos';
 
 export const plantaRouter = Router();
 
 // Datos de la cooperativa del usuario (nombre, habilitaciones): los usan la web y la app.
 plantaRouter.get('/organizacion', async (_req, res) => {
   const org = await Organization.findById(currentTenant());
-  res.json({ id: org._id, nombre: org.nombre, cuit: org.cuit, tipo: org.tipo, perfil: org.perfil, planta: org.planta, domicilio: org.domicilio, certificadoVerde: org.certificadoVerde ?? {}, jurisdiccion: org.jurisdiccion, prototipo: org.prototipo, habilitaciones: org.habilitaciones, certificado: org.certificado ?? {} });
+  res.json({ id: org._id, nombre: org.nombre, cuit: org.cuit, tipo: org.tipo, perfil: org.perfil, planta: org.planta, domicilio: org.domicilio, certificadoVerde: org.certificadoVerde ?? {}, jurisdiccion: org.jurisdiccion, prototipo: org.prototipo, habilitaciones: org.habilitaciones, certificado: org.certificado ?? {}, rol: org.rol, configuracion: org.configuracion ?? {} });
+});
+
+// Configuración inicial (asistente) y posterior: dónde opera, qué residuos gestiona y qué tratamientos hace.
+const configInput = z
+  .object({
+    provincia: z.string().refine((p) => PROV[p], 'Provincia desconocida').optional(),
+    municipio: z.string().optional(),
+    ciudad: z.string().max(120).optional(),
+    residuos: z.array(z.enum(Object.keys(RESIDUOS))).optional(),
+    corrientes: z.array(z.enum(Object.keys(CORR))).optional(),
+    onboarding: z.boolean().optional(),
+  })
+  .refine((d) => !d.municipio || (d.provincia && MUNI[d.provincia]?.[d.municipio]), { message: 'Municipio desconocido para esa provincia', path: ['municipio'] });
+plantaRouter.patch('/organizacion/configuracion', requireRole(), async (req, res) => {
+  const d = configInput.parse(req.body);
+  const org = await Organization.findById(currentTenant());
+  if (d.provincia) org.set('jurisdiccion', { provincia: d.provincia, municipio: d.municipio, ciudad: d.ciudad ?? (d.municipio ? MUNI[d.provincia][d.municipio].n : undefined) });
+  for (const k of ['residuos', 'corrientes', 'onboarding']) if (d[k] !== undefined) org.set(`configuracion.${k}`, d[k]);
+  await org.save();
+  res.json({ jurisdiccion: org.jurisdiccion, configuracion: org.configuracion });
 });
 
 // Datos que firman los certificados (responsable y cargo). Solo admin.
