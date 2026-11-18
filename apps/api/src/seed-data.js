@@ -23,6 +23,7 @@ import { PersonalMes, ParadaMaquina } from './modules/productividad/productivida
 import { Solicitud } from './modules/logistica/solicitud.model.js';
 import { Recuperador, Compra } from './modules/recuperadores/recuperadores.js';
 import { runWithTenant } from './lib/tenancy.js';
+import { Lote } from './modules/proceso/proceso.models.js';
 
 export const SEED_USUARIOS = [
   { email: 'admin@nuevavida.local', password: 'admin1234', org: 'nv', rol: 'admin', nombre: 'Admin Nueva Vida' },
@@ -30,6 +31,9 @@ export const SEED_USUARIOS = [
   { email: 'admin@litoral.local', password: 'admin1234', org: 'litoral', rol: 'admin', nombre: 'Admin Litoral' },
   { email: 'empresa@elpuente.local', password: 'empresa1234', org: 'empresa', rol: 'cliente_admin', nombre: 'Laura (El Puente)' },
   { email: 'municipio@ejemplo.local', password: 'municipio1234', org: 'municipio', rol: 'cliente_admin', nombre: 'Área de Ambiente' },
+  { email: 'admin@recicladora.local', password: 'admin1234', org: 'recicladora', rol: 'admin', nombre: 'Admin Recicladora' },
+  { email: 'superadmin@plataforma.local', password: 'super1234', org: 'plataforma', rol: 'superadmin', nombre: 'Administración de la plataforma' },
+  { email: 'ambiente@municipiooperador.local', password: 'admin1234', org: 'municipioOperador', rol: 'admin', nombre: 'Dirección de Ambiente' },
 ];
 
 // ⚠️ Factores de CO2 de EJEMPLO (kg CO2e evitado por kg reciclado). Antes de emitir
@@ -67,6 +71,10 @@ export async function seedDatabase() {
     litoral: await Organization.create({ tipo: 'cooperativa', nombre: 'Cooperativa Reciclar del Litoral', cuit: '30700000024', habilitaciones: { corrientes: ['rsu'] } }),
     empresa: await Organization.create({ tipo: 'empresa', nombre: 'Supermercado El Puente SA', cuit: '30712345671' }),
     municipio: await Organization.create({ tipo: 'municipio', nombre: 'Municipio de Ejemplo', cuit: '30999999995' }),
+    plataforma: await Organization.create({ tipo: 'plataforma', rol: 'plataforma', nombre: 'Plataforma' }),
+    // Operadores que no son cooperativas: una empresa recicladora y un municipio que gestiona su servicio
+    recicladora: await Organization.create({ tipo: 'recicladora', perfil: 'empresa', nombre: 'Recicladora de Ejemplo SA', cuit: '30710000030', jurisdiccion: { provincia: 'santa_fe', municipio: 'rosario', ciudad: 'Rosario' }, habilitaciones: { corrientes: ['rsu'] } }),
+    municipioOperador: await Organization.create({ tipo: 'municipio', rol: 'operador', nombre: 'Municipalidad Operadora de Ejemplo', cuit: '30999000041', jurisdiccion: { provincia: 'cordoba', municipio: 'cordoba', ciudad: 'Córdoba' } }),
   };
   const users = {};
   for (const u of SEED_USUARIOS) {
@@ -75,6 +83,8 @@ export async function seedDatabase() {
 
   await runWithTenant(orgs.nv._id, () => seedNuevaVida(orgs, users['chofer@nuevavida.local']));
   await runWithTenant(orgs.litoral._id, () => seedLitoral(orgs, users['admin@litoral.local']));
+  // Ejemplo: lo que entró hace más de dos semanas ya se procesó y vendió; quedan abiertos los lotes recientes
+  await Lote.updateMany({ fecha: { $lt: new Date(Date.now() - 14 * 86400000) }, etapa: 'recepcion' }, { etapa: 'vendido' }).setOptions({ sinTenant: true });
   return orgs;
 }
 

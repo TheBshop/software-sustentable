@@ -7,6 +7,7 @@ import { currentTenant } from '../../lib/tenancy.js';
 import { round2 } from '../../lib/validation.js';
 import { HttpError } from '../../middleware/error.js';
 import { pesoEfectivo } from '../pickups/pickup.model.js';
+import { crearLotesDeIngreso } from '../proceso/lote.service.js';
 
 const id = (v) => String(v?._id ?? v);
 
@@ -54,6 +55,8 @@ export async function registrarIngreso(intake, usuario, cliente) {
       usuario,
     })),
   );
+  // Cada material que entra abre su lote (recepción → clasificado → enfardado → vendido)
+  await crearLotesDeIngreso(intake, usuario, cliente);
 }
 
 /**
