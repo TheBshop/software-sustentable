@@ -12,6 +12,8 @@ import Proceso from './pages/operacion/Proceso.jsx';
 import Rutinas from './pages/operacion/Rutinas.jsx';
 import Tratamientos from './pages/operacion/Tratamientos.jsx';
 import Remitos from './pages/comercial/Remitos.jsx';
+import Afip from './pages/comercial/Afip.jsx';
+import Contabilidad from './pages/comercial/Contabilidad.jsx';
 import Compras from './pages/comercial/Compras.jsx';
 import Stock from './pages/comercial/Stock.jsx';
 import Contratos from './pages/comercial/Contratos.jsx';
@@ -111,6 +113,8 @@ ReactDOM.createRoot(document.getElementById('root')).render(
           <Route path="/operacion/rutinas" element={<Rutinas />} />
           <Route path="/operacion/tratamientos" element={<Tratamientos />} />
           <Route path="/comercial/remitos" element={<Remitos />} />
+          <Route path="/comercial/afip" element={<Afip />} />
+          <Route path="/comercial/contabilidad" element={<Contabilidad />} />
           <Route path="/comercial/compras" element={<Compras />} />
           <Route path="/comercial/stock" element={<Stock />} />
           <Route path="/comercial/contratos" element={<Contratos />} />

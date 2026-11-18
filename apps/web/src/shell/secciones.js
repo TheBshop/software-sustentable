@@ -53,6 +53,8 @@ export const SECCIONES = [
       { to: '/comercial/clientes', label: 'Clientes y proveedores', perfiles: PLANTA },
       { to: '/comercial/materiales', label: 'Materiales y precios', perfiles: PLANTA },
       { to: '/comercial/facturacion', label: 'Facturación', perfiles: PLANTA },
+      { to: '/comercial/afip', label: 'AFIP', perfiles: PLANTA, roles: ADMINISTRA },
+      { to: '/comercial/contabilidad', label: 'Contabilidad', perfiles: PLANTA, roles: ADMINISTRA },
       { to: '/comercial/balance', label: 'Balance', perfiles: PLANTA, roles: ADMINISTRA },
     ],
   },

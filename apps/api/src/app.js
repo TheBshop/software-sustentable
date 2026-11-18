@@ -15,6 +15,7 @@ import { tratamientosRouter } from './modules/tratamientos/tratamientos.js';
 import { comercialRouter, contratosRouter, conveniosRouter, ingresosCajaRouter } from './modules/comercial/comercial.routes.js';
 import { cumplimientoRouter } from './modules/cumplimiento/cumplimiento.routes.js';
 import { resultadosRouter } from './modules/resultados/resultados.routes.js';
+import { afipRouter } from './modules/afip/afip.routes.js';
 import { withTenant, runWithoutTenant } from './lib/tenancy.js';
 import { errorHandler, notFound } from './middleware/error.js';
 import { crudRouter } from './lib/crud.js';
@@ -118,6 +119,7 @@ export function createApp(config = {}) {
   coopApi.use('/cumplimiento', cumplimientoRouter);
   // Resultados: huella, emisiones evitadas, informe por cliente, memoria anual
   coopApi.use('/resultados', resultadosRouter);
+  coopApi.use('/afip', afipRouter); // facturación electrónica AFIP (modo mock por defecto)
   coopApi.use('/clientes', accesoPortalRouter);
   coopApi.use('/clientes', constanciaRouter); // constancia anual de reciclado (Ley 25.612)
   coopApi.use('/normativa', normativaRouter); // marco normativo según la jurisdicción
