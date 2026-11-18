@@ -2,20 +2,23 @@ import { beforeAll, afterAll, describe, it, expect } from 'vitest';
 import request from 'supertest';
 import mongoose from 'mongoose';
 import crypto from 'node:crypto';
-import { MongoMemoryServer } from 'mongodb-memory-server';
+import { MongoMemoryReplSet } from 'mongodb-memory-server';
 import { createApp } from '../src/app.js';
 import { User } from '../src/modules/users/user.model.js';
+import { Organization } from '../src/modules/organizations/organization.model.js';
 
 let mongo;
 let app;
 let token;
+let coop;
 const auth = () => ({ Authorization: `Bearer ${token}` });
 
 beforeAll(async () => {
-  mongo = await MongoMemoryServer.create();
+  mongo = await MongoMemoryReplSet.create({ replSet: { count: 1 } });
   await mongoose.connect(mongo.getUri());
   app = createApp();
-  await User.create({ nombre: 'Admin', email: 'admin@test.local', passwordHash: await User.hashPassword('secreto123'), rol: 'admin' });
+  coop = await Organization.create({ tipo: 'cooperativa', nombre: 'Coop Test', cuit: '30700000099' });
+  await User.create({ nombre: 'Admin', email: 'admin@test.local', passwordHash: await User.hashPassword('secreto123'), rol: 'admin', organizacion: coop._id });
   const res = await request(app).post('/api/auth/login').send({ email: 'admin@test.local', password: 'secreto123' });
   token = res.body.token;
 });
@@ -117,6 +120,16 @@ describe('Flujo retiro → certificado → factura → cobranza', () => {
     expect(pagada.body.saldo).toBe(0);
   });
 
+  it('anota el comprobante fiscal de ARCA en la liquidación', async () => {
+    await request(app).patch(`/api/facturas/${factura._id}/comprobante`).set(auth()).send({ tipo: 'B', puntoVenta: 2, numero: 15, cae: '123' }).expect(400);
+    const res = await request(app)
+      .patch(`/api/facturas/${factura._id}/comprobante`)
+      .set(auth())
+      .send({ tipo: 'B', puntoVenta: 2, numero: 15, cae: '74123456789012' })
+      .expect(200);
+    expect(res.body.comprobanteFiscal).toMatchObject({ tipo: 'B', puntoVenta: 2, numero: 15 });
+  });
+
   it('dashboard agrega por material y por cliente', async () => {
     const res = await request(app).get('/api/dashboard?desde=2000-01-01&hasta=2100-01-01').set(auth()).expect(200);
     expect(res.body.totales).toMatchObject({ retiros: 1, kgRecuperados: 150, co2EvitadoKg: 111 });
@@ -125,7 +138,7 @@ describe('Flujo retiro → certificado → factura → cobranza', () => {
   });
 
   it('un chofer no puede crear clientes', async () => {
-    await User.create({ nombre: 'Chofer', email: 'chofer@test.local', passwordHash: await User.hashPassword('secreto123'), rol: 'chofer' });
+    await User.create({ nombre: 'Chofer', email: 'chofer@test.local', passwordHash: await User.hashPassword('secreto123'), rol: 'chofer', organizacion: coop._id });
     const login = await request(app).post('/api/auth/login').send({ email: 'chofer@test.local', password: 'secreto123' });
     await request(app).post('/api/clientes').set({ Authorization: `Bearer ${login.body.token}` }).send({ razonSocial: 'Otro' }).expect(403);
   });

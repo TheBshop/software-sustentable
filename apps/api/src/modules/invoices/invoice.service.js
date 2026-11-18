@@ -2,7 +2,7 @@ import { Invoice } from './invoice.model.js';
 import { Client } from '../clients/client.model.js';
 import { Pickup, pesoEfectivo } from '../pickups/pickup.model.js';
 import { nextSeq } from '../../lib/counters.js';
-import { round2 } from '../../lib/validation.js';
+import { round2, endOfLocalDay } from '../../lib/validation.js';
 import { HttpError } from '../../middleware/error.js';
 
 const DIA_MS = 24 * 60 * 60 * 1000;
@@ -21,8 +21,7 @@ export async function buildInvoiceDraft({ cliente: clienteId, desde, hasta }) {
   const { modalidad, montoFijo = 0, preciosPorKg = [] } = cliente.tarifa ?? {};
   if (!modalidad || modalidad === 'sin_cargo') throw new HttpError(422, 'El cliente no tiene una tarifa facturable');
 
-  const hastaFinDelDia = new Date(hasta);
-  hastaFinDelDia.setUTCHours(23, 59, 59, 999); // "hasta 2026-11-30" incluye todo ese día
+  const hastaFinDelDia = endOfLocalDay(hasta); // "hasta 2026-11-30" incluye todo ese día
   const retiros = await Pickup.find({
     cliente: cliente._id,
     fecha: { $gte: desde, $lte: hastaFinDelDia },
@@ -56,7 +55,17 @@ export async function buildInvoiceDraft({ cliente: clienteId, desde, hasta }) {
 
   lineas = lineas.map((l) => ({ ...l, subtotal: round2(l.cantidad * l.precioUnitario) }));
   const total = round2(lineas.reduce((a, l) => a + l.subtotal, 0));
-  return { cliente, retiros, lineas, total };
+
+  // Detalle retiro por retiro, para que el cliente pueda auditar el cálculo.
+  const detalle = retiros.map((r) => ({
+    retiro: r._id,
+    numero: r.numero,
+    fecha: r.fecha,
+    sede: r.direccion,
+    kg: round2(r.items.reduce((a, it) => a + pesoEfectivo(it), 0)),
+    importe: importeDeRetiro(r, cliente),
+  }));
+  return { cliente, retiros, lineas, total, detalle };
 }
 
 export async function createInvoice({ cliente, desde, hasta, vencimiento }) {
@@ -71,6 +80,7 @@ export async function createInvoice({ cliente, desde, hasta, vencimiento }) {
     periodo: { desde, hasta },
     retiros: draft.retiros.map((r) => r._id),
     lineas: draft.lineas,
+    detalle: draft.detalle,
     total: draft.total,
     vencimiento: vencimiento ?? new Date(Date.now() + dias * DIA_MS),
   });
@@ -125,4 +135,16 @@ export async function paymentAlerts(dias = 7) {
     totalVencido: round2(vencidas.reduce((a, i) => a + i.saldo, 0)),
     totalPorVencer: round2(porVencer.reduce((a, i) => a + i.saldo, 0)),
   };
+}
+
+/**
+ * Lo que se le cobra a un cliente por un retiro según su tarifa (items con material populado).
+ * null = no se cobra por retiro (abono mensual o sin cargo).
+ */
+export function importeDeRetiro(retiro, cliente) {
+  const { modalidad, montoFijo = 0, preciosPorKg = [] } = cliente?.tarifa ?? {};
+  if (modalidad === 'por_retiro') return montoFijo;
+  if (modalidad !== 'por_kg') return null;
+  const precioKg = (material) => preciosPorKg.find((p) => String(p.material) === String(material._id ?? material))?.precio ?? material.tarifaRetiroKg ?? 0;
+  return round2(retiro.items.reduce((a, it) => a + pesoEfectivo(it) * precioKg(it.material), 0));
 }

@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { tenantPlugin } from '../../lib/tenancy.js';
 
 const { ObjectId } = mongoose.Schema.Types;
 
@@ -7,12 +8,14 @@ const { ObjectId } = mongoose.Schema.Types;
 // `comprobanteFiscal`. Ver docs/01-stack-y-arquitectura.md → "Facturación".
 const invoiceSchema = new mongoose.Schema(
   {
-    numero: { type: Number, unique: true },
+    numero: Number, // correlativo por cooperativa
     cliente: { type: ObjectId, ref: 'Client', required: true },
     clienteSnapshot: { razonSocial: String, cuit: String, condicionIva: String },
     periodo: { desde: Date, hasta: Date },
     retiros: [{ type: ObjectId, ref: 'Pickup' }],
     lineas: [{ _id: false, descripcion: String, cantidad: Number, unidad: String, precioUnitario: Number, subtotal: Number }],
+    // Qué se cobró por cada retiro (auditable por el cliente en el portal)
+    detalle: [{ _id: false, retiro: { type: ObjectId, ref: 'Pickup' }, numero: Number, fecha: Date, sede: String, kg: Number, importe: Number }],
     total: { type: Number, required: true },
     emitidaEn: { type: Date, default: Date.now },
     vencimiento: { type: Date, required: true },
@@ -35,5 +38,8 @@ invoiceSchema.virtual('vencida').get(function () {
 
 invoiceSchema.index({ estado: 1, vencimiento: 1 });
 invoiceSchema.index({ cliente: 1, emitidaEn: -1 });
+
+invoiceSchema.plugin(tenantPlugin);
+invoiceSchema.index({ coop: 1, numero: 1 }, { unique: true });
 
 export const Invoice = mongoose.model('Invoice', invoiceSchema);

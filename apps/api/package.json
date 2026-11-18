@@ -7,13 +7,25 @@
   "scripts": {
     "dev": "node --watch --env-file-if-exists=.env src/server.js",
     "start": "node src/server.js",
+    "dev:memoria": "node src/dev-memory.js",
     "seed": "node --env-file-if-exists=.env src/seed.js",
-    "test": "vitest run"
+    "importar": "node --env-file-if-exists=.env src/import/cli.js",
+    "crear-usuario": "node --env-file-if-exists=.env src/scripts/crear-usuario.js",
+    "test": "vitest run",
+    "crear-cooperativa": "node --env-file-if-exists=.env src/scripts/crear-cooperativa.js",
+    "crear-prototipo": "node src/scripts/crear-prototipo.js",
+    "dev:demo": "node src/dev-memory.js --demo",
+    "migrar-roles": "node --env-file-if-exists=.env src/scripts/migrar-roles.js",
+    "crear-superadmin": "node --env-file-if-exists=.env src/scripts/crear-superadmin.js"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1168.0",
+    "@nueva-vida/catalogos": "0.1.0",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
+    "exceljs": "^4.4.0",
     "express": "^5.1.0",
+    "express-rate-limit": "^7.5.1",
     "helmet": "^8.0.0",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.9.0",

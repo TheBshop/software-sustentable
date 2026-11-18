@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { api, fmtKg, fmtPeso } from '../api.js';
+import { useLoad } from '../ui.jsx';
 
 function Bars({ rows, label, value, format }) {
   const max = Math.max(...rows.map((r) => r[value]), 1);
@@ -33,6 +34,7 @@ export default function Dashboard() {
 
   return (
     <>
+      <AvisoPrototipo />
       <h2>Resumen del mes</h2>
       <div className="kpis">
         <div className="kpi"><span>Retiros</span><strong>{t.retiros}</strong></div>
@@ -41,6 +43,23 @@ export default function Dashboard() {
         <div className="kpi"><span>Ventas</span><strong>{fmtPeso(t.ventas)}</strong></div>
         <div className={`kpi ${t.cobrosVencidos > 0 ? 'alert' : ''}`}><span>Cobros vencidos</span><strong>{fmtPeso(t.cobrosVencidos)}</strong></div>
         <div className="kpi"><span>Vencen en 7 días</span><strong>{fmtPeso(t.cobrosPorVencer)}</strong></div>
+      </div>
+      <h3>Planta</h3>
+      <div className="kpis">
+        <div className="kpi"><span>Ingresado a planta</span><strong>{fmtKg(data.planta?.indicadores.ingresadoKg)}</strong></div>
+        <div className="kpi green"><span>Valorizado (vendido)</span><strong>{fmtKg(data.planta?.indicadores.valorizadoKg)}</strong></div>
+        <div className="kpi"><span>A disposición final</span><strong>{fmtKg(data.planta?.indicadores.dispuestoKg)}</strong></div>
+        <div className="kpi green" title="De lo que salió de planta, porcentaje que se valorizó en vez de ir al relleno sanitario">
+          <span>Desvío de relleno sanitario</span>
+          <strong>{data.planta?.indicadores.tasaDesvio == null ? '—' : `${data.planta.indicadores.tasaDesvio.toLocaleString('es-AR')} %`}</strong>
+        </div>
+        {data.planta?.mezcla?.ingresoMezclaKg > 0 && (
+          <div className="kpi" title="De lo que entró sin clasificar (camión municipal), cuánto se recuperó">
+            <span>Recuperación de lo recibido mezclado</span>
+            <strong>{data.planta.mezcla.tasaRecuperacion?.toLocaleString('es-AR') ?? '—'} %</strong>
+            <span className="small">{fmtKg(data.planta.mezcla.recuperadoKg)} de {fmtKg(data.planta.mezcla.ingresoMezclaKg)}</span>
+          </div>
+        )}
       </div>
       <div className="grid2">
         <section className="card">
@@ -53,5 +72,18 @@ export default function Dashboard() {
         </section>
       </div>
     </>
+  );
+}
+
+/** Si la organización es un prototipo de demostración, lo dice: los datos son de ejemplo. */
+function AvisoPrototipo() {
+  const { data } = useLoad('/planta/organizacion');
+  if (!data?.prototipo?.slug) return null;
+  return (
+    <div className="strip info-strip">
+      <b>Prototipo de demostración para {data.nombre}.</b> Los clientes, retiros y ventas son datos de ejemplo; los materiales son los que recibe la organización.
+      {data.prototipo.tambien && ` También relevada en esta fila: ${data.prototipo.tambien}.`}
+      {data.prototipo.notas && <div className="small" style={{ marginTop: 4 }}>{data.prototipo.notas}</div>}
+    </div>
   );
 }

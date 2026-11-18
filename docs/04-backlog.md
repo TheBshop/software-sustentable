@@ -12,43 +12,43 @@ Personas: **Chofer** (hace los retiros), **Planta** (recibe y pesa), **Administr
 |---|---|---|
 | S0-1 | Como equipo, quiero el repo, CI y entornos (Atlas, Render, Netlify) para poder deployar desde el día 1. ✅ repo/CI | 3 |
 | S0-2 | Como equipo, quiero relevar en la planta **un día de trabajo real** (acompañar un recorrido, ver la balanza, ver cómo facturan hoy) para validar el modelo de datos. | 2 |
-| S0-3 | Como coordinación, quiero cargar la lista real de materiales, clientes y tarifas (desde Excel) para arrancar con datos verdaderos. | 3 |
+| S0-3 | Como coordinación, quiero cargar la lista real de materiales, clientes y tarifas (desde Excel) para arrancar con datos verdaderos. ✅ importador + plantilla | 3 |
 
 ## Sprint 1 — Registro de retiros (objetivo: los choferes dejan el papel)
 | # | Historia | Criterios de aceptación | Pts |
 |---|---|---|---|
-| 1.1 | Como **chofer**, quiero iniciar sesión en la app una vez y que me recuerde. | Token guardado; expira a los 30 días. | 2 |
+| 1.1 | Como **chofer**, quiero iniciar sesión en la app una vez y que me recuerde. ✅ | Token guardado; expira a los 30 días. | 2 |
 | 1.2 | Como **chofer**, quiero registrar un retiro eligiendo cliente, materiales y kg estimados. ✅ API · ✅ pantalla | < 30 seg por retiro; busca cliente por nombre. | 5 |
 | 1.3 | Como **chofer**, quiero registrar retiros **sin señal** y que se envíen solos al volver la conexión. ✅ | Indicador "N sin enviar"; no duplica al reintentar. | 5 |
 | 1.4 | Como **chofer**, quiero sacar fotos del material. ✅ API · ✅ pantalla | Hasta 6 fotos comprimidas. | 3 |
-| 1.5 | Como **chofer**, quiero ver mis retiros del día para saber qué me falta. | Lista por fecha con estado de sincronización. | 3 |
+| 1.5 | Como **chofer**, quiero ver mis retiros del día para saber qué me falta. ✅ | Lista por fecha con estado de sincronización. | 3 |
 | 1.6 | Como **administración**, quiero el ABM de clientes en la web. ✅ | Alta, edición, baja lógica, búsqueda, validación de CUIT. | 3 |
 
 ## Sprint 2 — Planta y certificados (objetivo: primer certificado real a un cliente piloto)
 | # | Historia | Pts |
 |---|---|---|
-| 2.1 | Como **planta**, quiero ver los retiros que llegan y cargar el peso real de balanza. ✅ API | 5 |
-| 2.2 | Como **planta**, quiero registrar ingresos que no vienen de retiros (recuperadores, entregas voluntarias). ✅ API | 3 |
-| 2.3 | Como **administración**, quiero emitir el certificado PDF con QR de un retiro. ✅ API | 3 |
+| 2.1 | Como **planta**, quiero ver los retiros que llegan y cargar el peso real de balanza. ✅ | 5 |
+| 2.2 | Como **planta**, quiero registrar ingresos que no vienen de retiros (recuperadores, entregas voluntarias). ✅ | 3 |
+| 2.3 | Como **administración**, quiero emitir el certificado PDF con QR de un retiro. ✅ | 3 |
 | 2.4 | Como **generador**, quiero escanear el QR y ver que el certificado es auténtico. ✅ | 2 |
-| 2.5 | Como **administración**, quiero enviar el certificado por email o WhatsApp con un clic. ✅ API | 3 |
+| 2.5 | Como **administración**, quiero enviar el certificado por email o WhatsApp con un clic. ✅ | 3 |
 | 2.6 | Como **coordinación**, quiero que los factores de CO2 tengan fuente citada y aparezca en el PDF. | 2 |
-| 2.7 | Como **administración**, quiero el ABM de materiales con tarifas. ✅ API | 2 |
+| 2.7 | Como **administración**, quiero el ABM de materiales con tarifas. ✅ | 2 |
 
 ## Sprint 3 — Facturación y cobranza (objetivo: liquidar el primer mes)
 | # | Historia | Pts |
 |---|---|---|
 | 3.1 | Como **administración**, quiero configurar la tarifa de cada cliente (por retiro, por kg, abono). ✅ API | 3 |
-| 3.2 | Como **administración**, quiero ver una vista previa de lo que le corresponde facturar a un cliente en un período y confirmarla. ✅ API | 5 |
-| 3.3 | Como **administración**, quiero registrar pagos (parciales o totales). ✅ API | 2 |
-| 3.4 | Como **administración**, quiero ver alertas de facturas vencidas y por vencer en el inicio. ✅ API · ✅ KPIs | 3 |
+| 3.2 | Como **administración**, quiero ver una vista previa de lo que le corresponde facturar a un cliente en un período y confirmarla. ✅ | 5 |
+| 3.3 | Como **administración**, quiero registrar pagos (parciales o totales). ✅ | 2 |
+| 3.4 | Como **administración**, quiero ver alertas de facturas vencidas y por vencer en el inicio. ✅ | 3 |
 | 3.5 | Como **administración**, quiero un mail automático semanal con el resumen de cobros pendientes. | 3 |
-| 3.6 | Como **administración**, quiero cargar el número y CAE de la factura fiscal emitida para cada liquidación. | 2 |
+| 3.6 | Como **administración**, quiero cargar el número y CAE de la factura fiscal emitida para cada liquidación. ✅ | 2 |
 
 ## Sprint 4 — Ventas, dashboard y contratos
 | # | Historia | Pts |
 |---|---|---|
-| 4.1 | Como **administración**, quiero registrar ventas de material a compradores. ✅ API | 3 |
+| 4.1 | Como **administración**, quiero registrar ventas de material a compradores. ✅ | 3 |
 | 4.2 | Como **coordinación**, quiero un dashboard con kg por material, por cliente y ventas del mes. ✅ | 3 |
 | 4.3 | Como **coordinación**, quiero filtrar el dashboard por fechas y exportar a Excel. | 3 |
 | 4.4 | Como **administración**, quiero generar el contrato de un gran generador en PDF a partir del template y sus datos. | 5 |
@@ -69,3 +69,86 @@ Personas: **Chofer** (hace los retiros), **Planta** (recibe y pesa), **Administr
 - Tests de API para la regla de negocio nueva; CI en verde.
 - Deployado en **staging** y probado por alguien de la cooperativa.
 - Documentación del endpoint actualizada en `docs/03-api.md`.
+
+## Plataforma multi-organización ✅
+| # | Historia | Pts |
+|---|---|---|
+| P-1 | Como **plataforma**, quiero que cada cooperativa vea solo sus datos, para poder sumar más cooperativas. ✅ | 8 |
+| P-2 | Como **cooperativa**, quiero clasificar los materiales por corriente y fracción (Decreto 779/22) y que se bloqueen las corrientes para las que no estoy habilitada. ✅ | 5 |
+| P-3 | Como **planta**, quiero ver el stock y registrar rechazos a disposición final, con una trazabilidad que no se pueda alterar. ✅ | 5 |
+| P-4 | Como **empresa o municipio**, quiero un portal con mis retiros, certificados, facturas e informe anual. ✅ | 8 |
+| P-5 | Como **municipio**, quiero ver el impacto por sede. ✅ | 2 |
+| P-6 | Como **cliente**, quiero ver qué se me cobró por cada retiro. ✅ | 2 |
+| P-7 | Como **cooperativa**, quiero darle acceso al portal a un cliente con un clic. ✅ | 3 |
+
+## Roadmap posterior (ver [09-mercado-y-diferenciales.md](09-mercado-y-diferenciales.md))
+| # | Historia | Pts |
+|---|---|---|
+| R-1 | Como **cliente**, quiero pedir un retiro desde el portal y que le aparezca a la cooperativa. | 5 |
+| R-2 | Como **coordinación**, quiero una agenda de retiros por día y camión, con orden sugerido. | 8 |
+| R-3 | Como **chofer**, quiero escanear el QR del contenedor o bolsón para precargar el retiro. | 5 |
+| R-4 | Como **planta**, quiero leer el peso directo de la balanza. | 5 |
+| R-5 | Como **empresa**, quiero un reporte ESG / ISO 14001 con su metodología. | 5 |
+| R-6 | Como **cooperativa habilitada para peligrosos**, quiero emitir el manifiesto electrónico (Ley 24.051). | 13 |
+| R-7 | Como **cliente**, quiero recibir la invitación al portal por mail en lugar de una contraseña generada. | 3 |
+| R-8 | Como **administración**, quiero el PDF de la liquidación con el detalle por retiro. | 3 |
+
+## Prioridades del diagnóstico de la cooperativa ✅
+
+- ✅ Cargar retiros e ingresos en fardos, bolsones o camiones cuando no hay balanza (en la web y en la app).
+- ✅ Registrar el camión municipal, clasificarlo y registrar el rechazo con su causa. Ver la calidad de separación por generador, también en el portal de cada empresa.
+- ✅ Precio de referencia por material, aviso al vender debajo del mercado y precio promedio por comprador.
+- ✅ Gastos y balance mensual, exportable a Excel para el contador.
+- ✅ Certificado con firma, sello, responsable, cargo y costo del servicio.
+- ⏳ Pendiente con la cooperativa:
+  - pesar una vez 5 a 10 fardos y bolsones de cada material para cargar los pesos promedio reales;
+  - escanear la firma y el sello;
+  - actualizar los precios de referencia cada mes.
+
+## Ordenanza 9233 de Paraná y herramientas de Manglai ✅
+
+- ✅ Residuos de gestión diferenciada del art. 5 como tipos de REGU.
+- ✅ Inscripciones de la cooperativa (registro municipal de acopios, art. 28) impresas en el certificado.
+- ✅ Seguridad e higiene: entregas de EPP y capacitaciones, con aviso de vencimiento (art. 21).
+- ✅ Portal del municipio: kg ingresados por recolección municipal y por recuperadores (arts. 34 y 35).
+- ✅ Documentos del traslado adjuntos al retiro, visibles para el cliente.
+- ✅ Factor de CO₂ con su fuente en certificados e informe, con la aclaración de Alcance 3, categoría 5.
+- ✅ Recomendaciones automáticas al generador en el portal y en el informe anual.
+- ⏳ Pendiente:
+  - encontrar la norma específica de grandes generadores de Paraná;
+  - cargar las fuentes reales de los factores de CO₂;
+  - el número real del registro municipal de la cooperativa.
+
+## Ley 25.612 (residuos industriales) ✅
+
+- ✅ Tratamiento por material en certificados e informe (arts. 21 y 43 inc. b).
+- ✅ Libro de movimientos exportable (art. 34).
+- ✅ Constancia anual de reciclado firmada, para la declaración jurada del generador (arts. 11 inc. e y 12).
+- ⏳ Solo si la cooperativa se habilita para residuos industriales:
+  - nivel de riesgo por material;
+  - manifiesto obligatorio antes de certificar;
+  - etiquetas para recipientes.
+
+## Productividad de la planta ✅
+
+- ✅ Indicadores de la guía de productividad, mes a mes, con la evolución de los últimos 6 meses.
+- ✅ Los que salen solos de los registros: productividad, utilización, rechazo, eficiencia de venta y precio promedio.
+- ✅ Registros nuevos: personal del mes, paradas de máquina y accidentes.
+- ⏳ Pendiente:
+  - control de asistencia diario;
+  - liquidación de sueldos;
+  - agenda de mantenimiento;
+  - no conformidades.
+
+## Logística y recuperadores ✅ (análisis de plataformas)
+
+- ✅ Pedido de retiro desde el portal, con bandeja en la cooperativa (Sensoneo, Reaquila, Routeware).
+- ✅ Hoja de ruta del chofer en la app ("Hoy"): orden por cercanía y visitas fallidas con motivo y foto. Funciona sin señal (Rubicon, Routeware).
+- ✅ Frecuencia sugerida por cliente, a partir del historial y sin sensores (Enevo, Sensoneo).
+- ✅ Indicadores de los recorridos: kg por retiro, combustible por tonelada y pedidos cumplidos (Sensoneo).
+- ✅ Registro de recuperadores y compras de material con recibo (Recy, Reaquila, guía del BID).
+- ⏳ Más adelante:
+  - optimización de rutas con un servicio de mapas;
+  - pago en línea de facturas;
+  - aviso al cliente por WhatsApp cuando se programa su retiro;
+  - integración con Tonelada Justa.

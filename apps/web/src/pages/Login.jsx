@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { api, setToken } from '../api.js';
+import { api, setToken, setUser, esOperador } from '../api.js';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -12,29 +12,44 @@ export default function Login() {
     e.preventDefault();
     setError(null);
     try {
-      const { token } = await api('/auth/login', { method: 'POST', body: { email, password } });
+      const { token, user } = await api('/auth/login', { method: 'POST', body: { email, password } });
       setToken(token);
-      navigate('/');
+      setUser(user);
+      // Cooperativas → panel de gestión. Empresas y municipios → portal.
+      navigate(user.organizacion?.rol === 'plataforma' ? '/plataforma' : esOperador(user) ? '/panel' : '/portal');
     } catch (err) {
       setError(err.message);
     }
   }
 
   return (
-    <div className="center">
+    <div className="login-pant">
+      <section className="login-hero">
+        <span className="eyebrow">Gestión RSU</span>
+        <h1>Gestión legal de residuos, en orden y al día</h1>
+        <p>Para cooperativas, empresas recicladoras y municipios: registros, trazabilidad y cumplimiento según tu actividad y tu jurisdicción.</p>
+        <ul>
+          <li>Registros de cada día, con quién cargó qué</li>
+          <li>Obligaciones nacionales, provinciales y municipales</li>
+          <li>Certificados, remitos e informes para presentar</li>
+        </ul>
+      </section>
+      <div className="login-form-col">
       <form className="card login" onSubmit={onSubmit}>
-        <h2>♻ Cooperativa Nueva Vida</h2>
+        <h2>Ingresar</h2>
+        <p className="muted">Con el usuario que te dio tu organización.</p>
         <label>
           Email
-          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="email" />
         </label>
         <label>
           Contraseña
-          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required autoComplete="current-password" />
         </label>
         {error && <p className="error">{error}</p>}
         <button type="submit">Ingresar</button>
       </form>
+      </div>
     </div>
   );
 }

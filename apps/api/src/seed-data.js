@@ -1,0 +1,337 @@
+// Datos de ejemplo para desarrollo. Los usan `npm run seed` (seed.js) y `npm run dev:memoria`.
+// Usuarios (solo desarrollo; ver SEED_USUARIOS abajo):
+//   Cooperativa Nueva Vida     admin@nuevavida.local / admin1234 · chofer@nuevavida.local / chofer1234
+//   Cooperativa del Litoral    admin@litoral.local / admin1234
+//   Empresa (portal)           empresa@elpuente.local / empresa1234   (cliente de las dos cooperativas)
+//   Municipio (portal)         municipio@ejemplo.local / municipio1234 (tres sedes)
+import { User } from './modules/users/user.model.js';
+import { Organization } from './modules/organizations/organization.model.js';
+import { Material } from './modules/materials/material.model.js';
+import { Client } from './modules/clients/client.model.js';
+import { Pickup } from './modules/pickups/pickup.model.js';
+import { Intake, Sale } from './modules/plant/plant.models.js';
+import { Invoice } from './modules/invoices/invoice.model.js';
+import { issueCertificate } from './modules/certificates/certificate.service.js';
+import { registrarIngreso, registrarVenta, registrarRechazo, sincronizarIngresoDeRetiro } from './modules/movimientos/movimiento.service.js';
+import { nextSeq } from './lib/counters.js';
+import { registrarClasificacion } from './modules/movimientos/movimiento.service.js';
+import { resolverPesos } from './modules/materials/unidades.js';
+import { anotarReferencias } from './modules/plant/ventas.service.js';
+import { Gasto } from './modules/finanzas/gasto.model.js';
+import { RegistroSeguridad } from './modules/seguridad/seguridad.js';
+import { PersonalMes, ParadaMaquina } from './modules/productividad/productividad.models.js';
+import { Solicitud } from './modules/logistica/solicitud.model.js';
+import { Recuperador, Compra } from './modules/recuperadores/recuperadores.js';
+import { runWithTenant } from './lib/tenancy.js';
+import { Lote } from './modules/proceso/proceso.models.js';
+
+export const SEED_USUARIOS = [
+  { email: 'admin@nuevavida.local', password: 'admin1234', org: 'nv', rol: 'admin', nombre: 'Admin Nueva Vida' },
+  { email: 'chofer@nuevavida.local', password: 'chofer1234', org: 'nv', rol: 'chofer', nombre: 'Camión 1' },
+  { email: 'admin@litoral.local', password: 'admin1234', org: 'litoral', rol: 'admin', nombre: 'Admin Litoral' },
+  { email: 'empresa@elpuente.local', password: 'empresa1234', org: 'empresa', rol: 'cliente_admin', nombre: 'Laura (El Puente)' },
+  { email: 'municipio@ejemplo.local', password: 'municipio1234', org: 'municipio', rol: 'cliente_admin', nombre: 'Área de Ambiente' },
+  { email: 'admin@recicladora.local', password: 'admin1234', org: 'recicladora', rol: 'admin', nombre: 'Admin Recicladora' },
+  { email: 'superadmin@plataforma.local', password: 'super1234', org: 'plataforma', rol: 'superadmin', nombre: 'Administración de la plataforma' },
+  { email: 'ambiente@municipiooperador.local', password: 'admin1234', org: 'municipioOperador', rol: 'admin', nombre: 'Dirección de Ambiente' },
+];
+
+// ⚠️ Factores de CO2 de EJEMPLO (kg CO2e evitado por kg reciclado). Antes de emitir
+// certificados reales, la cooperativa debe reemplazarlos por factores de una fuente
+// reconocida (p. ej. EPA WARM, DEFRA, o un estudio local) y documentar la fuente.
+// Unidades estándar (peso sin balanza) y precios de referencia: valores de EJEMPLO.
+// Cada cooperativa los ajusta en Materiales (pesando una vez cada tipo de fardo o bolsón).
+const MATERIALES = [
+  { codigo: 'CART', nombre: 'Cartón', categoria: 'papel_carton', factorCo2: 0.9, tarifaRetiroKg: 0, precioVentaKg: 120, unidades: [{ nombre: 'fardo', kg: 60 }, { nombre: 'bolsón', kg: 25 }], precioReferencia: { minKg: 120, maxKg: 240, fuente: 'Reaquila, precios de materiales reciclados (revisión 30/10/2026)', fecha: new Date('2026-10-30') } },
+  { codigo: 'PAP', nombre: 'Papel blanco', categoria: 'papel_carton', factorCo2: 0.9, tarifaRetiroKg: 0, precioVentaKg: 150, unidades: [{ nombre: 'bolsón', kg: 30 }], precioReferencia: { minKg: 120, maxKg: 370, fuente: 'Reaquila, precios de materiales reciclados (revisión 30/10/2026)', fecha: new Date('2026-10-30') } },
+  { codigo: 'PET', nombre: 'PET', categoria: 'plasticos', factorCo2: 1.5, tarifaRetiroKg: 20, precioVentaKg: 250, unidades: [{ nombre: 'bolsón', kg: 12 }, { nombre: 'fardo', kg: 80 }], precioReferencia: { minKg: 250, maxKg: 560, fuente: 'Reaquila, precios de materiales reciclados (revisión 30/10/2026)', fecha: new Date('2026-10-30') } },
+  { codigo: 'PEAD', nombre: 'Polietileno (PEAD)', categoria: 'plasticos', factorCo2: 1.2, tarifaRetiroKg: 20, precioVentaKg: 200, unidades: [{ nombre: 'bolsón', kg: 15 }], precioReferencia: { minKg: 250, maxKg: 850, fuente: 'Reaquila, precios de materiales reciclados (revisión 30/10/2026)', fecha: new Date('2026-10-30') } },
+  { codigo: 'VID', nombre: 'Vidrio', categoria: 'vidrio', factorCo2: 0.3, tarifaRetiroKg: 15, precioVentaKg: 30, unidades: [{ nombre: 'tambor', kg: 90 }], precioReferencia: { minKg: 50, maxKg: 85, fuente: 'Reaquila, precios de materiales reciclados (revisión 30/10/2026)', fecha: new Date('2026-10-30') } },
+  { codigo: 'ALU', nombre: 'Aluminio', categoria: 'metales', factorCo2: 9, tarifaRetiroKg: 0, precioVentaKg: 1200, unidades: [{ nombre: 'bolsón', kg: 8 }], precioReferencia: { minKg: 1500, maxKg: 3500, fuente: 'Reaquila, precios de materiales reciclados (revisión 30/10/2026)', fecha: new Date('2026-10-30') } },
+  { codigo: 'CHAT', nombre: 'Chatarra', categoria: 'metales', factorCo2: 1.5, tarifaRetiroKg: 0, precioVentaKg: 180, precioReferencia: { minKg: 100, maxKg: 250, fuente: 'Reaquila, precios de materiales reciclados (revisión 30/10/2026)', fecha: new Date('2026-10-30') } },
+  { codigo: 'RECH', nombre: 'Rechazo (no valorizable)', categoria: 'otros', fraccion: 'basura', factorCo2: 0, tarifaRetiroKg: 0, precioVentaKg: 0 },
+  // Lo que trae el camión municipal, todavía sin clasificar
+  { codigo: 'MEZCLA', nombre: 'Residuos sin clasificar', categoria: 'otros', mezcla: true, valorizable: false, factorCo2: 0, tarifaRetiroKg: 0, precioVentaKg: 0, unidades: [{ nombre: 'camión', kg: 6000 }] },
+];
+// Solo para cooperativas habilitadas para REGU (Res. 522/2016)
+const MATERIALES_REGU = [
+  { codigo: 'AVU', nombre: 'Aceite vegetal usado', categoria: 'otros', corriente: 'regu', subtipoRegu: 'aceite_vegetal_usado', factorCo2: 2.5, tarifaRetiroKg: 30, precioVentaKg: 300 },
+  { codigo: 'RAEE', nombre: 'Electrónicos (RAEE)', categoria: 'electronicos', corriente: 'regu', subtipoRegu: 'raee', factorCo2: 1.4, tarifaRetiroKg: 50, precioVentaKg: 100 },
+];
+
+const DAY = 24 * 60 * 60 * 1000;
+
+/** Carga los datos de ejemplo. Asume una base vacía y ya conectada. */
+export async function seedDatabase() {
+  const orgs = {
+    nv: await Organization.create({ tipo: 'cooperativa', perfil: 'cooperativa', jurisdiccion: { provincia: 'entre_rios', municipio: 'parana', ciudad: 'Paraná' }, nombre: 'Cooperativa Nueva Vida', cuit: '30700000016', habilitaciones: { corrientes: ['rsu', 'regu'], registros: [{ descripcion: 'Registro municipal de depósitos de acopio', organismo: 'Municipalidad de Paraná (Ord. 9233, art. 28)', numero: 'EJEMPLO-0001' }] }, certificado: { responsable: 'Responsable de ejemplo', cargo: 'Presidencia' }, planta: { capacidadTnMes: 600, horasTrabajablesMes: 176 },
+      // Datos del certificado verde: valores de EJEMPLO, hay que cargar los reales
+      domicilio: 'Planta de ejemplo, Paraná, Entre Ríos',
+      certificadoVerde: { inaes: 'EJEMPLO-INAES', habilitacionMunicipal: 'EJEMPLO-HM-001', caa: 'EJEMPLO-CAA-001', registroProvincial: 'EJEMPLO-OP-001', basculaVence: new Date(Date.now() + 200 * 864e5), transporte: { propio: true, habilitacion: 'EJEMPLO-HT-001' }, procesos: ['Clasificación', 'Enfardado'] } }),
+    litoral: await Organization.create({ tipo: 'cooperativa', nombre: 'Cooperativa Reciclar del Litoral', cuit: '30700000024', habilitaciones: { corrientes: ['rsu'] } }),
+    empresa: await Organization.create({ tipo: 'empresa', nombre: 'Supermercado El Puente SA', cuit: '30712345671' }),
+    municipio: await Organization.create({ tipo: 'municipio', nombre: 'Municipio de Ejemplo', cuit: '30999999995' }),
+    plataforma: await Organization.create({ tipo: 'plataforma', rol: 'plataforma', nombre: 'Plataforma' }),
+    // Operadores que no son cooperativas: una empresa recicladora y un municipio que gestiona su servicio
+    recicladora: await Organization.create({ tipo: 'recicladora', perfil: 'empresa', nombre: 'Recicladora de Ejemplo SA', cuit: '30710000030', jurisdiccion: { provincia: 'santa_fe', municipio: 'rosario', ciudad: 'Rosario' }, habilitaciones: { corrientes: ['rsu'] } }),
+    municipioOperador: await Organization.create({ tipo: 'municipio', rol: 'operador', nombre: 'Municipalidad Operadora de Ejemplo', cuit: '30999000041', jurisdiccion: { provincia: 'cordoba', municipio: 'cordoba', ciudad: 'Córdoba' } }),
+  };
+  const users = {};
+  for (const u of SEED_USUARIOS) {
+    users[u.email] = await User.create({ nombre: u.nombre, email: u.email, rol: u.rol, organizacion: orgs[u.org]._id, passwordHash: await User.hashPassword(u.password) });
+  }
+
+  await runWithTenant(orgs.nv._id, () => seedNuevaVida(orgs, users['chofer@nuevavida.local']));
+  await runWithTenant(orgs.litoral._id, () => seedLitoral(orgs, users['admin@litoral.local']));
+  // Ejemplo: lo que entró hace más de dos semanas ya se procesó y vendió; quedan abiertos los lotes recientes
+  await Lote.updateMany({ fecha: { $lt: new Date(Date.now() - 14 * 86400000) }, etapa: 'recepcion' }, { etapa: 'vendido' }).setOptions({ sinTenant: true });
+  return orgs;
+}
+
+async function seedNuevaVida(orgs, chofer) {
+  // Factores de CO2 de ejemplo: antes de certificar en serio hay que cargar la fuente real
+  const mats = await Material.insertMany([...MATERIALES, ...MATERIALES_REGU].map((m) => new Material({ factorCo2Fuente: 'Valor de ejemplo, falta definir la fuente', ...m })));
+  const m = Object.fromEntries(mats.map((x) => [x.codigo, x]));
+
+  const [superm, hotel, escuela, distri, municipio, acopio] = await Client.insertMany(
+    [
+      {
+        razonSocial: 'Supermercado El Puente SA', cuit: '30712345671', organizacion: orgs.empresa._id,
+        contacto: { nombre: 'Laura', email: 'compras@elpuente.example', telefono: '5493430000001' },
+        direcciones: [{ alias: 'Sucursal Centro', direccion: 'Av. Ejemplo 1200, Paraná' }],
+        tarifa: { modalidad: 'por_retiro', montoFijo: 15000 },
+        contrato: { numero: 'GG-2026-001', inicio: new Date('2026-01-01'), fin: new Date('2026-12-31'), frecuenciaRetiro: 'martes y viernes', diasPagoFactura: 15 },
+      },
+      {
+        razonSocial: 'Hotel Costa Serena SRL', cuit: '30798765430',
+        contacto: { nombre: 'Martín', email: 'admin@costaserena.example', telefono: '5493430000002' },
+        direcciones: [{ direccion: 'Calle Ribera 455, Paraná' }],
+        tarifa: { modalidad: 'por_kg', preciosPorKg: [] },
+        contrato: { diasPagoFactura: 10 },
+      },
+      {
+        razonSocial: 'Escuela Técnica Modelo', cuit: '30700111225',
+        contacto: { email: 'direccion@etmodelo.example', telefono: '5493430000003' },
+        direcciones: [{ direccion: 'Pasaje Escolar 80, Paraná' }],
+        tarifa: { modalidad: 'abono_mensual', montoFijo: 40000 },
+        contrato: { diasPagoFactura: 30 },
+      },
+      {
+        razonSocial: 'Distribuidora Litoral Sur', cuit: '30715554441',
+        contacto: { email: 'logistica@litoralsur.example', telefono: '5493430000004' },
+        direcciones: [{ direccion: 'Ruta 12 km 5, Paraná' }],
+        tarifa: { modalidad: 'por_kg', preciosPorKg: [] },
+      },
+      {
+        // El municipio es un cliente más, con varias sedes (dependencias)
+        razonSocial: 'Municipio de Ejemplo', cuit: '30999999995', organizacion: orgs.municipio._id,
+        contacto: { nombre: 'Área de Ambiente', email: 'ambiente@municipio.example', telefono: '5493430000005' },
+        direcciones: [
+          { alias: 'Palacio municipal', direccion: 'Plaza Central s/n' },
+          { alias: 'Escuela N° 12', direccion: 'Calle de la Escuela 120' },
+          { alias: 'Polideportivo', direccion: 'Av. de los Deportes 900' },
+        ],
+        tarifa: { modalidad: 'sin_cargo' },
+      },
+      { tipo: 'comprador', razonSocial: 'Acopiadora Litoral (comprador)', cuit: '30711111111' },
+    ].map((c) => new Client(c)),
+  );
+  hotel.tarifa.preciosPorKg = [{ material: m.VID._id, precio: 25 }];
+  distri.tarifa.preciosPorKg = [{ material: m.CART._id, precio: 8 }];
+  await hotel.save();
+  await distri.save();
+
+  const plan = {
+    [superm.id]: (i) => [['CART', 180 + ((i * 37) % 90)], ['PEAD', 25 + ((i * 7) % 18)]],
+    [hotel.id]: (i) => [['VID', 70 + ((i * 13) % 45)], ['PET', 12 + ((i * 5) % 9)], ['AVU', 10 + (i % 4)]],
+    [escuela.id]: (i) => [['PAP', 40 + ((i * 11) % 25)], ['CART', 30]],
+    [distri.id]: (i) => [['CART', 300 + ((i * 29) % 120)], ['PEAD', 50], ['ALU', 6]],
+    [municipio.id]: (i) => [['PAP', 60 + ((i * 7) % 30)], ['CART', 40], ['RAEE', i % 2 ? 15 : 0]].filter(([, kg]) => kg > 0),
+  };
+  const orden = [superm, hotel, municipio, distri, superm, escuela, municipio, hotel, superm, distri, municipio];
+  // Puntos de ejemplo en Paraná (no son direcciones reales de nadie)
+  const GPS = { [superm.id]: { lat: -31.7333, lng: -60.5297 }, [hotel.id]: { lat: -31.7185, lng: -60.5232 }, [escuela.id]: { lat: -31.7442, lng: -60.5141 }, [distri.id]: { lat: -31.7701, lng: -60.4825 }, [municipio.id]: { lat: -31.7313, lng: -60.5376 } };
+  const now = Date.now();
+  for (let i = 0; i < 20; i++) {
+    const cliente = orden[i % orden.length];
+    const diasAtras = 40 - Math.round(i * 2);
+    const pesado = diasAtras > 2;
+    const sede = cliente.direcciones[i % cliente.direcciones.length];
+    const p = await Pickup.create({
+      numero: await nextSeq('retiro'),
+      cliente: cliente._id,
+      direccion: sede?.alias ? `${sede.alias} — ${sede.direccion}` : sede?.direccion,
+      fecha: new Date(now - diasAtras * DAY),
+      chofer: chofer._id,
+      ubicacion: GPS[cliente.id],
+      estado: pesado ? 'en_planta' : 'registrado',
+      items: plan[cliente.id](i).map(([cod, kg]) => ({
+        material: m[cod]._id,
+        pesoEstimadoKg: kg,
+        ...(pesado && { pesoRealKg: Math.max(1, kg + ((i * 7) % 11) - 5) }),
+      })),
+    });
+    if (pesado) await sincronizarIngresoDeRetiro(p, chofer._id); // ingreso a planta + movimientos
+    if (diasAtras > 6) await issueCertificate(p._id);
+  }
+
+  const recuperador = await Intake.create({ fecha: new Date(now - 4 * DAY), origen: 'recuperador', detalleOrigen: 'Recuperador independiente', items: [{ material: m.CART._id, pesoKg: 85 }, { material: m.ALU._id, pesoKg: 4 }] });
+  await registrarIngreso(recuperador);
+
+  for (const [dias, items] of [
+    [35, [['CART', 900, 85]]], // como la venta de junio 2025 del diagnóstico: muy por debajo del mercado
+    [20, [['CART', 1200, 150], ['PEAD', 200, 200]]],
+    [8, [['VID', 300, 30], ['ALU', 20, 1600]]],
+  ]) {
+    const data = { fecha: new Date(now - dias * DAY), comprador: acopio._id, remito: `R-${1000 + dias}`, items: items.map(([c, kg, p]) => ({ material: m[c]._id, pesoKg: kg, precioKg: p })), cobrada: dias > 10 };
+    await anotarReferencias(data);
+    const sale = await Sale.create(data);
+    await registrarVenta(sale);
+  }
+  // El rechazo se descuenta del material que se rechaza (acá, cartón húmedo/contaminado)
+  await registrarRechazo({ material: m.CART._id, kg: 140, fecha: new Date(now - 5 * DAY), causa: 'humedad', cliente: superm._id, motivo: 'Cartón mojado, a relleno sanitario' });
+
+  // Camiones municipales: entran como mezcla (sin balanza, por camión) y se clasifican.
+  // Del total, solo una parte se recupera (el diagnóstico habla de 3-4 t de 20 t diarias).
+  for (const dias of [12, 6, 1]) {
+    const fecha = new Date(now - dias * DAY);
+    const items = await resolverPesos([{ material: m.MEZCLA._id, cantidad: 2, unidad: 'camión' }], 'pesoKg');
+    const ingreso = await Intake.create({ fecha, origen: 'recoleccion_municipal', detalleOrigen: 'Recolección municipal zona centro', items });
+    await registrarIngreso(ingreso);
+    await registrarClasificacion({
+      desde: m.MEZCLA._id,
+      fecha,
+      items: [
+        { material: m.CART._id, kg: 1100 + dias * 10 },
+        { material: m.PET._id, kg: 320 },
+        { material: m.PEAD._id, kg: 260 },
+        { material: m.ALU._id, kg: 35 },
+        { material: m.VID._id, kg: 400 },
+      ],
+      rechazoKg: 9000,
+      causa: 'mezclado',
+    });
+  }
+
+  // Gastos del mes (para el balance)
+  await Gasto.insertMany(
+    [
+      [20, 'combustible', 'Gasoil camión volcador', 85000],
+      [12, 'combustible', 'Gasoil camión volcador', 92000],
+      [9, 'reparaciones', 'Reparación enfardadora de cartón', 240000],
+      [7, 'indumentaria', 'Guantes y barbijos', 60000],
+      [3, 'combustible', 'Gasoil tractor pala', 48000],
+      [2, 'repuestos', 'Cinta para enfardar', 35000],
+    ].map(([d, categoria, descripcion, monto]) => new Gasto({ fecha: new Date(now - d * DAY), categoria, descripcion, monto })),
+  );
+
+  // Seguridad e higiene: entregas de EPP y capacitaciones (Ord. 9233, art. 21)
+  await RegistroSeguridad.insertMany(
+    [
+      [40, 'epp', 'Socia de ejemplo 1', { elementos: ['guantes', 'botines', 'chaleco reflectivo'] }],
+      [40, 'epp', 'Socio de ejemplo 2', { elementos: ['guantes', 'botines', 'barbijo'] }],
+      [250, 'epp', 'Socio de ejemplo 3', { elementos: ['guantes'] }],
+      [60, 'capacitacion', 'Socia de ejemplo 1', { tema: 'Manejo seguro de la enfardadora', horas: 2, dictadaPor: 'Responsable de planta' }],
+      [60, 'capacitacion', 'Socio de ejemplo 2', { tema: 'Manejo seguro de la enfardadora', horas: 2, dictadaPor: 'Responsable de planta' }],
+    ].map(([d, tipo, persona, extra]) => new RegistroSeguridad({ fecha: new Date(now - d * DAY), tipo, persona, ...extra })),
+  );
+
+  // Productividad: personal de los últimos meses, paradas de máquina y un accidente (datos de ejemplo)
+  const mesDe = (d) => { const x = new Date(d - 3 * 3600_000); return `${x.getUTCFullYear()}-${String(x.getUTCMonth() + 1).padStart(2, '0')}`; };
+  for (let i = 5; i >= 0; i--) {
+    const fecha = new Date(now); fecha.setUTCDate(15); fecha.setUTCMonth(fecha.getUTCMonth() - i);
+    await PersonalMes.create({ mes: mesDe(fecha), personas: 24 + (i % 3), formalizadas: 16 + (5 - i), diasTrabajados: 500 + i * 7, diasAusencia: 28 + i * 2, bajas: i === 2 ? 2 : i === 4 ? 1 : 0, ingresoPromedio: 380000 + (5 - i) * 15000 });
+  }
+  await ParadaMaquina.insertMany([
+    { fecha: new Date(now - 9 * DAY), maquina: 'cinta', horas: 6, causa: 'rotura', detalle: 'Se cortó la banda' },
+    { fecha: new Date(now - 3 * DAY), maquina: 'prensa', horas: 4, causa: 'falta_energia' },
+  ].map((p) => new ParadaMaquina(p)));
+  await RegistroSeguridad.create({ fecha: new Date(now - 7 * DAY), tipo: 'accidente', persona: 'Socio de ejemplo 2', diasPerdidos: 3, observaciones: 'Corte en la mano con un vidrio en la cinta (ejemplo)' });
+
+  // Pedidos de retiro: uno del portal sin programar, dos para hoy en la hoja de ruta y una visita fallida
+  const hoy = new Date(now);
+  await Solicitud.insertMany([
+    { cliente: superm._id, sede: 'Sucursal Centro — Av. Ejemplo 1200, Paraná', detalle: '12 bolsones de cartón y 3 de film', kgEstimados: 300, origen: 'portal', estado: 'pendiente', fechaPreferida: new Date(now + DAY) },
+    { cliente: hotel._id, sede: 'Calle Ribera 455, Paraná', detalle: 'Vidrio de la semana', kgEstimados: 90, origen: 'cooperativa', estado: 'programada', fechaProgramada: hoy, chofer: chofer._id },
+    { cliente: distri._id, sede: 'Ruta 12 km 5, Paraná', detalle: 'Cartón de devoluciones', kgEstimados: 400, origen: 'cooperativa', estado: 'programada', fechaProgramada: hoy, chofer: chofer._id },
+    { cliente: escuela._id, detalle: 'Papel de archivo', origen: 'portal', estado: 'no_realizada', fechaProgramada: new Date(now - 2 * DAY), chofer: chofer._id, resultado: { motivo: 'cerrado', detalle: 'Feriado escolar', fecha: new Date(now - 2 * DAY), chofer: chofer._id } },
+  ].map((x) => new Solicitud(x)));
+
+  // Recuperadores urbanos y compras de material (datos de ejemplo)
+  const [rec1, rec2] = await Recuperador.insertMany([
+    { nombre: 'Recuperador de ejemplo 1', zona: 'Barrio Centro', vehiculo: 'carro' },
+    { nombre: 'Recuperadora de ejemplo 2', zona: 'Barrio Norte', vehiculo: 'bicicleta', asociado: true },
+  ].map((x) => new Recuperador(x)));
+  for (const [rec, dias, items, pagada] of [
+    [rec1, 9, [['CART', 120, 70], ['ALU', 3, 900]], true],
+    [rec2, 5, [['PET', 40, 160]], true],
+    [rec1, 2, [['CART', 95, 70]], false],
+  ]) {
+    const fecha = new Date(now - dias * DAY);
+    const its = items.map(([c, kg, p]) => ({ material: m[c]._id, pesoKg: kg, precioKg: p }));
+    const ingreso = await Intake.create({ fecha, origen: 'recuperador', detalleOrigen: `Compra a ${rec.nombre}`, items: its.map(({ material, pesoKg }) => ({ material, pesoKg })) });
+    await registrarIngreso(ingreso);
+    await Compra.create({ numero: await nextSeq('compra'), fecha, recuperador: rec._id, items: its, pagada, ...(pagada && { fechaPago: fecha, medioPago: 'efectivo' }), ingreso: ingreso._id });
+  }
+
+  // Liquidaciones del mes anterior: una vencida, una por vencer y una pagada
+  const snap = (c) => ({ razonSocial: c.razonSocial, cuit: c.cuit, condicionIva: c.condicionIva });
+  for (const [c, lineas, emitida, vence, pagada] of [
+    [superm, [['Servicio de retiro de materiales reciclables', 8, 'retiro', 15000]], 26, -11, false],
+    [hotel, [['Retiro y gestión de Vidrio', 610, 'kg', 25], ['Retiro y gestión de PET', 160, 'kg', 20]], 6, 4, false],
+    [escuela, [['Abono mensual servicio de retiro', 1, 'mes', 40000]], 20, 10, true],
+  ]) {
+    const ls = lineas.map(([descripcion, cantidad, unidad, precioUnitario]) => ({ descripcion, cantidad, unidad, precioUnitario, subtotal: cantidad * precioUnitario }));
+    const total = ls.reduce((a, l) => a + l.subtotal, 0);
+    await Invoice.create({
+      numero: await nextSeq('factura'),
+      cliente: c._id,
+      clienteSnapshot: snap(c),
+      periodo: { desde: new Date(now - 75 * DAY), hasta: new Date(now - 45 * DAY) },
+      lineas: ls,
+      total,
+      emitidaEn: new Date(now - emitida * DAY),
+      vencimiento: new Date(now + vence * DAY),
+      estado: pagada ? 'pagada' : 'pendiente',
+      pagos: pagada ? [{ monto: total, medio: 'transferencia', fecha: new Date(now - 3 * DAY) }] : [],
+    });
+  }
+}
+
+/** Segunda cooperativa: mismos códigos de material y mismo cliente (El Puente), datos separados. */
+async function seedLitoral(orgs, admin) {
+  const mats = await Material.insertMany(MATERIALES.slice(0, 5).map((x) => new Material({ factorCo2Fuente: 'Valor de ejemplo, falta definir la fuente', ...x, precioVentaKg: x.precioVentaKg + 10 })));
+  const m = Object.fromEntries(mats.map((x) => [x.codigo, x]));
+  const [puente] = await Client.insertMany([
+    new Client({
+      razonSocial: 'Supermercado El Puente SA', cuit: '30712345671', organizacion: orgs.empresa._id,
+      direcciones: [{ alias: 'Sucursal Santa Fe', direccion: 'Bv. Ejemplo 300, Santa Fe' }],
+      tarifa: { modalidad: 'por_retiro', montoFijo: 18000 },
+      contrato: { diasPagoFactura: 20 },
+    }),
+  ]);
+  const now = Date.now();
+  for (let i = 0; i < 4; i++) {
+    const p = await Pickup.create({
+      numero: await nextSeq('retiro'),
+      cliente: puente._id,
+      direccion: 'Sucursal Santa Fe — Bv. Ejemplo 300, Santa Fe',
+      fecha: new Date(now - (25 - i * 6) * DAY),
+      chofer: admin._id,
+      estado: 'en_planta',
+      items: [{ material: m.CART._id, pesoEstimadoKg: 150 + i * 10, pesoRealKg: 148 + i * 10 }, { material: m.PET._id, pesoEstimadoKg: 20, pesoRealKg: 22 }],
+    });
+    await sincronizarIngresoDeRetiro(p, admin._id);
+    if (i < 3) await issueCertificate(p._id);
+  }
+  await Invoice.create({
+    numero: await nextSeq('factura'),
+    cliente: puente._id,
+    clienteSnapshot: { razonSocial: puente.razonSocial, cuit: puente.cuit },
+    periodo: { desde: new Date(now - 60 * DAY), hasta: new Date(now - 30 * DAY) },
+    lineas: [{ descripcion: 'Servicio de retiro de materiales reciclables', cantidad: 4, unidad: 'retiro', precioUnitario: 18000, subtotal: 72000 }],
+    total: 72000,
+    emitidaEn: new Date(now - 12 * DAY),
+    vencimiento: new Date(now + 8 * DAY),
+  });
+}

@@ -4,16 +4,25 @@
   "description": "Plataforma de gestión de la Cooperativa Nueva Vida (Paraná): retiros, certificados y facturación",
   "workspaces": [
     "apps/api",
-    "apps/web"
+    "apps/web",
+    "packages/*"
   ],
   "scripts": {
     "db:up": "docker compose up -d mongo",
     "db:down": "docker compose down",
     "dev:api": "npm run dev -w apps/api",
+    "dev:memoria": "npm run dev:memoria -w apps/api",
+    "importar": "npm run importar -w apps/api --",
+    "crear-usuario": "npm run crear-usuario -w apps/api --",
     "dev:web": "npm run dev -w apps/web",
     "seed": "npm run seed -w apps/api",
     "test": "npm test -w apps/api",
-    "build:web": "npm run build -w apps/web"
+    "build:web": "npm run build -w apps/web",
+    "crear-cooperativa": "npm run crear-cooperativa -w apps/api --",
+    "dev:demo": "npm run dev:demo -w apps/api",
+    "crear-prototipo": "npm run crear-prototipo -w apps/api --",
+    "crear-superadmin": "npm run crear-superadmin -w apps/api --",
+    "migrar-roles": "npm run migrar-roles -w apps/api"
   },
   "engines": {
     "node": ">=20"

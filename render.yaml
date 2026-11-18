@@ -1,0 +1,53 @@
+# Blueprint de Render para la API. En Render: New → Blueprint → elegir este repositorio.
+# Las variables con `sync: false` se completan a mano en el panel la primera vez
+# (ver docs/07-despliegue.md). Cada push a main despliega solo.
+services:
+  - type: web
+    name: nueva-vida-api
+    runtime: node
+    # "free" se duerme después de 15 minutos sin uso y tarda ~1 minuto en despertar:
+    # sirve para staging, pero para el piloto con choferes conviene "starter" (USD 7/mes).
+    plan: starter
+    region: ohio
+    branch: main
+    buildCommand: npm ci --workspace apps/api --omit=dev
+    startCommand: npm start --workspace apps/api
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NODE_VERSION
+        value: "22"
+      - key: JWT_SECRET
+        generateValue: true
+      - key: TZ_OFFSET
+        value: "-03:00"
+      - key: STORAGE_DRIVER
+        value: s3
+      - key: S3_REGION
+        value: auto
+      - key: MONGO_URI
+        sync: false
+      - key: PUBLIC_WEB_URL
+        sync: false
+      - key: CORS_ORIGINS
+        sync: false
+      - key: S3_ENDPOINT
+        sync: false
+      - key: S3_BUCKET
+        sync: false
+      - key: S3_ACCESS_KEY_ID
+        sync: false
+      - key: S3_SECRET_ACCESS_KEY
+        sync: false
+      - key: STORAGE_PUBLIC_URL
+        sync: false
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASS
+        sync: false
+      - key: MAIL_FROM
+        sync: false

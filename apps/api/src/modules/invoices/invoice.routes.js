@@ -34,8 +34,8 @@ invoicesRouter.get('/:id', async (req, res) => {
 
 // Vista previa: qué se facturaría, sin guardar nada.
 invoicesRouter.post('/preview', async (req, res) => {
-  const { lineas, total, retiros } = await buildInvoiceDraft(periodoInput.parse(req.body));
-  res.json({ lineas, total, retiros: retiros.map((r) => ({ id: r._id, numero: r.numero, fecha: r.fecha })) });
+  const { lineas, total, retiros, detalle } = await buildInvoiceDraft(periodoInput.parse(req.body));
+  res.json({ lineas, total, detalle, retiros: retiros.map((r) => ({ id: r._id, numero: r.numero, fecha: r.fecha })) });
 });
 
 invoicesRouter.post('/', async (req, res) => {
@@ -47,6 +47,24 @@ invoicesRouter.post('/:id/pagos', async (req, res) => {
     .object({ monto: z.number().positive(), fecha: dateInput.optional(), medio: z.string().default('transferencia'), referencia: z.string().optional() })
     .parse(req.body);
   res.status(201).json(await registerPayment(req.params.id, data));
+});
+
+// Anota la factura fiscal emitida en ARCA para esta liquidación (historia 3.6).
+invoicesRouter.patch('/:id/comprobante', async (req, res) => {
+  const data = z
+    .object({
+      tipo: z.enum(['A', 'B', 'C']),
+      puntoVenta: z.number().int().positive(),
+      numero: z.number().int().positive(),
+      cae: z.string().regex(/^\d{14}$/, 'El CAE tiene 14 dígitos').optional(),
+    })
+    .parse(req.body);
+  const inv = await Invoice.findById(req.params.id);
+  if (!inv) throw new HttpError(404, 'Factura no encontrada');
+  if (inv.estado === 'anulada') throw new HttpError(409, 'La liquidación está anulada');
+  inv.comprobanteFiscal = data;
+  await inv.save();
+  res.json(inv);
 });
 
 invoicesRouter.post('/:id/anular', async (req, res) => {

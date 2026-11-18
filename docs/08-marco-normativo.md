@@ -1,0 +1,60 @@
+# 8. Marco normativo y cómo lo implementa el sistema
+
+Relevamiento hecho en noviembre de 2026 sobre la normativa argentina de residuos, y su traducción a funciones del software. **No es asesoramiento legal**: antes de usar el sistema para cumplir obligaciones ante un organismo, validarlo con el asesor de la cooperativa y con la autoridad local.
+
+## Normas nacionales
+
+| Norma | Qué establece | Cómo lo implementa el sistema |
+|---|---|---|
+| [Ley 25.916](https://www.argentina.gob.ar/normativa/nacional/norma-98327/texto): presupuestos mínimos de gestión de residuos domiciliarios | Siete etapas: generación, disposición inicial, recolección, transferencia, transporte, tratamiento y disposición final. Jerarquía: prevención, reúso, valorización y disposición final. | Cada movimiento de planta registra su **etapa** (`movimientos.etapa`). El certificado indica el **destino** de cada material: valorización o disposición final. |
+| [Decreto 779/2022](https://www.boletinoficial.gob.ar/detalleAviso/primera/276572/20221128) (reglamenta la ley anterior), Anexo I, art. 6 | Lineamientos de cuna a cuna, proximidad, responsabilidad extendida del productor (REP), ecodiseño, gradualidad, mejores técnicas y **trazabilidad**: "conocer stocks, flujos de generación, trayectos y cantidades valorizadas y dispuestas finalmente en forma desagregada por cada etapa". | **Libro de movimientos inmutable**, del que se calculan el stock por material y los kilos valorizados y dispuestos. El dashboard muestra la tasa de desvío de relleno sanitario. Las correcciones quedan como ajustes; nada se borra. |
+| Decreto 779/2022, **Anexo II** | Código unificado de colores por fracción: secos valorizables, basura, orgánicos, plásticos, papel y cartón, vidrio y metales. | Campo `fraccion` en materiales, con nombre y color. Se ve en el certificado, el portal y el informe anual. ⚠ Están confirmados verde (secos), negro (basura), marrón (orgánicos) y gris (metales). **Falta confirmar con el texto oficial** el amarillo de plásticos, el azul de papel y cartón y el blanco de vidrio, antes de imprimir etiquetas o contenedores. |
+| [Res. 522/2016](https://www.argentina.gob.ar/normativa/nacional/268583/texto) y [Res. 189/2019](https://www.argentina.gob.ar/normativa/nacional/323372/texto): residuos especiales de generación universal (REGU) | Pilas, RAEE, neumáticos, aceite vegetal usado, lámparas, entre otros. Requieren sistemas de gestión propios. | Corriente `regu` con su tipo (`subtipoRegu`). Una cooperativa solo los gestiona si está **habilitada** para esa corriente. |
+| [Ley 24.051](https://www.argentina.gob.ar/normativa/nacional/450/texto): residuos peligrosos | Registro de generadores, transportistas y operadores. **Manifiesto** por cada traslado. | Corriente `peligroso`, **bloqueada** salvo habilitación explícita. Las habilitaciones guardan el número de inscripción y su vencimiento. El manifiesto electrónico queda en el backlog. |
+| Ley 25.612 (industriales) y [Ley 27.279](https://www.argentina.gob.ar/agricultura/envases) (envases de fitosanitarios) | Corrientes con régimen propio. | Se pueden representar (`industrial` y `fitosanitario`), pero no se gestionan en el MVP. |
+| Ley de envases con responsabilidad extendida del productor | **Sin sancionar.** El proyecto de 2021 perdió estado parlamentario. | El modelo de organizaciones admite sumar un tipo "productor" si la ley se aprueba. |
+| [ENGIRSU](https://www.argentina.gob.ar/node/161297): Estrategia Nacional de Gestión Integral de RSU | Estrategia federal, en actualización con COFEMA. | Los indicadores (kilos valorizados, dispuestos y desvío) se pueden exportar para informes municipales y provinciales. |
+
+## Ley 25.612: residuos industriales y de actividades de servicio
+
+[Texto oficial](https://www.argentina.gob.ar/normativa/nacional/norma-76349/texto). Excluye los residuos domiciliarios (art. 5): lo que una empresa genera "asimilable a domiciliario" sigue siendo RSU. El Decreto 1343/2002 **vetó el art. 60, que derogaba la Ley 24.051**, y el capítulo penal: la Ley 24.051 de peligrosos sigue vigente. No encontré una reglamentación general de la ley; en 2007 el Defensor del Pueblo recomendó dictarla.
+
+| Artículo | Qué dice | Cómo lo cubre el sistema |
+|---|---|---|
+| 21 y 43 inc. b | El manifiesto documenta el tratamiento. La responsabilidad del generador termina cuando el residuo se usa como insumo de otro proceso productivo | `tratamiento` por material (reciclado, reúso, compostaje, disposición final), impreso en el certificado y el informe |
+| 11 inc. e y 12 | Si el generador recicla, su declaración jurada la firma también quien recicla | Constancia anual de reciclado firmada y sellada por la cooperativa, desde el panel y el portal |
+| 34 | Las plantas llevan un registro de operaciones permanente | Libro de movimientos exportable a CSV |
+| 8 | Niveles de riesgo bajo, medio y alto | Pendiente; solo si la cooperativa se habilita para industriales |
+| 11 inc. c y 21 a 23 | Recipientes identificados y fechados; manifiesto obligatorio | Pendiente; el manifiesto ya se puede adjuntar al retiro |
+
+**Para confirmar con la Secretaría de Ambiente de Entre Ríos:** si el descarte de embalajes de las industrias de la zona cuenta como RSU o como industrial, y qué formato de declaración jurada y de manifiesto pide la provincia.
+
+## Entre Ríos y Paraná
+
+- **[Ley provincial 10.311](https://faolex.fao.org/docs/pdf/arg162565.pdf)** (gestión integral de RSU, 2014): prioriza la reducción en origen y la clasificación domiciliaria.
+- **Paraná**: existe el programa Ecovecinales de separación en origen.
+- **Ordenanza 9233/2014 de Paraná** (GIRSU, modificada por la 9931; [digesto](https://digesto.parana.gob.ar/norma/6029)). Es la ordenanza general de RSU y **no define umbrales de "gran generador"**: el art. 5.11 y el art. 13 remiten a una "normativa específica" que falta encontrar. Lo que impacta en el software:
+
+| Artículo | Qué dice | Cómo lo cubre el sistema |
+|---|---|---|
+| 5 | Residuos de gestión diferenciada: RAEE, aceites minerales, baterías de vehículos, medicamentos, pilas, termómetros, químicos (pinturas, solventes), neumáticos, lámparas, higiene personal | Tipos de residuo especial (`SUBTIPOS_REGU`) |
+| 6 | Etapas: generación, disposición inicial, recolección, transporte, tratamiento, transferencia, disposición final | `ETAPAS` del libro de movimientos |
+| 10 y 44 | El generador debe separar secos y húmedos; no hacerlo es falta leve (25 a 60 UF) | Calidad de separación por generador y recomendación en el portal |
+| 21 | Elementos de protección y capacitación para quien trabaja con residuos | Módulo Seguridad e higiene |
+| 27 y 28 | Habilitación y registro municipal de depósitos de acopio | Inscripciones de la cooperativa, impresas en el certificado |
+| 2.i, 34 y 35 | Reducir el rechazo e incluir a los recuperadores | Tasa de desvío; ingresos por recuperadores en el portal del municipio |
+
+Límite conocido: el portal del municipio muestra **toda** la recolección municipal que recibió cada cooperativa que lo atiende. Si una cooperativa recibe camiones de más de un municipio, hay que distinguir el municipio de origen en el ingreso.
+
+## Preguntas pendientes para la cooperativa y el municipio
+
+1. ¿Hay una ordenanza en Paraná que obligue a los grandes generadores a contratar la gestión diferenciada? ¿Con qué umbral (kg por día) y qué informes exige?
+2. ¿El municipio pide algún informe periódico a la cooperativa? ¿Con qué formato?
+3. ¿La cooperativa tiene o tramita alguna inscripción provincial (por ejemplo, como operador de REGU)?
+4. ¿Qué fuente usar para los factores de CO₂ de cada material? Se sugieren EPA WARM o DEFRA, citadas en el certificado.
+5. Confirmar los colores de plásticos, papel y cartón y vidrio con el texto oficial del Anexo II del Decreto 779/2022.
+
+## Referencias del sector
+
+- **Tonelada Justa** (FACCyR y Fundación Avina): plataforma que certifica la trazabilidad de materiales reciclables de cooperativas. Puede ser una integración futura o una referencia de formato de datos.
+- **RENATEP**: registro de trabajadores de la economía popular, que incluye recicladores. No está integrado.
