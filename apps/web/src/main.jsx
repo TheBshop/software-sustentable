@@ -14,6 +14,7 @@ import Tratamientos from './pages/operacion/Tratamientos.jsx';
 import Remitos from './pages/comercial/Remitos.jsx';
 import Afip from './pages/comercial/Afip.jsx';
 import Contabilidad from './pages/comercial/Contabilidad.jsx';
+import { ImportarOdoo } from './pages/plataforma/ImportarOdoo.jsx';
 import Compras from './pages/comercial/Compras.jsx';
 import Stock from './pages/comercial/Stock.jsx';
 import Contratos from './pages/comercial/Contratos.jsx';
@@ -119,6 +120,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
           <Route path="/comercial/remitos" element={<Remitos />} />
           <Route path="/comercial/afip" element={<Afip />} />
           <Route path="/comercial/contabilidad" element={<Contabilidad />} />
+          <Route path="/comercial/importar-odoo" element={<ImportarOdoo />} />
           <Route path="/comercial/compras" element={<Compras />} />
           <Route path="/comercial/stock" element={<Stock />} />
           <Route path="/comercial/contratos" element={<Contratos />} />

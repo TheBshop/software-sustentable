@@ -17,6 +17,7 @@ import { cumplimientoRouter } from './modules/cumplimiento/cumplimiento.routes.j
 import { resultadosRouter } from './modules/resultados/resultados.routes.js';
 import { afipRouter } from './modules/afip/afip.routes.js';
 import { manifiestosRouter, manifiestosPublicosRouter } from './modules/manifiestos/manifiestos.routes.js';
+import { importOdooRouter } from './modules/import-odoo/import-odoo.routes.js';
 import { withTenant, runWithoutTenant } from './lib/tenancy.js';
 import { errorHandler, notFound } from './middleware/error.js';
 import { crudRouter } from './lib/crud.js';
@@ -124,6 +125,7 @@ export function createApp(config = {}) {
   coopApi.use('/resultados', resultadosRouter);
   coopApi.use('/afip', afipRouter); // facturación electrónica AFIP (modo mock por defecto)
   coopApi.use('/manifiestos', manifiestosRouter); // manifiestos de traslado con recepción por QR
+  coopApi.use('/import/odoo', importOdooRouter); // importador de CSVs exportados desde Odoo
   coopApi.use('/clientes', accesoPortalRouter);
   coopApi.use('/clientes', constanciaRouter); // constancia anual de reciclado (Ley 25.612)
   coopApi.use('/normativa', normativaRouter); // marco normativo según la jurisdicción
