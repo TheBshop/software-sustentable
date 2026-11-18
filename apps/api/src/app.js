@@ -4,7 +4,17 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 import rateLimit from 'express-rate-limit';
 import { env } from './config/env.js';
-import { requireAuth, requireOrgTipo, requireRole } from './middleware/auth.js';
+import { requireAuth, requireOperador, requireRole } from './middleware/auth.js';
+import { adminRouter } from './modules/admin/admin.routes.js';
+import { auditoriaRouter } from './modules/admin/auditoria.routes.js';
+import { registrosRouter } from './modules/registros/registro.routes.js';
+import { panelRouter } from './modules/panel/panel.routes.js';
+import { procesoRouter, lotesRouter, remitosRouter, calidadRouter } from './modules/proceso/proceso.routes.js';
+import { rutinasRouter } from './modules/proceso/rutinas.js';
+import { tratamientosRouter } from './modules/tratamientos/tratamientos.js';
+import { comercialRouter, contratosRouter, conveniosRouter, ingresosCajaRouter } from './modules/comercial/comercial.routes.js';
+import { cumplimientoRouter } from './modules/cumplimiento/cumplimiento.routes.js';
+import { resultadosRouter } from './modules/resultados/resultados.routes.js';
 import { withTenant, runWithoutTenant } from './lib/tenancy.js';
 import { errorHandler, notFound } from './middleware/error.js';
 import { crudRouter } from './lib/crud.js';
@@ -79,13 +89,35 @@ export function createApp(config = {}) {
   // (lib/tenancy.js filtra cada consulta por esa cooperativa).
   app.use('/api', requireAuth, withTenant);
   app.use('/api/usuarios', usersRouter);
+  // Administración de la plataforma (alta de organizaciones y usuarios)
+  app.use('/api/admin', adminRouter);
   // Portal de clientes generadores (empresas y municipios). Versionado: lo pueden consumir terceros.
   app.use('/api/v1/portal', portalRouter);
 
-  // Zona de gestión: solo usuarios de cooperativas. Las empresas y municipios usan el portal.
+  // Zona de gestión: organizaciones operadoras (cooperativa, recicladora o municipio).
+  // Los generadores usan el portal.
   const coopApi = Router();
-  coopApi.use(requireOrgTipo('cooperativa'));
+  coopApi.use(requireOperador());
   app.use('/api', coopApi);
+  coopApi.use('/auditoria', requireRole('admin'), auditoriaRouter); // quién cargó qué
+  coopApi.use('/panel', panelRouter); // inicio: indicadores, avisos y primeros pasos según el perfil
+  coopApi.use('/registros', registrosRouter); // registros por perfil (catálogo REG)
+  // Proceso de planta: mapa, lotes (recepción → clasificado → enfardado → vendido), remitos, rutinas y calidad
+  coopApi.use('/proceso', procesoRouter);
+  coopApi.use('/lotes', lotesRouter);
+  coopApi.use('/remitos', remitosRouter);
+  coopApi.use('/rutinas', rutinasRouter);
+  coopApi.use('/calidad', calidadRouter);
+  coopApi.use('/tratamientos', tratamientosRouter); // partidas y parámetros por corriente de tratamiento
+  // Comercial: stock y margen, padrón, contratos de venta, convenio con el municipio, ingresos de caja
+  coopApi.use('/comercial', comercialRouter);
+  coopApi.use('/contratos', contratosRouter);
+  coopApi.use('/convenios', conveniosRouter);
+  coopApi.use('/ingresos-caja', requireRole('administracion'), ingresosCajaRouter);
+  // Cumplimiento: matriz, evidencias (archivo y vencimiento), autodiagnóstico
+  coopApi.use('/cumplimiento', cumplimientoRouter);
+  // Resultados: huella, emisiones evitadas, informe por cliente, memoria anual
+  coopApi.use('/resultados', resultadosRouter);
   coopApi.use('/clientes', accesoPortalRouter);
   coopApi.use('/clientes', constanciaRouter); // constancia anual de reciclado (Ley 25.612)
   coopApi.use('/normativa', normativaRouter); // marco normativo según la jurisdicción

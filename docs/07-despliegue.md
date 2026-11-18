@@ -118,3 +118,30 @@ Un backup que nunca se restauró no está probado.
 - [ ] Emitir un certificado y escanear el QR con otro teléfono: tiene que abrir `PUBLIC_WEB_URL/verificar/...`.
 - [ ] Enviar un certificado por mail (si se configuró SMTP).
 - [ ] El backup del día aparece en el bucket.
+
+## 8. Primer superadmin y alta de la cooperativa
+
+Después del primer despliegue, la base está vacía. Se crea un administrador de la plataforma y desde la web se dan de alta las organizaciones:
+
+1. En el servidor (o desde una máquina con `MONGO_URI` seteado): `npm run crear-superadmin -- vos@dominio.ar "Tu Nombre"`. Devuelve una contraseña: guardala en el gestor.
+2. Entrar a `PUBLIC_WEB_URL/login` con ese usuario. Lleva a `/plataforma` (Organizaciones).
+3. "Nueva organización" → tipo cooperativa / recicladora / municipio, nombre, CUIT, provincia, email y nombre del admin. El sistema genera una contraseña y la muestra una sola vez: copiala y pasásela a la cooperativa por un canal seguro.
+4. La cooperativa entra a `/login`, llega al asistente de configuración y arranca.
+
+## 9. Modo demostración (staging)
+
+Para mostrar el producto sin tocar datos reales, levantar un entorno aparte con `DEMO_MODE=true`. En Render: variable de entorno en el servicio `api-staging`.
+
+- Levanta prototipos de ejemplo al arrancar (cooperativas, recicladora y municipio) y habilita `/api/demo/prototipos` y `/api/demo/entrar`.
+- La pantalla `/demo` del panel permite entrar a cada prototipo con un clic (sin contraseña). **No activar DEMO_MODE en producción.**
+- Ideal para reuniones, capturas y el video institucional.
+
+## 10. Checklist del piloto
+
+Después de la primera cooperativa productiva:
+- [ ] Un balance mensual exportado a Excel y revisado con la administración.
+- [ ] Un remito y un certificado emitidos y verificados por QR.
+- [ ] Un convenio con el municipio cargado y con al menos un mes de obligaciones.
+- [ ] La matriz de cumplimiento al 50 % (evidencias de las más importantes cargadas).
+- [ ] La memoria anual descargada en PDF y Excel.
+- [ ] Backup del día y restauración probada en un entorno aparte.
