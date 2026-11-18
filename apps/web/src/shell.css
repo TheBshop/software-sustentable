@@ -278,3 +278,9 @@ td.mono { white-space: nowrap; }
   .land-puntos { grid-template-columns: 1fr; }
   .land-prod, .land-demo { padding: 48px 20px; }
 }
+
+/* Página pública de recepción de manifiestos */
+.recibir-pant { min-height: 100vh; background: var(--fondo); padding: 20px; display: flex; justify-content: center; }
+.recibir-pant .card { max-width: 700px; width: 100%; display: flex; flex-direction: column; gap: 14px; padding: 20px; }
+.recibir-firma { border: 1px dashed var(--borde); border-radius: 8px; padding: 6px; }
+.recibir-firma canvas { width: 100%; max-width: 100%; height: 160px; background: #fff; display: block; }

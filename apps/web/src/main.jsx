@@ -40,6 +40,8 @@ import Clasificar from './pages/Clasificar.jsx';
 import Recuperadores from './pages/Recuperadores.jsx';
 import PortalPedidos from './pages/portal/Pedidos.jsx';
 import VerificarCertificado from './pages/VerificarCertificado.jsx';
+import RecibirManifiesto from './pages/RecibirManifiesto.jsx';
+import Manifiestos from './pages/operacion/Manifiestos.jsx';
 import PortalInicio from './pages/portal/Inicio.jsx';
 import PortalRetiros from './pages/portal/Retiros.jsx';
 import PortalCertificados from './pages/portal/Certificados.jsx';
@@ -103,6 +105,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
         <Route path="/demo" element={<main className="demo-main"><Demo /></main>} />
         {/* Página pública a la que apunta el QR del certificado */}
         <Route path="/verificar/:codigo" element={<VerificarCertificado />} />
+        <Route path="/recibir/:codigo" element={<RecibirManifiesto />} />
         <Route path="/bienvenida" element={<Zona><Bienvenida /></Zona>} />
         <Route element={<Zona><Shell /></Zona>}>
           <Route path="/panel" element={<Panel />} />
@@ -112,6 +115,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
           <Route path="/operacion/registros" element={<Registros />} />
           <Route path="/operacion/rutinas" element={<Rutinas />} />
           <Route path="/operacion/tratamientos" element={<Tratamientos />} />
+          <Route path="/operacion/manifiestos" element={<Manifiestos />} />
           <Route path="/comercial/remitos" element={<Remitos />} />
           <Route path="/comercial/afip" element={<Afip />} />
           <Route path="/comercial/contabilidad" element={<Contabilidad />} />

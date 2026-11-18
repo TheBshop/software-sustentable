@@ -16,6 +16,7 @@ import { comercialRouter, contratosRouter, conveniosRouter, ingresosCajaRouter }
 import { cumplimientoRouter } from './modules/cumplimiento/cumplimiento.routes.js';
 import { resultadosRouter } from './modules/resultados/resultados.routes.js';
 import { afipRouter } from './modules/afip/afip.routes.js';
+import { manifiestosRouter, manifiestosPublicosRouter } from './modules/manifiestos/manifiestos.routes.js';
 import { withTenant, runWithoutTenant } from './lib/tenancy.js';
 import { errorHandler, notFound } from './middleware/error.js';
 import { crudRouter } from './lib/crud.js';
@@ -83,6 +84,8 @@ export function createApp(config = {}) {
   );
   app.use('/api/auth', authRouter);
   app.use('/api/public/certificados', publicCertificatesRouter);
+  // Recepción pública de manifiestos (QR del PDF → firma + geolocalización)
+  app.use('/api/public/manifiestos', (_req, _res, next) => runWithoutTenant(next), manifiestosPublicosRouter);
   if (env.demoMode) app.use('/api/demo', (_req, _res, next) => runWithoutTenant(next), demoRouter);
 
   // ---- Privadas ----
@@ -120,6 +123,7 @@ export function createApp(config = {}) {
   // Resultados: huella, emisiones evitadas, informe por cliente, memoria anual
   coopApi.use('/resultados', resultadosRouter);
   coopApi.use('/afip', afipRouter); // facturación electrónica AFIP (modo mock por defecto)
+  coopApi.use('/manifiestos', manifiestosRouter); // manifiestos de traslado con recepción por QR
   coopApi.use('/clientes', accesoPortalRouter);
   coopApi.use('/clientes', constanciaRouter); // constancia anual de reciclado (Ley 25.612)
   coopApi.use('/normativa', normativaRouter); // marco normativo según la jurisdicción

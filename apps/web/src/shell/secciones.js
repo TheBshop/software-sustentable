@@ -34,6 +34,7 @@ export const SECCIONES = [
       { to: '/operacion/planta', label: 'Ingresos y stock', perfiles: PLANTA },
       { to: '/operacion/rutinas', label: 'Rutinas', perfiles: PLANTA },
       { to: '/operacion/tratamientos', label: 'Tratamientos' },
+      { to: '/operacion/manifiestos', label: 'Manifiestos', perfiles: PLANTA },
       { to: '/operacion/recuperadores', label: 'Recuperadores', perfiles: PLANTA, roles: GESTIONA },
       { to: '/operacion/productividad', label: 'Productividad', perfiles: PLANTA, roles: GESTIONA },
       { to: '/operacion/seguridad', label: 'Seguridad e higiene', roles: ADMINISTRA },
