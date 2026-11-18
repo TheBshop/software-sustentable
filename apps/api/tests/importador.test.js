@@ -1,7 +1,7 @@
 import { beforeAll, afterAll, beforeEach, describe, it, expect } from 'vitest';
 import mongoose from 'mongoose';
 import ExcelJS from 'exceljs';
-import { MongoMemoryServer } from 'mongodb-memory-server';
+import { MongoMemoryReplSet } from 'mongodb-memory-server';
 import { buildTemplate, parseWorkbook, applyImport } from '../src/import/importer.js';
 import { Material } from '../src/modules/materials/material.model.js';
 import { Client } from '../src/modules/clients/client.model.js';
@@ -11,7 +11,7 @@ import { enterTenant } from '../src/lib/tenancy.js';
 let mongo;
 let coop;
 beforeAll(async () => {
-  mongo = await MongoMemoryServer.create();
+  mongo = await MongoMemoryReplSet.create({ replSet: { count: 1 } });
   await mongoose.connect(mongo.getUri());
   coop = await Organization.create({ tipo: 'cooperativa', nombre: 'Coop Import', cuit: '30700000097' });
 });

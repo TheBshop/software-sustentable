@@ -13,12 +13,15 @@
 //   - query.setOptions({ sinTenant })  → una consulta puntual
 import { AsyncLocalStorage } from 'node:async_hooks';
 import mongoose from 'mongoose';
+import { auditPlugin } from './auditoria.js';
 
 const als = new AsyncLocalStorage();
 
 export const runWithTenant = (coop, fn) => als.run({ coop: String(coop) }, fn);
 export const runWithoutTenant = (fn) => als.run({ sinTenant: true }, fn);
 export const currentTenant = () => als.getStore()?.coop ?? null;
+/** Usuario del request en curso (para el registro de auditoría). */
+export const currentUser = () => als.getStore()?.usuario ?? null;
 
 /**
  * Fija la cooperativa para el resto de la ejecución asíncrona actual (tests y scripts).
@@ -28,8 +31,9 @@ export const enterTenant = (coop) => als.enterWith({ coop: String(coop) });
 
 /** Middleware (después de requireAuth): fija la cooperativa del usuario para todo el request. */
 export function withTenant(req, _res, next) {
-  const coop = req.user?.orgTipo === 'cooperativa' ? req.user.org : null;
-  als.run(coop ? { coop } : {}, next);
+  const rol = req.user?.orgRol ?? (req.user?.orgTipo === 'cooperativa' ? 'operador' : null);
+  const coop = rol === 'operador' ? req.user.org : null;
+  als.run(coop ? { coop, usuario: req.user.sub } : {}, next);
 }
 
 const SKIP = Symbol('sinTenant');
@@ -82,4 +86,7 @@ export function tenantPlugin(schema) {
     for (const d of Array.isArray(docs) ? docs : [docs]) if (d && !d.coop && coop) d.coop = coop;
     next();
   });
+
+  // Quién cargó, cambió o borró qué (lib/auditoria.js)
+  schema.plugin(auditPlugin);
 }

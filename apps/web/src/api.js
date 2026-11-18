@@ -12,7 +12,9 @@ export const getUser = () => {
   }
 };
 export const setUser = (u) => (u ? localStorage.setItem('user', JSON.stringify(u)) : localStorage.removeItem('user'));
-export const esCooperativa = (u = getUser()) => u?.organizacion?.tipo === 'cooperativa';
+/** Operadora: cooperativa, recicladora o municipio que gestiona residuos (los generadores van al portal). */
+export const esOperador = (u = getUser()) => (u?.organizacion?.rol ?? (u?.organizacion?.tipo === 'cooperativa' ? 'operador' : 'generador')) === 'operador';
+export const esCooperativa = esOperador; // nombre anterior
 
 export function logout() {
   setToken(null);

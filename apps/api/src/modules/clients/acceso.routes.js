@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { z } from 'zod';
-import { Client } from './client.model.js';
-import { Organization } from '../organizations/organization.model.js';
+import { Client, esGenerador } from './client.model.js';
+import { Organization, esOperador } from '../organizations/organization.model.js';
 import { User } from '../users/user.model.js';
 import { requireRole } from '../../middleware/auth.js';
 import { HttpError } from '../../middleware/error.js';
@@ -23,18 +23,18 @@ accesoPortalRouter.post('/:id/acceso-portal', requireRole('administracion'), asy
 
   const cliente = await Client.findById(req.params.id);
   if (!cliente) throw new HttpError(404, 'Cliente no encontrado');
-  if (cliente.tipo === 'comprador') throw new HttpError(422, 'El portal es para clientes generadores, no para compradores');
+  if (!esGenerador(cliente)) throw new HttpError(422, 'El portal es para clientes generadores, no para compradores ni proveedores');
   if (await User.exists({ email: data.email.toLowerCase() })) throw new HttpError(409, 'Ya existe un usuario con ese email');
 
   let org = cliente.organizacion ? await Organization.findById(cliente.organizacion) : null;
   let vinculadaExistente = Boolean(org);
   if (!org && cliente.cuit) {
     org = await Organization.findOne({ cuit: normalizarCuit(cliente.cuit) });
-    if (org?.tipo === 'cooperativa') throw new HttpError(409, 'Ese CUIT corresponde a una cooperativa de la plataforma');
+    if (org && esOperador(org)) throw new HttpError(409, 'Ese CUIT corresponde a una organización que opera en la plataforma');
     vinculadaExistente = Boolean(org);
   }
   if (!org) {
-    org = await Organization.create({ tipo: data.tipo, nombre: cliente.razonSocial, ...(cliente.cuit && { cuit: normalizarCuit(cliente.cuit) }) });
+    org = await Organization.create({ tipo: data.tipo, rol: 'generador', nombre: cliente.razonSocial, ...(cliente.cuit && { cuit: normalizarCuit(cliente.cuit) }) });
   }
   if (!cliente.organizacion) {
     cliente.organizacion = org._id;

@@ -1,7 +1,7 @@
 import { beforeAll, afterAll, describe, it, expect } from 'vitest';
 import request from 'supertest';
 import mongoose from 'mongoose';
-import { MongoMemoryServer } from 'mongodb-memory-server';
+import { MongoMemoryReplSet } from 'mongodb-memory-server';
 import { PutObjectCommand } from '@aws-sdk/client-s3';
 import { createApp } from '../src/app.js';
 import { checkProductionEnv, env } from '../src/config/env.js';
@@ -20,7 +20,7 @@ const tokens = {};
 let retiro;
 
 beforeAll(async () => {
-  mongo = await MongoMemoryServer.create();
+  mongo = await MongoMemoryReplSet.create({ replSet: { count: 1 } });
   await mongoose.connect(mongo.getUri());
   const app = createApp();
   const coop = await Organization.create({ tipo: 'cooperativa', nombre: 'Coop Fotos', cuit: '30700000098' });

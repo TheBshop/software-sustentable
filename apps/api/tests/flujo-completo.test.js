@@ -2,7 +2,7 @@ import { beforeAll, afterAll, describe, it, expect } from 'vitest';
 import request from 'supertest';
 import mongoose from 'mongoose';
 import crypto from 'node:crypto';
-import { MongoMemoryServer } from 'mongodb-memory-server';
+import { MongoMemoryReplSet } from 'mongodb-memory-server';
 import { createApp } from '../src/app.js';
 import { User } from '../src/modules/users/user.model.js';
 import { Organization } from '../src/modules/organizations/organization.model.js';
@@ -14,7 +14,7 @@ let coop;
 const auth = () => ({ Authorization: `Bearer ${token}` });
 
 beforeAll(async () => {
-  mongo = await MongoMemoryServer.create();
+  mongo = await MongoMemoryReplSet.create({ replSet: { count: 1 } });
   await mongoose.connect(mongo.getUri());
   app = createApp();
   coop = await Organization.create({ tipo: 'cooperativa', nombre: 'Coop Test', cuit: '30700000099' });

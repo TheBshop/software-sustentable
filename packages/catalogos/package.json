@@ -1,0 +1,11 @@
+{
+  "name": "@nueva-vida/catalogos",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Catálogos de referencia compartidos por la API y la web: normativa, municipios, corrientes, registros, factores de emisión y matriz de cumplimiento",
+  "type": "module",
+  "main": "src/index.js",
+  "exports": {
+    ".": "./src/index.js"
+  }
+}

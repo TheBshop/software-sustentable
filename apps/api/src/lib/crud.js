@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { HttpError } from '../middleware/error.js';
 import { requireRole } from '../middleware/auth.js';
 import { escapeRegex } from './validation.js';
+import { enTransaccion } from './transacciones.js';
 
 /**
  * Genera un router REST estándar (list / get / create / update / delete) para un modelo.
@@ -46,9 +47,12 @@ export function crudRouter(Model, { createSchema, updateSchema, searchFields = [
   router.post('/', canWrite, async (req, res) => {
     const data = createSchema.parse(req.body);
     if (beforeCreate) await beforeCreate(data, req);
-    const doc = await Model.create(data);
-    // afterCreate puede devolver datos extra para la respuesta (ej. avisos de precio)
-    const extra = afterCreate ? await afterCreate(doc, req) : null;
+    // Alta y efectos (movimientos de stock, auditoría) en una transacción: todo o nada
+    const { doc, extra } = await enTransaccion(async () => {
+      const doc = await Model.create(data);
+      // afterCreate puede devolver datos extra para la respuesta (ej. avisos de precio)
+      return { doc, extra: afterCreate ? await afterCreate(doc, req) : null };
+    });
     res.status(201).json(extra && typeof extra === 'object' && !Array.isArray(extra) ? { ...doc.toJSON(), ...extra } : doc);
   });
 

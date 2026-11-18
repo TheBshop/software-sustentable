@@ -1,51 +1,34 @@
-// Da de alta una cooperativa en la plataforma con su primer administrador.
+// Da de alta una organización operadora (cooperativa, recicladora o municipio) con su primer administrador.
 //
-//   npm run crear-cooperativa -- <cuit> "<nombre>" <email-admin> "<nombre-admin>" [corrientes] [provincia] [municipio] [perfil]
-//   provincia y municipio: claves de modules/normativa/jurisdicciones.js (ej. entre_rios parana)
-//   perfil: cooperativa (por defecto), empresa, planta_publica o asociacion
+//   npm run crear-cooperativa -- <cuit> "<nombre>" <email-admin> "<nombre-admin>" [corrientes] [provincia] [municipio] [perfil] [tipo]
+//   provincia y municipio: claves del paquete @nueva-vida/catalogos (ej. entre_rios parana)
+//   perfil: cooperativa, empresa, planta_publica o asociacion (por defecto, según el tipo)
+//   tipo: cooperativa (por defecto), recicladora o municipio
 //   corrientes habilitadas, separadas por coma (por defecto: rsu). Ej: rsu,regu
 //
 // La contraseña del admin se genera al azar y se muestra una sola vez.
+// También se puede hacer desde la administración de la plataforma (/api/admin).
 import mongoose from 'mongoose';
 import { env } from '../config/env.js';
-import { Organization, CORRIENTES } from '../modules/organizations/organization.model.js';
-import { User } from '../modules/users/user.model.js';
-import { randomPassword, normalizarCuit } from '../lib/passwords.js';
-import { PROVINCIAS } from '../modules/normativa/jurisdicciones.js';
+import { altaOperador } from '../modules/organizations/alta.service.js';
+import { normalizarCuit } from '../lib/passwords.js';
 
-const [cuit, nombre, email, nombreAdmin, corrientesArg = 'rsu', provincia, municipio, perfil = 'cooperativa'] = process.argv.slice(2);
+const [cuit, nombre, email, nombreAdmin, corrientesArg = 'rsu', provincia, municipio, perfil, tipo = 'cooperativa'] = process.argv.slice(2);
 if (!cuit || !nombre || !email || !nombreAdmin) {
-  console.error('Uso: npm run crear-cooperativa -- <cuit> "<nombre>" <email-admin> "<nombre-admin>" [rsu,regu,...] [provincia] [municipio] [perfil]');
+  console.error('Uso: npm run crear-cooperativa -- <cuit> "<nombre>" <email-admin> "<nombre-admin>" [rsu,regu,...] [provincia] [municipio] [perfil] [tipo]');
   process.exit(1);
 }
 const corrientes = corrientesArg.split(',').map((c) => c.trim());
-const invalidas = corrientes.filter((c) => !CORRIENTES.includes(c));
-if (invalidas.length) {
-  console.error(`Corrientes inválidas: ${invalidas.join(', ')}. Opciones: ${CORRIENTES.join(', ')}`);
-  process.exit(1);
-}
-if (provincia && !PROVINCIAS[provincia]) {
-  console.error(`Provincia desconocida: ${provincia}. Opciones: ${Object.keys(PROVINCIAS).join(', ')}`);
-  process.exit(1);
-}
-if (!['cooperativa', 'empresa', 'planta_publica', 'asociacion'].includes(perfil)) {
-  console.error('Perfil inválido: cooperativa, empresa, planta_publica o asociacion');
-  process.exit(1);
-}
 if (corrientes.includes('peligroso')) {
-  console.warn('⚠ Corriente "peligroso": la cooperativa debe estar inscripta como operador (Ley 24.051). Cargá el registro en habilitaciones.registros.');
+  console.warn('⚠ Corriente "peligroso": la organización debe estar inscripta como operador (Ley 24.051). Cargá el registro en habilitaciones.registros.');
 }
 
 await mongoose.connect(env.mongoUri);
 try {
-  if (await Organization.exists({ cuit: normalizarCuit(cuit) })) throw new Error(`Ya existe una organización con CUIT ${cuit}`);
-  if (await User.exists({ email: email.toLowerCase() })) throw new Error(`Ya existe un usuario con email ${email}`);
-  const coop = await Organization.create({ tipo: 'cooperativa', perfil, nombre, cuit: normalizarCuit(cuit), habilitaciones: { corrientes }, ...(provincia && { jurisdiccion: { provincia, municipio } }) });
-  const password = randomPassword();
-  await User.create({ nombre: nombreAdmin, email, rol: 'admin', organizacion: coop._id, passwordHash: await User.hashPassword(password) });
-  console.log(`✓ Cooperativa creada: ${nombre} (habilitada para: ${corrientes.join(', ')})`);
-  console.log(`✓ Admin: ${email}`);
-  console.log(`  Contraseña: ${password}`);
+  const { org, admin } = await altaOperador({ tipo, nombre, cuit, perfil: perfil || undefined, corrientes, provincia, municipio, admin: { email, nombre: nombreAdmin } });
+  console.log(`✓ Organización creada: ${org.nombre} (${org.tipo}, habilitada para: ${corrientes.join(', ')})`);
+  console.log(`✓ Admin: ${admin.email}`);
+  console.log(`  Contraseña: ${admin.password}`);
   console.log('  Guardala ahora: no se vuelve a mostrar.');
   console.log(`\nSiguiente paso: cargar sus materiales y clientes con npm run importar -- revisar planilla.xlsx --coop ${normalizarCuit(cuit)}`);
 } catch (err) {

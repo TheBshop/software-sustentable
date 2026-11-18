@@ -1,7 +1,7 @@
 // Levanta la API con una MongoDB temporal en memoria y datos de ejemplo.
 // No necesita Docker ni Mongo instalado. Los datos se pierden al cortar el proceso.
 //   npm run dev:memoria
-import { MongoMemoryServer } from 'mongodb-memory-server';
+import { MongoMemoryReplSet } from 'mongodb-memory-server';
 import mongoose from 'mongoose';
 import { env } from './config/env.js';
 import { createApp } from './app.js';
@@ -9,7 +9,7 @@ import { seedDatabase, SEED_USUARIOS } from './seed-data.js';
 import { crearTodos } from './demo/prototipos.js';
 import { runWithoutTenant } from './lib/tenancy.js';
 
-const mongo = await MongoMemoryServer.create();
+const mongo = await MongoMemoryReplSet.create({ replSet: { count: 1 } });
 await mongoose.connect(mongo.getUri());
 await seedDatabase();
 // Con DEMO_MODE=true se cargan además los prototipos de todas las organizaciones relevadas

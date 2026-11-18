@@ -1,9 +1,16 @@
 import mongoose from 'mongoose';
 
 // Organizaciones de la plataforma.
-//   cooperativa → presta el servicio; es la dueña de sus datos operativos (ver lib/tenancy.js)
-//   empresa / municipio → clientes generadores; entran al portal (/api/v1/portal)
-export const TIPOS_ORG = ['cooperativa', 'empresa', 'municipio'];
+//   rol 'operador'  → contrata el software y gestiona residuos; es dueña de sus datos (ver lib/tenancy.js).
+//                     Tipos: cooperativa, recicladora (empresa de reciclaje) o municipio.
+//   rol 'generador' → cliente de un operador (comercio, industria, institución o dependencia
+//                     municipal); entra gratis al portal (/api/v1/portal). Tipos: empresa o municipio.
+//   rol 'plataforma' → la organización de los administradores del SaaS (una sola).
+export const TIPOS_ORG = ['cooperativa', 'recicladora', 'municipio', 'empresa', 'plataforma'];
+export const ROLES_ORG = ['operador', 'generador', 'plataforma'];
+/** Rol por defecto: cooperativas y recicladoras operan; empresas y municipios sin rol son generadores (compatibilidad). */
+export const rolPorDefecto = (tipo) => (tipo === 'plataforma' ? 'plataforma' : ['cooperativa', 'recicladora'].includes(tipo) ? 'operador' : 'generador');
+export const esOperador = (org) => (org?.rol ?? rolPorDefecto(org?.tipo)) === 'operador';
 
 // Corrientes de residuos (ver docs/08-marco-normativo.md)
 //   rsu           Ley 25.916 — residuos domiciliarios / sólidos urbanos
@@ -16,6 +23,14 @@ export const CORRIENTES = ['rsu', 'regu', 'peligroso', 'industrial', 'fitosanita
 const organizationSchema = new mongoose.Schema(
   {
     tipo: { type: String, enum: TIPOS_ORG, required: true },
+    rol: { type: String, enum: ROLES_ORG },
+    // Configuración que elige la organización al empezar (asistente) y edita después
+    configuracion: {
+      residuos: { type: [String], default: undefined }, // secos, organicos, raee… (catálogo RESIDUOS)
+      corrientes: { type: [String], default: undefined }, // tratamientos que hace (catálogo CORR)
+      onboarding: { type: Boolean, default: false }, // terminó el asistente de configuración
+      etapas: { type: mongoose.Schema.Types.Mixed }, // por corriente: índices de las etapas que hace
+    },
     nombre: { type: String, required: true, trim: true },
     cuit: { type: String, trim: true, unique: true, sparse: true },
     // Solo cooperativas: corrientes que está habilitada a recibir y gestionar.
@@ -59,7 +74,8 @@ const organizationSchema = new mongoose.Schema(
 );
 
 organizationSchema.pre('validate', function () {
-  if (this.tipo === 'cooperativa' && !this.habilitaciones?.corrientes) {
+  if (!this.rol) this.rol = rolPorDefecto(this.tipo);
+  if (this.rol === 'operador' && !this.habilitaciones?.corrientes) {
     this.set('habilitaciones.corrientes', ['rsu']);
   }
 });

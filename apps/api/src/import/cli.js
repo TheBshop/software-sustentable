@@ -42,7 +42,7 @@ if (cmd === 'plantilla') {
     process.exit(1);
   }
   await mongoose.connect(env.mongoUri);
-  const coop = await Organization.findOne({ cuit: normalizarCuit(coopCuit), tipo: 'cooperativa' });
+  const coop = await Organization.findOne({ cuit: normalizarCuit(coopCuit), $or: [{ rol: 'operador' }, { tipo: 'cooperativa' }] });
   if (!coop) {
     console.error(`No existe una cooperativa con CUIT ${coopCuit}`);
     await mongoose.disconnect();

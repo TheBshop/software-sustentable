@@ -1,14 +1,14 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import { User } from './user.model.js';
-import { requireAuth, requireRole, rolesPara, signToken } from '../../middleware/auth.js';
+import { requireAuth, requireRole, rolesPara, rolDeToken, signToken } from '../../middleware/auth.js';
 import { HttpError } from '../../middleware/error.js';
 
 export const authRouter = Router();
 
 export const sesion = (user, org) => ({
   token: signToken(user, org),
-  user: { id: user._id, nombre: user.nombre, rol: user.rol, organizacion: { id: org._id, nombre: org.nombre, tipo: org.tipo } },
+  user: { id: user._id, nombre: user.nombre, rol: user.rol, organizacion: { id: org._id, nombre: org.nombre, tipo: org.tipo, rol: org.rol ?? (org.tipo === 'plataforma' ? 'plataforma' : ['cooperativa', 'recicladora'].includes(org.tipo) ? 'operador' : 'generador') } },
 });
 
 authRouter.post('/login', async (req, res) => {
@@ -31,7 +31,7 @@ usersRouter.get('/', requireRole('cliente_admin'), async (req, res) => {
 
 usersRouter.post('/', requireRole('cliente_admin'), async (req, res) => {
   const data = z
-    .object({ nombre: z.string().min(2), email: z.string().email(), password: z.string().min(8), rol: z.enum(rolesPara(req.user.orgTipo)) })
+    .object({ nombre: z.string().min(2), email: z.string().email(), password: z.string().min(8), rol: z.enum(rolesPara(rolDeToken(req.user))) })
     .parse(req.body);
   const user = await User.create({ ...data, organizacion: req.user.org, passwordHash: await User.hashPassword(data.password) });
   res.status(201).json({ id: user._id, nombre: user.nombre, email: user.email, rol: user.rol });
