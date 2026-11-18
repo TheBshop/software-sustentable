@@ -4,10 +4,10 @@ import { useEffect, useState } from 'react';
 import { api, esOperador, getToken, getUser, setToken, setUser } from '../api.js';
 
 const PUNTOS = [
-  { t: 'Registros al día', s: 'Combustible, personal, EPP, capacitaciones… con quién cargó cada cosa.' },
-  { t: 'Trazabilidad real', s: 'De la agenda de retiro al remito y al certificado verde con QR.' },
-  { t: 'Cumplimiento guiado', s: 'Matriz por perfil, jurisdicción y corriente, con evidencias y vencimientos.' },
-  { t: 'Resultados medibles', s: 'Huella de carbono (SNIGEI-AR), emisiones evitadas (EPA WARM), memoria anual.' },
+  { t: 'Especialistas en RSU argentino', s: 'Un sistema pensado para cooperativas, recicladoras y municipios de Argentina, no un ERP genérico adaptado.' },
+  { t: 'Trazabilidad end-to-end', s: 'Del pedido al retiro, al lote, al remito y al certificado verde con QR público.' },
+  { t: 'Cumplimiento guiado por jurisdicción', s: 'Matriz con las leyes nacionales, provinciales y municipales que te aplican, y evidencias con vencimientos.' },
+  { t: 'Contador contento', s: 'Libro IVA Ventas y Compras, Mayor y balance exportables. Facturación electrónica AFIP integrada.' },
 ];
 
 function Prototipos({ onEntrar }) {
@@ -73,9 +73,9 @@ export default function Landing() {
 
       <section className="land-hero">
         <div className="land-hero-txt">
-          <span className="land-eyebrow">SaaS para cooperativas, recicladoras y municipios</span>
+          <span className="land-eyebrow">SaaS especializada en gestión de residuos — Argentina</span>
           <h1>El reciclaje, en orden y al día.</h1>
-          <p className="land-lead">La plataforma que transforma la operación de los residuos sólidos urbanos: trazabilidad, cumplimiento legal y resultados medibles, en un solo lugar.</p>
+          <p className="land-lead">La plataforma hecha para cooperativas, empresas recicladoras y municipios argentinos. Diseñada con la normativa nacional, provincial y municipal como base, no como anexo. Reemplaza las planillas, el ERP genérico y el cumplimiento improvisado.</p>
           <div className="land-ctas">
             <button type="button" className="primary" onClick={() => setAbrirDemo(true)}>Probar la demo</button>
             <a href="#demo" className="secondary button">Ver el video</a>
@@ -98,8 +98,10 @@ export default function Landing() {
         <div className="land-grid">
           <article><h3>Operación</h3><p>Pedidos, retiros, pesaje, lotes (recepción → clasificado → enfardado → venta), rutinas de planta y tratamientos por corriente.</p></article>
           <article><h3>Comercial</h3><p>Compras, ventas con precio de referencia, stock y margen, contratos, remitos numerados, facturación y convenio con el municipio.</p></article>
-          <article><h3>Métricas</h3><p>KPIs con variación vs. período anterior, desglose por fracción y por material, huella de carbono y memoria anual en PDF y Excel.</p></article>
-          <article><h3>Cumplimiento</h3><p>Matriz por perfil, jurisdicción y corriente, con evidencias (archivo y vencimiento). Autodiagnóstico, normativa y clasificador.</p></article>
+          <article><h3>Métricas y sustentabilidad</h3><p>KPIs con variación vs. período anterior, desglose por fracción, huella de carbono (SNIGEI-AR 2025), emisiones evitadas (EPA WARM) y memoria anual en PDF y Excel.</p></article>
+          <article><h3>Cumplimiento argentino</h3><p>Matriz con las leyes y ordenanzas de tu provincia y municipio, con evidencias y vencimientos. Autodiagnóstico, normativa y clasificador en 3 niveles.</p></article>
+          <article><h3>Contabilidad lista para AFIP</h3><p>Facturación electrónica (Factura A/B/C/E con CAE), Libro IVA Ventas y Compras, Mayor de cuentas, exportables en el formato que usa tu contador.</p></article>
+          <article><h3>Multi-organización</h3><p>Pensado para cooperativas chicas, federaciones y municipios con varias filiales. Cada organización tiene sus datos aislados; el superadmin consolida.</p></article>
         </div>
       </section>
 
