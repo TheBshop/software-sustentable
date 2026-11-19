@@ -14,6 +14,7 @@ import Tratamientos from './pages/operacion/Tratamientos.jsx';
 import Remitos from './pages/comercial/Remitos.jsx';
 import Afip from './pages/comercial/Afip.jsx';
 import Contabilidad from './pages/comercial/Contabilidad.jsx';
+import Presupuestos from './pages/comercial/Presupuestos.jsx';
 import { ImportarOdoo } from './pages/plataforma/ImportarOdoo.jsx';
 import Compras from './pages/comercial/Compras.jsx';
 import Stock from './pages/comercial/Stock.jsx';
@@ -34,6 +35,7 @@ import Normativa from './pages/Normativa.jsx';
 import Sustentabilidad from './pages/resultados/Sustentabilidad.jsx';
 import Matriz from './pages/cumplimiento/Matriz.jsx';
 import Autodiagnostico from './pages/cumplimiento/Autodiagnostico.jsx';
+import Snigei from './pages/cumplimiento/Snigei.jsx';
 import Demo from './pages/Demo.jsx';
 import Productividad from './pages/Productividad.jsx';
 import Agenda from './pages/Agenda.jsx';
@@ -120,6 +122,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
           <Route path="/comercial/remitos" element={<Remitos />} />
           <Route path="/comercial/afip" element={<Afip />} />
           <Route path="/comercial/contabilidad" element={<Contabilidad />} />
+          <Route path="/comercial/presupuestos" element={<Presupuestos />} />
           <Route path="/comercial/importar-odoo" element={<ImportarOdoo />} />
           <Route path="/comercial/compras" element={<Compras />} />
           <Route path="/comercial/stock" element={<Stock />} />
@@ -141,6 +144,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
           <Route path="/resultados/sustentabilidad" element={<Sustentabilidad />} />
           <Route path="/cumplimiento" element={<Matriz />} />
           <Route path="/cumplimiento/autodiagnostico" element={<Autodiagnostico />} />
+          <Route path="/cumplimiento/snigei" element={<Snigei />} />
           <Route path="/cumplimiento/normativa" element={<Normativa />} />
           <Route path="/cumplimiento/certificados" element={<Certificados />} />
           <Route path="/cumplimiento/clasificar" element={<Clasificar />} />

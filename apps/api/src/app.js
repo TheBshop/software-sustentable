@@ -18,6 +18,8 @@ import { resultadosRouter } from './modules/resultados/resultados.routes.js';
 import { afipRouter } from './modules/afip/afip.routes.js';
 import { manifiestosRouter, manifiestosPublicosRouter } from './modules/manifiestos/manifiestos.routes.js';
 import { importOdooRouter } from './modules/import-odoo/import-odoo.routes.js';
+import { presupuestosRouter } from './modules/presupuestos/presupuestos.routes.js';
+import { snigeiRouter } from './modules/snigei/snigei.routes.js';
 import { withTenant, runWithoutTenant } from './lib/tenancy.js';
 import { errorHandler, notFound } from './middleware/error.js';
 import { crudRouter } from './lib/crud.js';
@@ -126,6 +128,8 @@ export function createApp(config = {}) {
   coopApi.use('/afip', afipRouter); // facturación electrónica AFIP (modo mock por defecto)
   coopApi.use('/manifiestos', manifiestosRouter); // manifiestos de traslado con recepción por QR
   coopApi.use('/import/odoo', importOdooRouter); // importador de CSVs exportados desde Odoo
+  coopApi.use('/presupuestos', presupuestosRouter); // presupuestos (cotizaciones) previos a factura
+  coopApi.use('/snigei', snigeiRouter); // reporte mensual tipo SNIGEI (toneladas por corriente/tratamiento)
   coopApi.use('/clientes', accesoPortalRouter);
   coopApi.use('/clientes', constanciaRouter); // constancia anual de reciclado (Ley 25.612)
   coopApi.use('/normativa', normativaRouter); // marco normativo según la jurisdicción
