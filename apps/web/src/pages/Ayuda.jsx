@@ -1,5 +1,5 @@
 // Ayuda en línea: tutoriales cortos por sección y contacto de soporte.
-const SOPORTE_WPP = '5493435551234'; // TODO: reemplazar con el número real de soporte
+const SOPORTE_WPP = '5493435254141'; // TODO: reemplazar con el número real de soporte
 
 const TUTORIALES = [
   { titulo: 'Primeros pasos', pasos: [
