@@ -58,7 +58,6 @@ services:
   - type: web
     name: gestion-rsu-web
     runtime: static
-    plan: starter
     branch: main
     buildCommand: npm ci && npm run build --workspace apps/web
     staticPublishPath: apps/web/dist
