@@ -14,6 +14,7 @@ import Tratamientos from './pages/operacion/Tratamientos.jsx';
 import Remitos from './pages/comercial/Remitos.jsx';
 import Afip from './pages/comercial/Afip.jsx';
 import Contabilidad from './pages/comercial/Contabilidad.jsx';
+import Presupuestos from './pages/comercial/Presupuestos.jsx';
 import { ImportarOdoo } from './pages/plataforma/ImportarOdoo.jsx';
 import Compras from './pages/comercial/Compras.jsx';
 import Stock from './pages/comercial/Stock.jsx';
@@ -34,6 +35,7 @@ import Normativa from './pages/Normativa.jsx';
 import Sustentabilidad from './pages/resultados/Sustentabilidad.jsx';
 import Matriz from './pages/cumplimiento/Matriz.jsx';
 import Autodiagnostico from './pages/cumplimiento/Autodiagnostico.jsx';
+import Snigei from './pages/cumplimiento/Snigei.jsx';
 import Demo from './pages/Demo.jsx';
 import Productividad from './pages/Productividad.jsx';
 import Agenda from './pages/Agenda.jsx';
@@ -52,6 +54,9 @@ import PortalUsuarios from './pages/portal/Usuarios.jsx';
 import PortalShell from './pages/portal/PortalShell.jsx';
 import Plataforma from './pages/plataforma/Plataforma.jsx';
 import Landing from './pages/Landing.jsx';
+import PrimerIngreso from './pages/PrimerIngreso.jsx';
+import Ayuda from './pages/Ayuda.jsx';
+import EstadoPag from './pages/Estado.jsx';
 import './styles.css';
 import './shell.css';
 
@@ -59,6 +64,7 @@ import './shell.css';
 function Zona({ portal, children }) {
   const user = getUser();
   if (!getToken() || !user) return <Navigate to="/login" replace />;
+  if (user.debeCambiarPassword && !location.pathname.startsWith('/primera-vez')) return <Navigate to="/primera-vez" replace />;
   if (user.organizacion?.rol === 'plataforma') return <Navigate to="/plataforma" replace />;
   if (!portal && !esOperador(user)) return <Navigate to="/portal" replace />;
   if (portal && esOperador(user)) return <Navigate to="/panel" replace />;
@@ -101,6 +107,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
       <Routes>
         <Route path="/" element={<Landing />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/primera-vez" element={<PrimerIngreso />} />
         <Route path="/plataforma" element={<GateAdmin><Plataforma /></GateAdmin>} />
         {/* Selector de prototipos: solo responde con la API en modo demostración */}
         <Route path="/demo" element={<main className="demo-main"><Demo /></main>} />
@@ -120,6 +127,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
           <Route path="/comercial/remitos" element={<Remitos />} />
           <Route path="/comercial/afip" element={<Afip />} />
           <Route path="/comercial/contabilidad" element={<Contabilidad />} />
+          <Route path="/comercial/presupuestos" element={<Presupuestos />} />
           <Route path="/comercial/importar-odoo" element={<ImportarOdoo />} />
           <Route path="/comercial/compras" element={<Compras />} />
           <Route path="/comercial/stock" element={<Stock />} />
@@ -141,6 +149,9 @@ ReactDOM.createRoot(document.getElementById('root')).render(
           <Route path="/resultados/sustentabilidad" element={<Sustentabilidad />} />
           <Route path="/cumplimiento" element={<Matriz />} />
           <Route path="/cumplimiento/autodiagnostico" element={<Autodiagnostico />} />
+          <Route path="/ayuda" element={<Ayuda />} />
+          <Route path="/estado" element={<EstadoPag />} />
+          <Route path="/cumplimiento/snigei" element={<Snigei />} />
           <Route path="/cumplimiento/normativa" element={<Normativa />} />
           <Route path="/cumplimiento/certificados" element={<Certificados />} />
           <Route path="/cumplimiento/clasificar" element={<Clasificar />} />

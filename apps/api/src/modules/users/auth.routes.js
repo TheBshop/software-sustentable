@@ -8,7 +8,7 @@ export const authRouter = Router();
 
 export const sesion = (user, org) => ({
   token: signToken(user, org),
-  user: { id: user._id, nombre: user.nombre, rol: user.rol, organizacion: { id: org._id, nombre: org.nombre, tipo: org.tipo, rol: org.rol ?? (org.tipo === 'plataforma' ? 'plataforma' : ['cooperativa', 'recicladora'].includes(org.tipo) ? 'operador' : 'generador') } },
+  user: { id: user._id, nombre: user.nombre, rol: user.rol, debeCambiarPassword: !!user.debeCambiarPassword, organizacion: { id: org._id, nombre: org.nombre, tipo: org.tipo, rol: org.rol ?? (org.tipo === 'plataforma' ? 'plataforma' : ['cooperativa', 'recicladora'].includes(org.tipo) ? 'operador' : 'generador') } },
 });
 
 authRouter.post('/login', async (req, res) => {
@@ -20,6 +20,18 @@ authRouter.post('/login', async (req, res) => {
 });
 
 authRouter.get('/me', requireAuth, (req, res) => res.json(req.user));
+
+// Cambio de contraseña del propio usuario. Habilitado también para usuarios con
+// `debeCambiarPassword: true` (primer ingreso tras alta por crear-piloto).
+authRouter.post('/cambiar-password', requireAuth, async (req, res) => {
+  const { actual, nueva } = z.object({ actual: z.string().min(1), nueva: z.string().min(8).max(100) }).parse(req.body);
+  const user = await User.findById(req.user.sub).select('+passwordHash');
+  if (!user || !(await user.checkPassword(actual))) throw new HttpError(401, 'La contraseña actual es incorrecta');
+  user.passwordHash = await User.hashPassword(nueva);
+  user.debeCambiarPassword = false;
+  await user.save();
+  res.json({ ok: true });
+});
 
 // Usuarios de la propia organización. Las cooperativas los gestionan acá; los clientes
 // (empresa/municipio) lo hacen desde el portal con el mismo criterio.

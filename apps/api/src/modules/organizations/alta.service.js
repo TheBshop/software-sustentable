@@ -38,7 +38,7 @@ export async function crearUsuario({ organizacion, email, nombre, rol }) {
   if (!permitidos.includes(rol)) throw new HttpError(422, `Rol inválido para esta organización. Opciones: ${permitidos.join(', ')}`);
   if (await User.exists({ email: email.toLowerCase() })) throw new HttpError(409, `Ya existe un usuario con email ${email}`);
   const password = randomPassword();
-  const user = await User.create({ nombre, email, rol, organizacion: organizacion._id, passwordHash: await User.hashPassword(password) });
+  const user = await User.create({ nombre, email, rol, organizacion: organizacion._id, passwordHash: await User.hashPassword(password), debeCambiarPassword: true });
   return { id: user._id, email: user.email, nombre: user.nombre, rol: user.rol, password };
 }
 
