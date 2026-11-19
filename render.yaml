@@ -51,3 +51,50 @@ services:
         sync: false
       - key: MAIL_FROM
         sync: false
+      - key: SENTRY_DSN
+        sync: false
+
+  # Web (SPA Vite). Alternativa: desplegar en Netlify con netlify.toml ya incluido.
+  - type: web
+    name: gestion-rsu-web
+    runtime: static
+    plan: starter
+    branch: main
+    buildCommand: npm ci && npm run build --workspace apps/web
+    staticPublishPath: apps/web/dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: VITE_API_URL
+        sync: false
+
+  # Backup diario de Mongo a S3/R2 (06:00 UTC = 03:00 Argentina).
+  - type: cron
+    name: gestion-rsu-backup
+    runtime: node
+    plan: starter
+    branch: main
+    schedule: "0 6 * * *"
+    buildCommand: npm ci --workspace apps/api --omit=dev
+    startCommand: npm run backup --workspace apps/api
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NODE_VERSION
+        value: "22"
+      - key: STORAGE_DRIVER
+        value: s3
+      - key: S3_REGION
+        value: auto
+      - key: MONGO_URI
+        sync: false
+      - key: S3_ENDPOINT
+        sync: false
+      - key: S3_BUCKET
+        sync: false
+      - key: S3_ACCESS_KEY_ID
+        sync: false
+      - key: S3_SECRET_ACCESS_KEY
+        sync: false

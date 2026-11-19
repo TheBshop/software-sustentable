@@ -68,6 +68,8 @@ const organizationSchema = new mongoose.Schema(
     },
     // Prototipo de demostración armado para mostrarle el sistema a la organización
     prototipo: { slug: String, notas: String, tambien: String },
+    // Marca de piloto activo (vía npm run crear-piloto). Lo usa el panel de admin.
+    piloto: { activo: Boolean, inicio: Date, notas: String },
     activo: { type: Boolean, default: true },
   },
   { timestamps: true },

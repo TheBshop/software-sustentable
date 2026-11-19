@@ -3,6 +3,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import rateLimit from 'express-rate-limit';
+import mongooseLib from 'mongoose';
 import { env } from './config/env.js';
 import { requireAuth, requireOperador, requireRole } from './middleware/auth.js';
 import { adminRouter } from './modules/admin/admin.routes.js';
@@ -20,6 +21,8 @@ import { manifiestosRouter, manifiestosPublicosRouter } from './modules/manifies
 import { importOdooRouter } from './modules/import-odoo/import-odoo.routes.js';
 import { presupuestosRouter } from './modules/presupuestos/presupuestos.routes.js';
 import { snigeiRouter } from './modules/snigei/snigei.routes.js';
+import { exportarRouter } from './modules/exportar/exportar.routes.js';
+import { estadoRouter } from './modules/estado/estado.routes.js';
 import { withTenant, runWithoutTenant } from './lib/tenancy.js';
 import { errorHandler, notFound } from './middleware/error.js';
 import { crudRouter } from './lib/crud.js';
@@ -65,7 +68,31 @@ export function createApp(config = {}) {
   app.use(express.json({ limit: '1mb' }));
   if (env.nodeEnv !== 'test') app.use(morgan(env.nodeEnv === 'production' ? 'combined' : 'dev'));
 
-  app.get('/health', (_req, res) => res.json({ ok: true }));
+  // Request id para correlacionar logs. Si el proxy manda X-Request-Id, lo respeta.
+  app.use((req, res, next) => {
+    const id = req.headers['x-request-id'] || Math.random().toString(36).slice(2, 10);
+    req.id = id;
+    res.setHeader('X-Request-Id', id);
+    next();
+  });
+
+  // Health del sistema: Mongo responde? versión y uptime.
+  app.get(['/health', '/api/health'], (_req, res) => {
+    const estado = mongooseLib.connection?.readyState === 1 ? 'conectado' : 'desconectado';
+    res.json({ ok: true, mongo: estado, uptime: Math.round(process.uptime()), env: env.nodeEnv });
+  });
+
+  // Rate limit global suave a /api (además del específico de login). Se desactiva en tests.
+  if (env.nodeEnv !== 'test') {
+    app.use('/api', rateLimit({
+      windowMs: 60 * 1000,
+      limit: Number(process.env.API_RATE_LIMIT ?? 240), // 4/seg por IP por defecto
+      standardHeaders: 'draft-7',
+      legacyHeaders: false,
+      message: { error: 'Demasiadas solicitudes. Reintentá en un minuto.' },
+    }));
+  }
+
   // Datos privados: que ni el navegador ni proxies intermedios guarden respuestas de la API
   app.use('/api', (_req, res, next) => {
     res.set('Cache-Control', 'no-store');
@@ -130,6 +157,8 @@ export function createApp(config = {}) {
   coopApi.use('/import/odoo', importOdooRouter); // importador de CSVs exportados desde Odoo
   coopApi.use('/presupuestos', presupuestosRouter); // presupuestos (cotizaciones) previos a factura
   coopApi.use('/snigei', snigeiRouter); // reporte mensual tipo SNIGEI (toneladas por corriente/tratamiento)
+  coopApi.use('/mi-organizacion/exportar', exportarRouter); // export ZIP de todos los datos (Ley 25.326)
+  coopApi.use('/estado', estadoRouter); // versión, uptime, storage, email
   coopApi.use('/clientes', accesoPortalRouter);
   coopApi.use('/clientes', constanciaRouter); // constancia anual de reciclado (Ley 25.612)
   coopApi.use('/normativa', normativaRouter); // marco normativo según la jurisdicción

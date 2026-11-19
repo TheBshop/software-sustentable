@@ -16,7 +16,10 @@
     "crear-prototipo": "node src/scripts/crear-prototipo.js",
     "dev:demo": "node src/dev-memory.js --demo",
     "migrar-roles": "node --env-file-if-exists=.env src/scripts/migrar-roles.js",
-    "crear-superadmin": "node --env-file-if-exists=.env src/scripts/crear-superadmin.js"
+    "crear-superadmin": "node --env-file-if-exists=.env src/scripts/crear-superadmin.js",
+    "crear-piloto": "node --env-file-if-exists=.env src/scripts/crear-piloto.js",
+    "backup": "node --env-file-if-exists=.env src/scripts/backup-mongo.js",
+    "smoke-test": "node src/scripts/smoke-test.js"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1168.0",

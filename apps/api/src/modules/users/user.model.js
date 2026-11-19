@@ -12,6 +12,8 @@ const userSchema = new mongoose.Schema(
     organizacion: { type: mongoose.Schema.Types.ObjectId, ref: 'Organization', required: true, index: true },
     rol: { type: String, enum: ROLES, default: 'chofer' },
     activo: { type: Boolean, default: true },
+    // Marcado por crear-piloto / crear-cooperativa: el primer ingreso obliga a cambiar la clave.
+    debeCambiarPassword: { type: Boolean, default: false },
   },
   { timestamps: true },
 );
