@@ -22,6 +22,7 @@ import { importOdooRouter } from './modules/import-odoo/import-odoo.routes.js';
 import { presupuestosRouter } from './modules/presupuestos/presupuestos.routes.js';
 import { snigeiRouter } from './modules/snigei/snigei.routes.js';
 import { exportarRouter } from './modules/exportar/exportar.routes.js';
+import { miOrganizacionRouter } from './modules/organizations/mi-organizacion.routes.js';
 import { estadoRouter } from './modules/estado/estado.routes.js';
 import { withTenant, runWithoutTenant } from './lib/tenancy.js';
 import { errorHandler, notFound } from './middleware/error.js';
@@ -158,6 +159,7 @@ export function createApp(config = {}) {
   coopApi.use('/presupuestos', presupuestosRouter); // presupuestos (cotizaciones) previos a factura
   coopApi.use('/snigei', snigeiRouter); // reporte mensual tipo SNIGEI (toneladas por corriente/tratamiento)
   coopApi.use('/mi-organizacion/exportar', exportarRouter); // export ZIP de todos los datos (Ley 25.326)
+  coopApi.use('/mi-organizacion', miOrganizacionRouter); // datos fiscales y edición de la propia org
   coopApi.use('/estado', estadoRouter); // versión, uptime, storage, email
   coopApi.use('/clientes', accesoPortalRouter);
   coopApi.use('/clientes', constanciaRouter); // constancia anual de reciclado (Ley 25.612)

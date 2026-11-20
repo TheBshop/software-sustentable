@@ -41,6 +41,7 @@ const organizationSchema = new mongoose.Schema(
       registros: [{ _id: false, descripcion: String, corriente: { type: String, enum: CORRIENTES }, organismo: String, numero: String, vence: Date }],
     },
     domicilio: { type: String, trim: true }, // domicilio real de la planta (va en el certificado)
+    condicionIva: { type: String, enum: ['responsable_inscripto', 'monotributo', 'exento', 'consumidor_final'] },
     // Datos que exige el certificado verde (ver modules/certificates/certificado-verde.js)
     certificadoVerde: {
       inaes: String, // matrícula INAES (cooperativas)

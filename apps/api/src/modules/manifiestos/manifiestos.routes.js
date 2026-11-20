@@ -10,6 +10,7 @@ import { nextSeq } from '../../lib/counters.js';
 import { requireRole } from '../../middleware/auth.js';
 import { HttpError } from '../../middleware/error.js';
 import { objectId, dateInput } from '../../lib/validation.js';
+import { env } from '../../config/env.js';
 
 export const manifiestosRouter = Router();
 
@@ -36,7 +37,7 @@ manifiestosRouter.get('/', async (_req, res) => {
 manifiestosRouter.post('/', GESTIONA, async (req, res) => {
   const d = manifiestoInput.parse(req.body);
   const numero = await nextSeq('manifiesto');
-  const m = await Manifiesto.create({ ...d, numero, codigo: generarCodigo() });
+  const m = await Manifiesto.create({ ...d, numero, codigo: generarCodigo(), hostWebAlEmitir: env.publicWebUrl });
   res.status(201).json({ ...m.toObject(), codigoManifiesto: fmtManifiesto(m) });
 });
 
@@ -48,6 +49,7 @@ manifiestosRouter.post('/desde-remito/:remitoId', GESTIONA, async (req, res) => 
   const m = await Manifiesto.create({
     numero,
     codigo: generarCodigo(),
+    hostWebAlEmitir: env.publicWebUrl,
     fecha: r.fecha,
     remito: r._id,
     destino: r.destinatario ? { razonSocial: r.destinatario.razonSocial, cuit: r.destinatario.cuit } : undefined,

@@ -19,6 +19,9 @@ const manifiestoSchema = new mongoose.Schema(
   {
     numero: { type: Number, required: true },
     codigo: { type: String, required: true, unique: true, sparse: true }, // random 16 chars para QR público
+    // Host web al momento de emitir, para que el QR del PDF siga apuntando al lugar correcto
+    // aunque cambiemos el dominio de la plataforma más adelante.
+    hostWebAlEmitir: { type: String, trim: true },
     fecha: { type: Date, default: Date.now },
     remito: { type: ObjectId, ref: 'Remito' },
     origen: parteSchema,

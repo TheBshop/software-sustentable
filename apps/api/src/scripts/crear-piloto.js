@@ -10,6 +10,7 @@ import mongoose from 'mongoose';
 import { env } from '../config/env.js';
 import { altaOperador } from '../modules/organizations/alta.service.js';
 import { Organization } from '../modules/organizations/organization.model.js';
+import { mandarInvitacionPiloto } from '../lib/mailer.js';
 
 function parseArgs(argv) {
   const out = {};
@@ -66,9 +67,25 @@ try {
   console.log(`  Contraseña:     ${admin.password}    ← pasarla por canal seguro`);
   if (args.notas) console.log(`  Notas:          ${args.notas}`);
   console.log(linea);
-  console.log('Próximos pasos:');
-  console.log('  1. Mandá email/WhatsApp al admin con URL + usuario + contraseña.');
-  console.log('  2. Primer ingreso: al entrar lo lleva a cambiar la contraseña y completar datos fiscales.');
+
+  // Email automático de invitación (si SMTP está configurado).
+  try {
+    const { enviado } = await mandarInvitacionPiloto({
+      to: admin.email,
+      nombre: args['nombre-admin'],
+      orgNombre: org.nombre,
+      password: admin.password,
+      urlWeb: env.publicWebUrl,
+    });
+    if (enviado) console.log(`✓ Email de invitación enviado a ${admin.email}`);
+    else console.log(`⚠ SMTP no configurado: mandá la contraseña a mano por WhatsApp o email.`);
+  } catch (e) {
+    console.log(`⚠ No se pudo enviar el email: ${e.message}. Mandalo a mano.`);
+  }
+
+  console.log('\nPróximos pasos:');
+  console.log('  1. (Si no salió el email) mandá al admin URL + usuario + contraseña.');
+  console.log('  2. Primer ingreso: cambio de contraseña y datos fiscales.');
   console.log('  3. Si va a facturar AFIP, cargar el certificado desde /comercial/afip.');
   console.log(`${linea}\n`);
 } catch (err) {

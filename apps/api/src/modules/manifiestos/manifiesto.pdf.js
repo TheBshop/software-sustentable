@@ -14,7 +14,9 @@ const cuit = (c) => {
 };
 
 export async function renderManifiestoPdf(m, org, stream) {
-  const url = `${env.publicWebUrl}/recibir/${m.codigo}`;
+  // Preferir el host guardado al emitir (asegura que PDFs viejos sigan apuntando bien si el dominio cambió)
+  const host = m.hostWebAlEmitir || env.publicWebUrl;
+  const url = `${host}/recibir/${m.codigo}`;
   const qr = await QRCode.toBuffer(url, { margin: 1, width: 240 });
   const doc = new PDFDocument({ size: 'A4', margin: 48, info: { Title: `Manifiesto ${fmtManifiesto(m)}` } });
   doc.pipe(stream);
