@@ -71,6 +71,15 @@ export const SECCIONES = [
     ],
   },
   {
+    id: 'sustentabilidad',
+    label: 'Sustentabilidad',
+    icono: 'resultados',
+    tabs: [
+      { to: '/sustentabilidad/huella', label: 'Huella de carbono', perfiles: PLANTA, roles: ADMINISTRA, end: true },
+      { to: '/sustentabilidad/consumos', label: 'Consumos (luz/gas/agua)', perfiles: PLANTA, roles: ADMINISTRA },
+    ],
+  },
+  {
     id: 'cumplimiento',
     label: 'Cumplimiento',
     icono: 'cumplimiento',

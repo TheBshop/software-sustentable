@@ -73,9 +73,9 @@ export default function Landing() {
 
       <section className="land-hero">
         <div className="land-hero-txt">
-          <span className="land-eyebrow">SaaS especializada en gestión de residuos — Argentina</span>
-          <h1>El reciclaje, en orden y al día.</h1>
-          <p className="land-lead">La plataforma hecha para cooperativas, empresas recicladoras y municipios argentinos. Diseñada con la normativa nacional, provincial y municipal como base, no como anexo. Reemplaza las planillas, el ERP genérico y el cumplimiento improvisado.</p>
+          <span className="land-eyebrow">Gestión sustentable integral — Argentina</span>
+          <h1>Residuos, consumos y huella de carbono en un solo lugar.</h1>
+          <p className="land-lead">La plataforma hecha para cooperativas, empresas recicladoras, industrias y municipios argentinos. Gestionás residuos, medís tus consumos de luz, gas, agua y combustible, y obtenés tu huella de carbono mensual. Diseñada con la normativa argentina como base, no como anexo.</p>
           <div className="land-ctas">
             <button type="button" className="primary" onClick={() => setAbrirDemo(true)}>Probar la demo</button>
             <a href="#demo" className="secondary button">Ver el video</a>
@@ -97,12 +97,64 @@ export default function Landing() {
         <h2>Una plataforma para toda la cadena</h2>
         <div className="land-grid">
           <article><h3>Operación</h3><p>Pedidos, retiros, pesaje, lotes (recepción → clasificado → enfardado → venta), rutinas de planta y tratamientos por corriente.</p></article>
-          <article><h3>Comercial</h3><p>Compras, ventas con precio de referencia, stock y margen, contratos, remitos numerados, facturación y convenio con el municipio.</p></article>
-          <article><h3>Métricas y sustentabilidad</h3><p>KPIs con variación vs. período anterior, desglose por fracción, huella de carbono (SNIGEI-AR 2025), emisiones evitadas (EPA WARM) y memoria anual en PDF y Excel.</p></article>
-          <article><h3>Cumplimiento argentino</h3><p>Matriz con las leyes y ordenanzas de tu provincia y municipio, con evidencias y vencimientos. Autodiagnóstico, normativa y clasificador en 3 niveles.</p></article>
-          <article><h3>Contabilidad lista para AFIP</h3><p>Facturación electrónica (Factura A/B/C/E con CAE), Libro IVA Ventas y Compras, Mayor de cuentas, exportables en el formato que usa tu contador.</p></article>
+          <article><h3>Comercial</h3><p>Presupuestos, ventas con precio de referencia, stock y margen, contratos, remitos numerados, facturación y convenio con el municipio.</p></article>
+          <article><h3>Sustentabilidad</h3><p>Cargás tus consumos de luz, gas, agua y combustible, y la plataforma calcula tu huella de carbono mensual: lo que evitás por recuperar y lo que emitís en la operación.</p></article>
+          <article><h3>Cumplimiento argentino</h3><p>Matriz con las leyes y ordenanzas de tu provincia y municipio, manifiestos de traslado con QR (Ley 25.612), reporte mensual tipo SNIGEI, certificados verdes.</p></article>
+          <article><h3>Contabilidad lista para AFIP</h3><p>Facturación electrónica (Factura A/B/C con CAE), Libro IVA Ventas y Compras, Mayor de cuentas, importador desde Odoo.</p></article>
           <article><h3>Multi-organización</h3><p>Pensado para cooperativas chicas, federaciones y municipios con varias filiales. Cada organización tiene sus datos aislados; el superadmin consolida.</p></article>
         </div>
+      </section>
+
+      <section id="precios" className="land-prod">
+        <h2>Planes</h2>
+        <p className="muted">Durante el programa piloto el uso es gratuito por 3 meses. Después, estos son los planes previstos — sujeto a ajuste con el feedback de los pilotos.</p>
+        <div className="land-grid">
+          <article>
+            <h3>Piloto</h3>
+            <p><strong>Gratis · 3 meses</strong></p>
+            <ul>
+              <li>1 organización</li>
+              <li>Hasta 5 usuarios</li>
+              <li>Todos los módulos</li>
+              <li>Soporte directo por WhatsApp</li>
+              <li>Facturación AFIP en homologación</li>
+            </ul>
+          </article>
+          <article>
+            <h3>Cooperativa</h3>
+            <p><strong>$60.000 / mes</strong></p>
+            <ul>
+              <li>1 organización, hasta 10 usuarios</li>
+              <li>Hasta 500 retiros/mes</li>
+              <li>Facturación AFIP producción</li>
+              <li>Backup diario + export ZIP</li>
+              <li>Soporte en horario hábil</li>
+            </ul>
+          </article>
+          <article>
+            <h3>Recicladora / Industria</h3>
+            <p><strong>$120.000 / mes</strong></p>
+            <ul>
+              <li>Hasta 25 usuarios</li>
+              <li>Multi-sitio (hasta 3)</li>
+              <li>Huella de carbono consolidada</li>
+              <li>Logo y colores propios</li>
+              <li>Soporte prioritario</li>
+            </ul>
+          </article>
+          <article>
+            <h3>Municipio / Federación</h3>
+            <p><strong>A medida</strong></p>
+            <ul>
+              <li>Multi-organización sin límite</li>
+              <li>Panel consolidado</li>
+              <li>Integraciones a medida</li>
+              <li>Dominio propio</li>
+              <li>Capacitación on-site</li>
+            </ul>
+          </article>
+        </div>
+        <p className="muted" style={{ marginTop: 16 }}>Precios en pesos argentinos con IVA incluido, al <strong>{new Date().toLocaleDateString('es-AR', { month: 'long', year: 'numeric' })}</strong>. ¿Tenés dudas? <a href="https://wa.me/5493435254141" target="_blank" rel="noreferrer">Escribinos por WhatsApp</a>.</p>
       </section>
 
       <section id="demo" className="land-demo">
