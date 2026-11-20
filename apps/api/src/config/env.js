@@ -35,13 +35,18 @@ export const env = {
   },
 };
 
-/** En producción, falla al arrancar si falta configuración en vez de fallar con el primer usuario. */
-export function checkProductionEnv(e = env, raw = process.env) {
+/** En producción, falla al arrancar si falta configuración. Según `scope`:
+ *   - 'api'    (default): valida todo lo que la API necesita para servir pedidos.
+ *   - 'worker': solo lo que necesita un job/cron (Mongo + storage). No pide JWT ni URLs web.
+ */
+export function checkProductionEnv(scope = 'api', e = env, raw = process.env) {
   const faltan = [];
   if (!raw.MONGO_URI) faltan.push('MONGO_URI');
-  if (!raw.JWT_SECRET || raw.JWT_SECRET === DEV_SECRET || raw.JWT_SECRET.length < 32) faltan.push('JWT_SECRET (32+ caracteres)');
-  if (!raw.PUBLIC_WEB_URL) faltan.push('PUBLIC_WEB_URL');
-  if (!e.corsOrigins.length) faltan.push('CORS_ORIGINS');
+  if (scope === 'api') {
+    if (!raw.JWT_SECRET || raw.JWT_SECRET === DEV_SECRET || raw.JWT_SECRET.length < 32) faltan.push('JWT_SECRET (32+ caracteres)');
+    if (!raw.PUBLIC_WEB_URL) faltan.push('PUBLIC_WEB_URL');
+    if (!e.corsOrigins.length) faltan.push('CORS_ORIGINS');
+  }
   if (e.storage.driver !== 's3') faltan.push('STORAGE_DRIVER=s3 (el disco de Render no es persistente)');
   else {
     for (const [k, v] of Object.entries({ S3_BUCKET: 'bucket', S3_ACCESS_KEY_ID: 'accessKeyId', S3_SECRET_ACCESS_KEY: 'secretAccessKey', STORAGE_PUBLIC_URL: 'publicUrl' })) {
@@ -51,7 +56,8 @@ export function checkProductionEnv(e = env, raw = process.env) {
   return faltan;
 }
 
-if (nodeEnv === 'production') {
-  const faltan = checkProductionEnv();
+// En producción, la API chequea todo. Los scripts/cron llaman `checkProductionEnv('worker')` ellos mismos.
+if (nodeEnv === 'production' && process.env.ENV_CHECK_SCOPE !== 'worker' && !process.argv.some((a) => a.includes('scripts/'))) {
+  const faltan = checkProductionEnv('api');
   if (faltan.length) throw new Error(`Faltan variables de entorno para producción: ${faltan.join(', ')}`);
 }

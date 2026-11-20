@@ -2,9 +2,17 @@
 //   npm run backup   (lee MONGO_URI y S3_* del entorno)
 import mongoose from 'mongoose';
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
-import { env } from '../config/env.js';
+import { env, checkProductionEnv } from '../config/env.js';
 import { gzipSync } from 'node:zlib';
 
+// El cron solo necesita Mongo y S3; no requiere JWT ni URLs web.
+if (env.nodeEnv === 'production') {
+  const faltan = checkProductionEnv('worker');
+  if (faltan.length) {
+    console.error(`backup-mongo: faltan variables: ${faltan.join(', ')}`);
+    process.exit(1);
+  }
+}
 if (env.storage.driver !== 's3') {
   console.error('backup-mongo: STORAGE_DRIVER debe ser s3 (bucket destino).');
   process.exit(1);

@@ -111,8 +111,8 @@ describe('Seguridad para producción', () => {
     for (let i = 0; i < 3; i++) await request(app).post('/api/auth/login').send({ email: 'c1@test.local', password: 'secreto123' }).expect(200);
   });
 
-  it('detecta configuración faltante para producción', () => {
-    expect(checkProductionEnv(env, {})).toEqual(
+  it('detecta configuración faltante para producción (scope api)', () => {
+    expect(checkProductionEnv('api', env, {})).toEqual(
       expect.arrayContaining(['MONGO_URI', 'JWT_SECRET (32+ caracteres)', 'PUBLIC_WEB_URL', 'CORS_ORIGINS', 'STORAGE_DRIVER=s3 (el disco de Render no es persistente)']),
     );
     const completo = {
@@ -120,7 +120,17 @@ describe('Seguridad para producción', () => {
       corsOrigins: ['https://panel.example'],
       storage: { driver: 's3', s3: { bucket: 'b', accessKeyId: 'k', secretAccessKey: 's', publicUrl: 'https://f.example' } },
     };
-    expect(checkProductionEnv(completo, { MONGO_URI: 'mongodb+srv://x', JWT_SECRET: 'x'.repeat(40), PUBLIC_WEB_URL: 'https://panel.example' })).toEqual([]);
+    expect(checkProductionEnv('api', completo, { MONGO_URI: 'mongodb+srv://x', JWT_SECRET: 'x'.repeat(40), PUBLIC_WEB_URL: 'https://panel.example' })).toEqual([]);
+  });
+
+  it('scope worker: solo exige Mongo y storage (ignora JWT/URLs web)', () => {
+    const faltan = checkProductionEnv('worker', env, {});
+    expect(faltan).toEqual(expect.arrayContaining(['MONGO_URI', 'STORAGE_DRIVER=s3 (el disco de Render no es persistente)']));
+    expect(faltan).not.toContain('JWT_SECRET (32+ caracteres)');
+    expect(faltan).not.toContain('PUBLIC_WEB_URL');
+    expect(faltan).not.toContain('CORS_ORIGINS');
+    const completo = { ...env, storage: { driver: 's3', s3: { bucket: 'b', accessKeyId: 'k', secretAccessKey: 's', publicUrl: 'https://f.example' } } };
+    expect(checkProductionEnv('worker', completo, { MONGO_URI: 'mongodb+srv://x' })).toEqual([]);
   });
 });
 

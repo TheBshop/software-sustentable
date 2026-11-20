@@ -1,0 +1,47 @@
+[
+  {
+    "cuit": "30700000024",
+    "nombre": "Reciclaje Electrónico Neuquén Cooperativa",
+    "email": "admin@ren.coop",
+    "nombreAdmin": "Referente REN",
+    "tipo": "cooperativa",
+    "perfil": "cooperativa",
+    "provincia": "neuquen",
+    "municipio": "neuquen",
+    "corrientes": ["rsu", "regu", "peligroso"],
+    "notas": "Piloto nov/26 — RAEE, desarme y venta de fracciones"
+  },
+  {
+    "cuit": "30999000001",
+    "nombre": "Municipalidad de San Benito",
+    "email": "ambiente@sanbenito.gob.ar",
+    "nombreAdmin": "Secretaría de Ambiente",
+    "tipo": "municipio",
+    "provincia": "entre_rios",
+    "municipio": "parana",
+    "corrientes": ["rsu"],
+    "notas": "Piloto nov/26 — gestión municipal RSU"
+  },
+  {
+    "cuit": "30999000002",
+    "nombre": "Municipalidad de Oro Verde",
+    "email": "ambiente@oroverde.gob.ar",
+    "nombreAdmin": "Secretaría de Ambiente",
+    "tipo": "municipio",
+    "provincia": "entre_rios",
+    "municipio": "parana",
+    "corrientes": ["rsu"],
+    "notas": "Piloto nov/26 — gestión municipal RSU"
+  },
+  {
+    "cuit": "30999000003",
+    "nombre": "Quinto Municipio (CAMBIAR)",
+    "email": "admin@municipio5.gob.ar",
+    "nombreAdmin": "Referente",
+    "tipo": "municipio",
+    "provincia": "entre_rios",
+    "municipio": "parana",
+    "corrientes": ["rsu"],
+    "notas": "Piloto nov/26"
+  }
+]
