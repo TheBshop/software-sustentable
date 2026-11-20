@@ -1,13 +1,20 @@
 // Consumos y combustible: CRUD + resumen de huella de carbono.
 import { Router } from 'express';
 import { z } from 'zod';
+import multer from 'multer';
 import { ConsumoServicio, Vehiculo, CargaCombustible } from './consumo.model.js';
 import { TIPOS_SERVICIO, TIPOS_COMBUSTIBLE, FACTOR_CO2_SERVICIO, FACTOR_CO2_COMBUSTIBLE, UNIDAD_SERVICIO, UNIDAD_COMBUSTIBLE } from './factores.js';
 import { Intake } from '../plant/plant.models.js';
 import { Material } from '../materials/material.model.js';
+import { Organization } from '../organizations/organization.model.js';
 import { objectId, dateInput } from '../../lib/validation.js';
 import { requireRole } from '../../middleware/auth.js';
 import { HttpError } from '../../middleware/error.js';
+import { currentTenant, runWithoutTenant } from '../../lib/tenancy.js';
+import { extraerDatosDeTicket } from '../../lib/ia-ticket.js';
+import { renderHuellaPdf } from './huella.pdf.js';
+
+const subirImagen = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 }, fileFilter: (_r, f, cb) => cb(null, f.mimetype.startsWith('image/')) });
 
 export const consumosRouter = Router();
 consumosRouter.use(requireRole('administracion'));
@@ -94,6 +101,17 @@ consumosRouter.get('/combustibles', async (_req, res) => {
   const items = await CargaCombustible.find().sort('-fecha').limit(500).populate('vehiculo', 'patente tipoCombustible');
   res.json({ items });
 });
+// IA: parsear ticket desde foto. Devuelve datos sugeridos; NO crea el registro.
+consumosRouter.post('/combustibles/parse-ticket', subirImagen.single('foto'), async (req, res) => {
+  if (!req.file) throw new HttpError(422, 'Adjuntá la foto del ticket en el campo "foto"');
+  try {
+    const resultado = await extraerDatosDeTicket(req.file.buffer, req.file.mimetype);
+    res.json(resultado);
+  } catch (e) {
+    throw new HttpError(502, `IA no disponible: ${e.message}`);
+  }
+});
+
 consumosRouter.post('/combustibles', async (req, res) => {
   const d = combustibleInput.parse(req.body);
   const v = await Vehiculo.findById(d.vehiculo);
@@ -109,8 +127,7 @@ consumosRouter.delete('/combustibles/:id', async (req, res) => {
 });
 
 // --------- Huella de carbono consolidada ---------
-consumosRouter.get('/huella', async (req, res) => {
-  const { anio, mes } = z.object({ anio: z.coerce.number().int().min(2020).max(2100), mes: z.coerce.number().int().min(1).max(12).optional() }).parse(req.query);
+async function calcularHuella(anio, mes) {
   const desde = new Date(Date.UTC(anio, (mes ?? 1) - 1, 1));
   const hasta = mes ? new Date(Date.UTC(anio, mes, 1)) : new Date(Date.UTC(anio + 1, 0, 1));
 
@@ -122,16 +139,12 @@ consumosRouter.get('/huella', async (req, res) => {
   ]);
 
   const materialesPorId = new Map(materiales.map((m) => [String(m._id), m]));
-
-  // Emitido
   const emitidoPorServicio = {};
   for (const s of servicios) emitidoPorServicio[s.tipo] = (emitidoPorServicio[s.tipo] || 0) + (s.kgCo2 || 0);
   const emitidoPorCombustible = {};
   for (const c of combustibles) emitidoPorCombustible[c.tipoCombustible] = (emitidoPorCombustible[c.tipoCombustible] || 0) + (c.kgCo2 || 0);
-
   const emitidoKg = Object.values(emitidoPorServicio).reduce((a, b) => a + b, 0) + Object.values(emitidoPorCombustible).reduce((a, b) => a + b, 0);
 
-  // Evitado (por recuperación de materiales) — kg procesado × factorCo2 del material (excepto los que van a disposición final)
   let evitadoKg = 0;
   const evitadoPorMaterial = new Map();
   for (const i of ingresos) {
@@ -146,11 +159,9 @@ consumosRouter.get('/huella', async (req, res) => {
       evitadoPorMaterial.set(m.codigo, prev);
     }
   }
-
   const neto = evitadoKg - emitidoKg;
   const round = (n) => Math.round(n * 100) / 100;
-
-  res.json({
+  return {
     periodo: { anio, mes, desde, hasta },
     emitido: {
       totalKg: round(emitidoKg),
@@ -162,6 +173,22 @@ consumosRouter.get('/huella', async (req, res) => {
       porMaterial: [...evitadoPorMaterial.values()].map((m) => ({ ...m, kgProcesado: round(m.kgProcesado), kgCo2: round(m.kgCo2) })),
     },
     netoKg: round(neto),
-    esNegativo: neto < 0, // true = la operación emite más de lo que evita
-  });
+    esNegativo: neto < 0,
+  };
+}
+
+consumosRouter.get('/huella.pdf', async (req, res) => {
+  const { anio, mes } = z.object({ anio: z.coerce.number().int().min(2020).max(2100), mes: z.coerce.number().int().min(1).max(12).optional() }).parse(req.query);
+  const rep = await calcularHuella(anio, mes);
+  const tid = currentTenant();
+  const org = await runWithoutTenant(() => Organization.findById(tid).lean());
+  const nombreMes = mes ? `-${String(mes).padStart(2, '0')}` : '';
+  res.setHeader('Content-Type', 'application/pdf');
+  res.setHeader('Content-Disposition', `inline; filename="huella-${anio}${nombreMes}.pdf"`);
+  renderHuellaPdf(rep, org, res);
+});
+
+consumosRouter.get('/huella', async (req, res) => {
+  const { anio, mes } = z.object({ anio: z.coerce.number().int().min(2020).max(2100), mes: z.coerce.number().int().min(1).max(12).optional() }).parse(req.query);
+  res.json(await calcularHuella(anio, mes));
 });

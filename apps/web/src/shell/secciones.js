@@ -77,6 +77,7 @@ export const SECCIONES = [
     tabs: [
       { to: '/sustentabilidad/huella', label: 'Huella de carbono', perfiles: PLANTA, roles: ADMINISTRA, end: true },
       { to: '/sustentabilidad/consumos', label: 'Consumos (luz/gas/agua)', perfiles: PLANTA, roles: ADMINISTRA },
+      { to: '/sustentabilidad/flota', label: 'Flota y combustible', perfiles: PLANTA, roles: ADMINISTRA },
     ],
   },
   {

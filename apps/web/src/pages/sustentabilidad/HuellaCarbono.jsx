@@ -1,6 +1,6 @@
 // Huella de carbono consolidada: emitido (servicios + combustible) vs evitado (materiales recuperados).
 import { useEffect, useState } from 'react';
-import { api } from '../../api.js';
+import { api, openPdf } from '../../api.js';
 
 const MESES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
 
@@ -30,6 +30,7 @@ export default function HuellaCarbono() {
             {MESES.map((m, i) => <option key={i} value={i + 1}>{m}</option>)}
           </select>
         </label>
+        <button onClick={() => openPdf(`/consumos/huella.pdf?anio=${anio}&mes=${mes}`)} disabled={!rep}>Descargar PDF (para firmar)</button>
       </div>
 
       {cargando && <p>Cargando...</p>}

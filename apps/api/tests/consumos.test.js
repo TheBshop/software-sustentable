@@ -75,4 +75,30 @@ describe('Huella de carbono consolidada', () => {
   it('rechaza período inválido', async () => {
     await request(app).get('/api/consumos/huella?anio=2026&mes=13').set(as(NV)).expect(400);
   });
+
+  it('exporta PDF de la huella', async () => {
+    const r = await request(app).get('/api/consumos/huella.pdf?anio=2026&mes=11')
+      .set(as(NV))
+      .buffer(true)
+      .parse((res, cb) => { const data = []; res.on('data', (c) => data.push(c)); res.on('end', () => cb(null, Buffer.concat(data))); })
+      .expect(200);
+    expect(r.headers['content-type']).toMatch(/pdf/);
+    expect(r.body.slice(0, 5).toString()).toBe('%PDF-');
+  });
+});
+
+describe('IA ticket de combustible', () => {
+  it('sin ANTHROPIC_API_KEY devuelve "no disponible" en vez de fallar', async () => {
+    const png = Buffer.from([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]); // header PNG mínimo
+    const r = await request(app).post('/api/consumos/combustibles/parse-ticket')
+      .set(as(NV))
+      .attach('foto', png, { filename: 'ticket.png', contentType: 'image/png' })
+      .expect(200);
+    expect(r.body.disponible).toBe(false);
+    expect(r.body.motivo).toMatch(/ANTHROPIC_API_KEY/);
+  });
+
+  it('rechaza sin archivo', async () => {
+    await request(app).post('/api/consumos/combustibles/parse-ticket').set(as(NV)).expect(422);
+  });
 });
