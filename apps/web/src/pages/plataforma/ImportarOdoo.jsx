@@ -23,7 +23,7 @@ export function ImportarOdoo() {
     try {
       const form = new FormData();
       form.append('archivo', archivo);
-      const r = await apiForm(`/api/import/odoo/${tipo}`, form);
+      const r = await apiForm(`/import/odoo/${tipo}`, form);
       setResumen(r);
     } catch (err) {
       setError(err.message || 'Error al importar');

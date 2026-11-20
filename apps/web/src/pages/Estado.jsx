@@ -7,7 +7,7 @@ export default function Estado() {
   const [err, setErr] = useState('');
 
   useEffect(() => {
-    api('/api/estado').then(setEstado).catch((e) => setErr(e.message));
+    api('/estado').then(setEstado).catch((e) => setErr(e.message));
   }, []);
 
   if (err) return <div className="pant"><div className="aviso aviso-error">{err}</div></div>;
@@ -39,7 +39,7 @@ export default function Estado() {
       <div className="tarjeta" style={{ marginTop: 12 }}>
         <h2>Mis datos</h2>
         <p className="ayuda">Podés bajar en cualquier momento un ZIP con todos los datos de tu organización. Son tuyos.</p>
-        <button onClick={() => descargar('/api/mi-organizacion/exportar/datos.zip', `datos-${new Date().toISOString().slice(0, 10)}.zip`)}>Descargar todos mis datos (ZIP)</button>
+        <button onClick={() => descargar('/mi-organizacion/exportar/datos.zip', `datos-${new Date().toISOString().slice(0, 10)}.zip`)}>Descargar todos mis datos (ZIP)</button>
       </div>
     </div>
   );

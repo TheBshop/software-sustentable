@@ -13,7 +13,7 @@ export default function Snigei() {
   async function cargar() {
     setCargando(true);
     try {
-      const r = await api(`/api/snigei/mensual?anio=${anio}&mes=${mes}`);
+      const r = await api(`/snigei/mensual?anio=${anio}&mes=${mes}`);
       setRep(r);
     } finally { setCargando(false); }
   }
@@ -35,7 +35,7 @@ export default function Snigei() {
             {MESES.map((m, i) => <option key={i} value={i + 1}>{m}</option>)}
           </select>
         </label>
-        <button onClick={() => descargar(`/api/snigei/mensual.xlsx?anio=${anio}&mes=${mes}`, `snigei-${anio}-${String(mes).padStart(2, '0')}.xlsx`)} disabled={!rep}>Descargar Excel</button>
+        <button onClick={() => descargar(`/snigei/mensual.xlsx?anio=${anio}&mes=${mes}`, `snigei-${anio}-${String(mes).padStart(2, '0')}.xlsx`)} disabled={!rep}>Descargar Excel</button>
       </div>
 
       {cargando && <p>Cargando...</p>}

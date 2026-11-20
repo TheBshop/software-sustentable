@@ -11,19 +11,19 @@ export default function Presupuestos() {
   const [nuevo, setNuevo] = useState(null);
 
   async function refrescar() {
-    const [p, c] = await Promise.all([api('/api/presupuestos'), api('/api/clientes?limit=200')]);
+    const [p, c] = await Promise.all([api('/presupuestos'), api('/clientes?limit=200')]);
     setLista(p.items);
     setClientes(c.items);
   }
   useEffect(() => { refrescar(); }, []);
 
   async function cambiarEstado(p, estado) {
-    await api(`/api/presupuestos/${p._id}/estado`, { method: 'POST', body: { estado } });
+    await api(`/presupuestos/${p._id}/estado`, { method: 'POST', body: { estado } });
     refrescar();
   }
   async function convertir(p) {
     if (!confirm(`Convertir el presupuesto N° ${p.numero} en factura?`)) return;
-    await api(`/api/presupuestos/${p._id}/convertir`, { method: 'POST', body: {} });
+    await api(`/presupuestos/${p._id}/convertir`, { method: 'POST', body: {} });
     refrescar();
   }
 
@@ -56,7 +56,7 @@ export default function Presupuestos() {
               <td style={{ textAlign: 'right' }}>$ {Number(p.total).toLocaleString('es-AR', { minimumFractionDigits: 2 })}</td>
               <td><span className={`chip chip-${p.estado}`}>{p.estado}</span></td>
               <td>
-                <button className="link" onClick={() => openPdf(`/api/presupuestos/${p._id}/pdf`)}>PDF</button>
+                <button className="link" onClick={() => openPdf(`/presupuestos/${p._id}/pdf`)}>PDF</button>
                 {p.estado === 'vigente' && <>
                   {' · '}<button className="link" onClick={() => cambiarEstado(p, 'aceptado')}>Marcar aceptado</button>
                   {' · '}<button className="link" onClick={() => cambiarEstado(p, 'rechazado')}>Rechazar</button>
@@ -94,7 +94,7 @@ function NuevoPresupuesto({ draft, setDraft, clientes, onSaved }) {
         notas: draft.notas || undefined,
         lineas: draft.lineas.map((l) => ({ ...l, cantidad: Number(l.cantidad), precioUnitario: Number(l.precioUnitario) })),
       };
-      await api('/api/presupuestos', { method: 'POST', body });
+      await api('/presupuestos', { method: 'POST', body });
       onSaved();
     } catch (err) {
       setError(err.message || 'No se pudo guardar');

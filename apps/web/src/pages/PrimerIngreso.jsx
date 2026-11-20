@@ -19,7 +19,7 @@ export default function PrimerIngreso() {
     if (nueva.length < 8) return setError('Mínimo 8 caracteres');
     setGuardando(true);
     try {
-      await api('/api/auth/cambiar-password', { method: 'POST', body: { actual, nueva } });
+      await api('/auth/cambiar-password', { method: 'POST', body: { actual, nueva } });
       setUser({ ...user, debeCambiarPassword: false });
       nav('/', { replace: true });
     } catch (err) {
