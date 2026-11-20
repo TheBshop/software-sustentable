@@ -59,9 +59,8 @@ export default function Landing() {
   return (
     <div className="land">
       <header className="land-top">
-        <Link to="/" className="land-logo">
-          <span className="logo-mark"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M7 19H4.8a1.8 1.8 0 0 1-1.6-2.7l1.2-2" /><path d="M11 19h8.2a1.8 1.8 0 0 0 1.6-2.7l-1.3-2.2" /><path d="m14 16-3 3 3 3" /><path d="M8.3 13.6 7.2 9.4 3 10.5" /><path d="m9.3 5.3 1.4-2.5a1.8 1.8 0 0 1 3.1 0l3.1 5.4" /><path d="m13.4 9.2 4.2 1.1 1.1-4.2" /></svg></span>
-          <span>Gestión RSU</span>
+        <Link to="/" className="land-logo" aria-label="Gestión RSU — Inicio">
+          <img src="/logo.svg" alt="Gestión RSU" height="40" style={{ display: 'block' }} />
         </Link>
         <nav className="land-nav">
           <a href="#producto">Producto</a>
