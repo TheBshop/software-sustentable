@@ -38,6 +38,11 @@ export default function Landing() {
   const navigate = useNavigate();
   const [abrirDemo, setAbrirDemo] = useState(false);
 
+  function probarDemo() {
+    setAbrirDemo(true);
+    setTimeout(() => document.getElementById('demo')?.scrollIntoView({ behavior: 'smooth' }), 50);
+  }
+
   // Ya hay sesión: no mostrar la landing, mandar al panel que corresponda
   if (getToken()) {
     const u = getUser();
@@ -64,9 +69,9 @@ export default function Landing() {
         </Link>
         <nav className="land-nav">
           <a href="#producto">Producto</a>
-          <a href="#demo">Demo</a>
-          <Link to="/login">Ingresar</Link>
-          <button type="button" className="primary sm" onClick={() => setAbrirDemo(true)}>Probar la demo</button>
+          <a href="#precios">Planes</a>
+          <button type="button" className="secondary sm" onClick={probarDemo}>Probar la demo</button>
+          <Link to="/login" className="primary button">Entrar</Link>
         </nav>
       </header>
 
@@ -76,8 +81,8 @@ export default function Landing() {
           <h1>Residuos, consumos y huella de carbono en un solo lugar.</h1>
           <p className="land-lead">La plataforma hecha para cooperativas, empresas recicladoras, industrias y municipios argentinos. Gestionás residuos, medís tus consumos de luz, gas, agua y combustible, y obtenés tu huella de carbono mensual. Diseñada con la normativa argentina como base, no como anexo.</p>
           <div className="land-ctas">
-            <button type="button" className="primary" onClick={() => setAbrirDemo(true)}>Probar la demo</button>
-            <a href="#demo" className="secondary button">Ver el video</a>
+            <Link to="/login" className="primary button">Entrar a mi cuenta</Link>
+            <button type="button" className="secondary" onClick={probarDemo}>Probar la demo</button>
           </div>
           <ul className="land-puntos">
             {PUNTOS.map((p) => (
@@ -160,7 +165,7 @@ export default function Landing() {
         <h2>Probala con datos reales</h2>
         <p className="muted">Entrá a los prototipos de ejemplo cargados en el entorno de demostración. Vas al panel completo, sin instalar nada.</p>
         {abrirDemo ? <Prototipos onEntrar={entrar} /> : (
-          <button type="button" className="primary" onClick={() => setAbrirDemo(true)}>Ver los prototipos disponibles</button>
+          <button type="button" className="primary" onClick={probarDemo}>Ver los prototipos disponibles</button>
         )}
       </section>
 
