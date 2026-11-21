@@ -4,10 +4,10 @@ import { useEffect, useState } from 'react';
 import { api, esOperador, getToken, getUser, setToken, setUser } from '../api.js';
 
 const PUNTOS = [
-  { t: 'Especialistas en RSU argentino', s: 'Un sistema pensado para cooperativas, recicladoras y municipios de Argentina, no un ERP genérico adaptado.' },
-  { t: 'Trazabilidad end-to-end', s: 'Del pedido al retiro, al lote, al remito y al certificado verde con QR público.' },
-  { t: 'Cumplimiento guiado por jurisdicción', s: 'Matriz con las leyes nacionales, provinciales y municipales que te aplican, y evidencias con vencimientos.' },
-  { t: 'Contador contento', s: 'Libro IVA Ventas y Compras, Mayor y balance exportables. Facturación electrónica AFIP integrada.' },
+  { t: 'Me paso el mes atrás de los choferes y las planillas', s: 'Panel operativo en vivo: retiros, pesaje, ingresos a planta y ventas desde cualquier dispositivo. El chofer entra con su usuario desde el celular.' },
+  { t: 'El contador me cobra una fortuna por cada DDJJ', s: 'Libro IVA Ventas y Compras, Mayor, facturación AFIP con CAE y DDJJ mensual de materiales reciclables generados desde las operaciones.' },
+  { t: 'Mi cliente grande me pide reporte de impacto', s: 'PDF firmado mensual con CO₂ evitado, toneladas recuperadas y trazabilidad. Lo mandás y tu cliente lo usa para su reporte ESG.' },
+  { t: 'Vivo con miedo a la auditoría municipal', s: 'Matriz de obligaciones por jurisdicción, vencimientos con alerta y manifiestos de traslado con QR y firma digital (Ley 25.612).' },
 ];
 
 function Prototipos({ onEntrar }) {
@@ -78,8 +78,8 @@ export default function Landing() {
       <section className="land-hero">
         <div className="land-hero-txt">
           <span className="land-eyebrow">Gestión sustentable integral — Argentina</span>
-          <h1>Residuos, consumos y huella de carbono en un solo lugar.</h1>
-          <p className="land-lead">La plataforma hecha para cooperativas, empresas recicladoras, industrias y municipios argentinos. Gestionás residuos, medís tus consumos de luz, gas, agua y combustible, y obtenés tu huella de carbono mensual. Diseñada con la normativa argentina como base, no como anexo.</p>
+          <h1>Sacale el contador, la planilla y la carpeta de normativa a tu cooperativa.</h1>
+          <p className="land-lead">Gestión RSU es el único software argentino que junta la <strong>operación diaria</strong> de tu planta, la <strong>facturación AFIP</strong>, los <strong>manifiestos de ley</strong>, tus <strong>consumos</strong> de luz, gas, agua y combustible, y tu <strong>huella de carbono mensual</strong> — en una sola pantalla.</p>
           <div className="land-ctas">
             <Link to="/login" className="primary button">Entrar a mi cuenta</Link>
             <button type="button" className="secondary" onClick={probarDemo}>Probar la demo</button>
@@ -173,6 +173,10 @@ export default function Landing() {
         <span>Gestión RSU — Argentina, {new Date().getFullYear()}</span>
         <Link to="/login">Entrar con mi usuario</Link>
       </footer>
+
+      <a href="https://wa.me/5493435254141?text=Hola!%20Quiero%20saber%20m%C3%A1s%20sobre%20Gesti%C3%B3n%20RSU" target="_blank" rel="noreferrer" className="wpp-float" aria-label="Escribinos por WhatsApp">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="#fff" aria-hidden="true"><path d="M20.52 3.48A11.9 11.9 0 0 0 12.06 0C5.46 0 .08 5.37.08 11.96c0 2.11.55 4.17 1.6 5.99L0 24l6.22-1.63a11.95 11.95 0 0 0 5.84 1.49h.01c6.6 0 11.98-5.37 11.98-11.96a11.9 11.9 0 0 0-3.53-8.42zM12.07 21.79h-.01a9.9 9.9 0 0 1-5.05-1.38l-.36-.22-3.69.97.98-3.6-.24-.37a9.87 9.87 0 0 1-1.51-5.23c0-5.47 4.46-9.92 9.94-9.92 2.65 0 5.15 1.03 7.02 2.9a9.87 9.87 0 0 1 2.91 7.02c0 5.47-4.46 9.83-9.99 9.83zm5.46-7.4c-.3-.15-1.77-.87-2.04-.97-.27-.1-.47-.15-.67.15-.2.3-.77.97-.95 1.17-.17.2-.35.22-.65.07-.3-.15-1.26-.46-2.4-1.48-.89-.79-1.49-1.77-1.66-2.07-.17-.3-.02-.46.13-.6.13-.13.3-.35.45-.52.15-.17.2-.3.3-.5.1-.2.05-.37-.02-.52-.07-.15-.67-1.62-.92-2.22-.24-.58-.49-.5-.67-.51l-.57-.01c-.2 0-.52.07-.8.37-.27.3-1.04 1.02-1.04 2.49s1.07 2.89 1.22 3.09c.15.2 2.1 3.2 5.08 4.49.71.3 1.26.49 1.69.63.71.22 1.35.19 1.86.12.57-.08 1.77-.72 2.02-1.42.25-.7.25-1.3.17-1.42-.07-.12-.27-.2-.57-.35z"/></svg>
+      </a>
     </div>
   );
 }
