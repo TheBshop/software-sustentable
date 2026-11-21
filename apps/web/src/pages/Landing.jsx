@@ -1,7 +1,10 @@
-// Landing pública: título fuerte, subtítulo, botón "Probar la demo" y video del producto.
-import { Link, Navigate, useNavigate } from 'react-router-dom';
-import { useEffect, useState } from 'react';
-import { api, esOperador, getToken, getUser, setToken, setUser } from '../api.js';
+// Landing pública: título fuerte, subtítulo, video y CTA a WhatsApp para pedir una demo.
+import { Link, Navigate } from 'react-router-dom';
+import { esOperador, getToken, getUser } from '../api.js';
+
+const WPP_DEMO = 'https://wa.me/5493435254141?text=' + encodeURIComponent(
+  'Hola! Vi la página de Gestión RSU y me gustaría agendar una demo para conocer la plataforma.',
+);
 
 const PUNTOS = [
   { t: 'Me paso el mes atrás de los choferes y las planillas', s: 'Panel operativo en vivo: retiros, pesaje, ingresos a planta y ventas desde cualquier dispositivo. El chofer entra con su usuario desde el celular.' },
@@ -10,55 +13,12 @@ const PUNTOS = [
   { t: 'Vivo con miedo a la auditoría municipal', s: 'Matriz de obligaciones por jurisdicción, vencimientos con alerta y manifiestos de traslado con QR y firma digital (Ley 25.612).' },
 ];
 
-function Prototipos({ onEntrar }) {
-  const [items, setItems] = useState(null);
-  const [error, setError] = useState(null);
-  useEffect(() => {
-    api('/demo/prototipos').then((r) => setItems(r.items)).catch((e) => setError(e.message));
-  }, []);
-  if (error) return <p className="muted small">La demo pública no está disponible en este entorno. Pedí acceso con el botón de abajo.</p>;
-  if (!items) return <p className="muted small">Buscando prototipos…</p>;
-  if (!items.length) return <p className="muted small">Todavía no hay prototipos cargados.</p>;
-  return (
-    <ul className="land-demos">
-      {items.map((p) => (
-        <li key={p.slug}>
-          <div>
-            <b>{p.nombre}</b>
-            <span className="small muted">{p.perfil} · {p.ciudad}, {p.provincia}</span>
-          </div>
-          <button type="button" className="secondary sm" onClick={() => onEntrar(p.slug)}>Entrar</button>
-        </li>
-      ))}
-    </ul>
-  );
-}
-
 export default function Landing() {
-  const navigate = useNavigate();
-  const [abrirDemo, setAbrirDemo] = useState(false);
-
-  function probarDemo() {
-    setAbrirDemo(true);
-    setTimeout(() => document.getElementById('demo')?.scrollIntoView({ behavior: 'smooth' }), 50);
-  }
-
   // Ya hay sesión: no mostrar la landing, mandar al panel que corresponda
   if (getToken()) {
     const u = getUser();
     const destino = u?.organizacion?.rol === 'plataforma' ? '/plataforma' : esOperador(u) ? '/panel' : '/portal';
     return <Navigate to={destino} replace />;
-  }
-
-  async function entrar(slug) {
-    try {
-      const { token, user } = await api('/demo/entrar', { method: 'POST', body: { slug } });
-      setToken(token);
-      setUser(user);
-      navigate('/');
-    } catch (e) {
-      alert(e.message);
-    }
   }
 
   return (
@@ -70,7 +30,7 @@ export default function Landing() {
         <nav className="land-nav">
           <a href="#producto">Producto</a>
           <a href="#precios">Planes</a>
-          <button type="button" className="secondary sm" onClick={probarDemo}>Probar la demo</button>
+          <a href={WPP_DEMO} target="_blank" rel="noreferrer" className="secondary sm">Pedir una demo</a>
           <Link to="/login" className="primary button">Entrar</Link>
         </nav>
       </header>
@@ -82,7 +42,7 @@ export default function Landing() {
           <p className="land-lead">Gestión RSU es el único software argentino que junta la <strong>operación diaria</strong> de tu planta, la <strong>facturación AFIP</strong>, los <strong>manifiestos de ley</strong>, tus <strong>consumos</strong> de luz, gas, agua y combustible, y tu <strong>huella de carbono mensual</strong> — en una sola pantalla.</p>
           <div className="land-ctas">
             <Link to="/login" className="primary button">Entrar a mi cuenta</Link>
-            <button type="button" className="secondary" onClick={probarDemo}>Probar la demo</button>
+            <a href={WPP_DEMO} target="_blank" rel="noreferrer" className="secondary button">Pedir una demo</a>
           </div>
           <ul className="land-puntos">
             {PUNTOS.map((p) => (
@@ -162,11 +122,9 @@ export default function Landing() {
       </section>
 
       <section id="demo" className="land-demo">
-        <h2>Probala con datos reales</h2>
-        <p className="muted">Entrá a los prototipos de ejemplo cargados en el entorno de demostración. Vas al panel completo, sin instalar nada.</p>
-        {abrirDemo ? <Prototipos onEntrar={entrar} /> : (
-          <button type="button" className="primary" onClick={probarDemo}>Ver los prototipos disponibles</button>
-        )}
+        <h2>¿Querés verlo con tus datos?</h2>
+        <p className="muted">Agendamos 30 minutos por videollamada. Te mostramos cómo quedaría tu cooperativa, planta o municipio en la plataforma, con ejemplos reales del rubro. Sin compromiso.</p>
+        <a href={WPP_DEMO} target="_blank" rel="noreferrer" className="primary button">Pedir una demo por WhatsApp</a>
       </section>
 
       <footer className="land-foot">
