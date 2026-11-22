@@ -46,6 +46,9 @@ import { clasificadorRouter } from './modules/normativa/clasificador.js';
 import { productividadRouter } from './modules/productividad/productividad.routes.js';
 import { solicitudesRouter, hojaDeRutaRouter, logisticaRouter } from './modules/logistica/logistica.routes.js';
 import { Recuperador, recuperadorInput, comprasRouter, recuperadoresResumenRouter } from './modules/recuperadores/recuperadores.js';
+import { obligacionesRouter } from './modules/obligaciones/obligaciones.routes.js';
+import { ddjjReciclarRouter } from './modules/ddjj-reciclar/ddjj-reciclar.routes.js';
+import { snigeiPublicoRouter } from './modules/snigei/snigei-publico.routes.js';
 import { demoRouter } from './demo/demo.routes.js';
 import { assertHabilitados, assertCorrienteHabilitada, registrarIngreso, registrarVenta } from './modules/movimientos/movimiento.service.js';
 import { pickupsRouter } from './modules/pickups/pickup.routes.js';
@@ -118,6 +121,7 @@ export function createApp(config = {}) {
   app.use('/api/public/certificados', publicCertificatesRouter);
   // Recepción pública de manifiestos (QR del PDF → firma + geolocalización)
   app.use('/api/public/manifiestos', (_req, _res, next) => runWithoutTenant(next), manifiestosPublicosRouter);
+  app.use('/api/public/snigei', snigeiPublicoRouter);
   if (env.demoMode) app.use('/api/demo', (_req, _res, next) => runWithoutTenant(next), demoRouter);
 
   // ---- Privadas ----
@@ -159,6 +163,8 @@ export function createApp(config = {}) {
   coopApi.use('/import/odoo', importOdooRouter); // importador de CSVs exportados desde Odoo
   coopApi.use('/presupuestos', presupuestosRouter); // presupuestos (cotizaciones) previos a factura
   coopApi.use('/snigei', snigeiRouter); // reporte mensual tipo SNIGEI (toneladas por corriente/tratamiento)
+  coopApi.use('/obligaciones', obligacionesRouter); // panel de obligaciones con semáforos
+  coopApi.use('/ddjj-reciclar', ddjjReciclarRouter); // DDJJ RG 2849 comercializadores de materiales a reciclar
   coopApi.use('/consumos', consumosRouter); // servicios, combustible y huella de carbono
   coopApi.use('/mi-organizacion/exportar', exportarRouter); // export ZIP de todos los datos (Ley 25.326)
   coopApi.use('/mi-organizacion', miOrganizacionRouter); // datos fiscales y edición de la propia org

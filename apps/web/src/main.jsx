@@ -36,6 +36,8 @@ import Sustentabilidad from './pages/resultados/Sustentabilidad.jsx';
 import Matriz from './pages/cumplimiento/Matriz.jsx';
 import Autodiagnostico from './pages/cumplimiento/Autodiagnostico.jsx';
 import Snigei from './pages/cumplimiento/Snigei.jsx';
+import Obligaciones from './pages/cumplimiento/Obligaciones.jsx';
+import DDJJReciclar from './pages/cumplimiento/DDJJReciclar.jsx';
 import Consumos from './pages/sustentabilidad/Consumos.jsx';
 import HuellaCarbono from './pages/sustentabilidad/HuellaCarbono.jsx';
 import Flota from './pages/sustentabilidad/Flota.jsx';
@@ -155,6 +157,8 @@ ReactDOM.createRoot(document.getElementById('root')).render(
           <Route path="/ayuda" element={<Ayuda />} />
           <Route path="/estado" element={<EstadoPag />} />
           <Route path="/cumplimiento/snigei" element={<Snigei />} />
+          <Route path="/cumplimiento/obligaciones" element={<Obligaciones />} />
+          <Route path="/cumplimiento/ddjj-reciclar" element={<DDJJReciclar />} />
           <Route path="/sustentabilidad/huella" element={<HuellaCarbono />} />
           <Route path="/sustentabilidad/consumos" element={<Consumos />} />
           <Route path="/sustentabilidad/flota" element={<Flota />} />

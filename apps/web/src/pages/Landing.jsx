@@ -1,4 +1,5 @@
 // Landing pública: título fuerte, subtítulo, video y CTA a WhatsApp para pedir una demo.
+import { useEffect, useState } from 'react';
 import { Link, Navigate } from 'react-router-dom';
 import { esOperador, getToken, getUser } from '../api.js';
 
@@ -69,6 +70,8 @@ export default function Landing() {
         </div>
       </section>
 
+      <CasoSNIGEI />
+
       <section id="precios" className="land-prod">
         <h2>Planes</h2>
         <p className="muted">Durante el programa piloto el uso es gratuito por 3 meses. Después, estos son los planes previstos — sujeto a ajuste con el feedback de los pilotos.</p>
@@ -138,3 +141,41 @@ export default function Landing() {
     </div>
   );
 }
+
+function CasoSNIGEI() {
+  const [data, setData] = useState(null);
+  const [vista, setVista] = useState('totales');
+  useEffect(() => {
+    fetch('/api/public/snigei/caso-ejemplo').then((r) => r.ok ? r.json() : null).then(setData).catch(() => {});
+  }, []);
+  if (!data) return null;
+  const f = (n) => n?.toLocaleString('es-AR', { maximumFractionDigits: 1 }) ?? '—';
+  const { totales: t, porCorriente, porFraccion, porTratamiento, periodo, organizacion } = data;
+  return (
+    <section id="snigei" className="land-prod" style={{ background: 'var(--bg-sutil, #f0fdf4)' }}>
+      <h2>Caso real: reporte mensual tipo SNIGEI</h2>
+      <p className="muted">Así se ve el reporte que genera la plataforma automáticamente a partir de las operaciones cargadas. Este es un ejemplo de <strong>{organizacion}</strong>, {periodo.label}.</p>
+      <div className="land-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 12, marginBottom: 20 }}>
+        <div style={kpiStyle}><div style={{ fontSize: 24, fontWeight: 700 }}>{f(t.ingresoTn)}</div><div style={{ fontSize: 12, color: '#6b7280' }}>Toneladas ingresadas</div></div>
+        <div style={kpiStyle}><div style={{ fontSize: 24, fontWeight: 700 }}>{f(t.ventaKg / 1000)}</div><div style={{ fontSize: 12, color: '#6b7280' }}>Toneladas vendidas</div></div>
+        <div style={kpiStyle}><div style={{ fontSize: 24, fontWeight: 700, color: '#16a34a' }}>{f(t.tasaRecuperacionPct)}%</div><div style={{ fontSize: 12, color: '#6b7280' }}>Tasa de recupero</div></div>
+        <div style={kpiStyle}><div style={{ fontSize: 24, fontWeight: 700, color: '#dc2626' }}>{f(t.disposicionFinalKg / 1000)}</div><div style={{ fontSize: 12, color: '#6b7280' }}>Tn a disposición final</div></div>
+      </div>
+      <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+        {[['totales', 'Por corriente'], ['fraccion', 'Por fracción'], ['tratamiento', 'Por tratamiento']].map(([k, l]) => (
+          <button key={k} className={vista === k ? 'primary sm' : 'secondary sm'} onClick={() => setVista(k)}>{l}</button>
+        ))}
+      </div>
+      <table className="tabla" style={{ fontSize: 14 }}>
+        <thead><tr><th>{vista === 'totales' ? 'Corriente' : vista === 'fraccion' ? 'Fracción' : 'Tratamiento'}</th><th style={{ textAlign: 'right' }}>Kg</th></tr></thead>
+        <tbody>
+          {(vista === 'totales' ? porCorriente : vista === 'fraccion' ? porFraccion : porTratamiento).map((r, i) => (
+            <tr key={i}><td>{r.corriente || r.fraccion || r.tratamiento}</td><td style={{ textAlign: 'right' }}>{f(r.kg)}</td></tr>
+          ))}
+        </tbody>
+      </table>
+      <p style={{ marginTop: 16, fontSize: 13, color: '#9ca3af' }}>El reporte SNIGEI es obligatorio para operadores registrados ante el MAyDS. Gestión RSU lo genera en un clic.</p>
+    </section>
+  );
+}
+const kpiStyle = { background: '#fff', borderRadius: 8, padding: '16px 12px', textAlign: 'center', boxShadow: '0 1px 3px rgba(0,0,0,.08)' };
