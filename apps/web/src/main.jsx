@@ -4,6 +4,8 @@ import { BrowserRouter, Routes, Route, Navigate, NavLink, Outlet, useLocation } 
 import { getToken, getUser, esOperador, logout } from './api.js';
 import Shell from './shell/Shell.jsx';
 import Login from './pages/Login.jsx';
+import ForgotPassword from './pages/ForgotPassword.jsx';
+import ResetPassword from './pages/ResetPassword.jsx';
 import Bienvenida from './pages/Bienvenida.jsx';
 import Panel from './pages/inicio/Panel.jsx';
 import Pasos from './pages/inicio/Pasos.jsx';
@@ -112,6 +114,8 @@ ReactDOM.createRoot(document.getElementById('root')).render(
       <Routes>
         <Route path="/" element={<Landing />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/primera-vez" element={<PrimerIngreso />} />
         <Route path="/plataforma" element={<GateAdmin><Plataforma /></GateAdmin>} />
         {/* Selector de prototipos: solo responde con la API en modo demostración */}

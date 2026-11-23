@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { api, setToken, setUser, esOperador } from '../api.js';
 
 export default function Login() {
@@ -48,6 +48,7 @@ export default function Login() {
         </label>
         {error && <p className="error">{error}</p>}
         <button type="submit">Ingresar</button>
+        <p style={{ textAlign: 'center', marginTop: 12 }}><Link to="/forgot-password" style={{ fontSize: 13, color: '#6b7280' }}>Olvidé mi contraseña</Link></p>
       </form>
       </div>
     </div>
