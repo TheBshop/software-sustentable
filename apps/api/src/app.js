@@ -118,6 +118,26 @@ export function createApp(config = {}) {
       message: { error: 'Demasiados intentos fallidos. Esperá 15 minutos y volvé a probar.' },
     }),
   );
+  app.use(
+    '/api/auth/forgot-password',
+    rateLimit({
+      windowMs: 15 * 60 * 1000,
+      limit: 5,
+      standardHeaders: 'draft-7',
+      legacyHeaders: false,
+      message: { error: 'Demasiados pedidos de recuperación. Esperá 15 minutos.' },
+    }),
+  );
+  app.use(
+    '/api/auth/reset-password',
+    rateLimit({
+      windowMs: 15 * 60 * 1000,
+      limit: 10,
+      standardHeaders: 'draft-7',
+      legacyHeaders: false,
+      message: { error: 'Demasiados intentos. Esperá 15 minutos.' },
+    }),
+  );
   app.use('/api/auth', authRouter);
   app.use('/api/public/certificados', publicCertificatesRouter);
   // Recepción pública de manifiestos (QR del PDF → firma + geolocalización)

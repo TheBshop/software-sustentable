@@ -5,20 +5,24 @@ import { api, setToken, setUser, esOperador } from '../api.js';
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPwd, setShowPwd] = useState(false);
   const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   async function onSubmit(e) {
     e.preventDefault();
     setError(null);
+    setLoading(true);
     try {
       const { token, user } = await api('/auth/login', { method: 'POST', body: { email, password } });
       setToken(token);
       setUser(user);
-      // Cooperativas → panel de gestión. Empresas y municipios → portal.
       navigate(user.organizacion?.rol === 'plataforma' ? '/plataforma' : esOperador(user) ? '/panel' : '/portal');
     } catch (err) {
       setError(err.message);
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -40,14 +44,17 @@ export default function Login() {
         <p className="muted">Con el usuario que te dio tu organización.</p>
         <label>
           Email
-          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="email" />
+          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="email" autoFocus />
         </label>
         <label>
           Contraseña
-          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required autoComplete="current-password" />
+          <div style={{ position: 'relative' }}>
+            <input type={showPwd ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} required autoComplete="current-password" style={{ paddingRight: 44 }} />
+            <button type="button" onClick={() => setShowPwd(!showPwd)} tabIndex={-1} style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', padding: 4, cursor: 'pointer', fontSize: 13, color: '#6b7280' }}>{showPwd ? 'Ocultar' : 'Ver'}</button>
+          </div>
         </label>
-        {error && <p className="error">{error}</p>}
-        <button type="submit">Ingresar</button>
+        {error && <p className="error" role="alert">{error}</p>}
+        <button type="submit" disabled={loading}>{loading ? 'Ingresando…' : 'Ingresar'}</button>
         <p style={{ textAlign: 'center', marginTop: 12 }}><Link to="/forgot-password" style={{ fontSize: 13, color: '#6b7280' }}>Olvidé mi contraseña</Link></p>
       </form>
       </div>

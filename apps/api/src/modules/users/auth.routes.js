@@ -9,6 +9,16 @@ import { env } from '../../config/env.js';
 
 export const authRouter = Router();
 
+const RESET_TTL = 60 * 60 * 1000; // 1 hora
+const MAX_INTENTOS_LOGIN = 5;
+const BLOQUEO_MINUTOS = 15;
+
+const passwordSchema = z.string().min(8, 'La contraseña debe tener al menos 8 caracteres').max(100);
+
+function hashToken(token) {
+  return crypto.createHash('sha256').update(token).digest('hex');
+}
+
 export const sesion = (user, org) => ({
   token: signToken(user, org),
   user: { id: user._id, nombre: user.nombre, rol: user.rol, debeCambiarPassword: !!user.debeCambiarPassword, organizacion: { id: org._id, nombre: org.nombre, tipo: org.tipo, rol: org.rol ?? (org.tipo === 'plataforma' ? 'plataforma' : ['cooperativa', 'recicladora'].includes(org.tipo) ? 'operador' : 'generador') } },
@@ -16,18 +26,43 @@ export const sesion = (user, org) => ({
 
 authRouter.post('/login', async (req, res) => {
   const { email, password } = z.object({ email: z.string().email(), password: z.string().min(1) }).parse(req.body);
-  const user = await User.findOne({ email: email.toLowerCase(), activo: true }).select('+passwordHash').populate('organizacion');
-  if (!user || !(await user.checkPassword(password))) throw new HttpError(401, 'Email o contraseña incorrectos');
+  const user = await User.findOne({ email: email.toLowerCase(), activo: true })
+    .select('+passwordHash +loginIntentosFallidos +loginBloqueadoHasta')
+    .populate('organizacion');
+
+  if (!user) throw new HttpError(401, 'Email o contraseña incorrectos');
+
+  // Bloqueo temporal tras intentos fallidos
+  if (user.loginBloqueadoHasta && user.loginBloqueadoHasta > new Date()) {
+    const minutos = Math.ceil((user.loginBloqueadoHasta - Date.now()) / 60000);
+    throw new HttpError(429, `Cuenta bloqueada temporalmente. Intentá de nuevo en ${minutos} minuto${minutos === 1 ? '' : 's'}.`);
+  }
+
+  if (!(await user.checkPassword(password))) {
+    const intentos = (user.loginIntentosFallidos ?? 0) + 1;
+    const update = { loginIntentosFallidos: intentos };
+    if (intentos >= MAX_INTENTOS_LOGIN) {
+      update.loginBloqueadoHasta = new Date(Date.now() + BLOQUEO_MINUTOS * 60 * 1000);
+      update.loginIntentosFallidos = 0;
+    }
+    await User.updateOne({ _id: user._id }, update);
+    if (intentos >= MAX_INTENTOS_LOGIN) {
+      throw new HttpError(429, `Demasiados intentos fallidos. La cuenta se bloqueó por ${BLOQUEO_MINUTOS} minutos.`);
+    }
+    throw new HttpError(401, 'Email o contraseña incorrectos');
+  }
+
   if (!user.organizacion?.activo) throw new HttpError(403, 'La organización está dada de baja');
+
+  // Login exitoso: resetear contador y registrar timestamp
+  await User.updateOne({ _id: user._id }, { loginIntentosFallidos: 0, loginBloqueadoHasta: null, ultimoLogin: new Date() });
   res.json(sesion(user, user.organizacion));
 });
 
 authRouter.get('/me', requireAuth, (req, res) => res.json(req.user));
 
-// Cambio de contraseña del propio usuario. Habilitado también para usuarios con
-// `debeCambiarPassword: true` (primer ingreso tras alta por crear-piloto).
 authRouter.post('/cambiar-password', requireAuth, async (req, res) => {
-  const { actual, nueva } = z.object({ actual: z.string().min(1), nueva: z.string().min(8).max(100) }).parse(req.body);
+  const { actual, nueva } = z.object({ actual: z.string().min(1), nueva: passwordSchema }).parse(req.body);
   const user = await User.findById(req.user.sub).select('+passwordHash');
   if (!user || !(await user.checkPassword(actual))) throw new HttpError(401, 'La contraseña actual es incorrecta');
   user.passwordHash = await User.hashPassword(nueva);
@@ -36,47 +71,67 @@ authRouter.post('/cambiar-password', requireAuth, async (req, res) => {
   res.json({ ok: true });
 });
 
-// Tokens de reset en memoria (TTL 1h). En producción con múltiples instancias
-// conviene moverlo a Redis o a un campo en el User, pero para un solo dyno alcanza.
-const resetTokens = new Map();
-const RESET_TTL = 60 * 60 * 1000;
-
 authRouter.post('/forgot-password', async (req, res) => {
   const { email } = z.object({ email: z.string().email() }).parse(req.body);
   const user = await User.findOne({ email: email.toLowerCase(), activo: true });
   // Siempre responder OK para no revelar si el email existe
   if (!user) return res.json({ ok: true });
+
+  // Generar token, guardar hash en la base (el token plano va en el mail)
   const token = crypto.randomBytes(32).toString('hex');
-  resetTokens.set(token, { userId: user._id.toString(), expires: Date.now() + RESET_TTL });
+  user.resetToken = hashToken(token);
+  user.resetTokenExpires = new Date(Date.now() + RESET_TTL);
+  await user.save();
+
   const link = `${env.publicWebUrl}/reset-password?token=${token}`;
+  const nombre = user.nombre.split(' ')[0] || '';
   await enviarMail({
     to: email.toLowerCase(),
     subject: 'Restablecer contraseña — Gestión RSU',
     text:
-      `Hola ${user.nombre.split(' ')[0] || ''},\n\n` +
+      `Hola ${nombre},\n\n` +
       `Recibimos un pedido para restablecer tu contraseña.\n\n` +
       `  Hacé clic acá: ${link}\n\n` +
       `El enlace es válido por 1 hora. Si no pediste esto, ignorá este mensaje.\n\n` +
       `Gestión RSU — Nueva Vida`,
+    html:
+      `<div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:24px">` +
+      `<div style="background:#2f7d32;padding:16px 24px;border-radius:8px 8px 0 0">` +
+      `<h2 style="color:#fff;margin:0;font-size:18px">Gestión RSU</h2></div>` +
+      `<div style="border:1px solid #e5e7eb;border-top:0;padding:24px;border-radius:0 0 8px 8px">` +
+      `<p>Hola ${nombre},</p>` +
+      `<p>Recibimos un pedido para restablecer tu contraseña.</p>` +
+      `<p style="text-align:center;margin:24px 0">` +
+      `<a href="${link}" style="background:#2f7d32;color:#fff;padding:12px 32px;border-radius:6px;text-decoration:none;font-weight:600;display:inline-block">Restablecer contraseña</a></p>` +
+      `<p style="font-size:13px;color:#6b7280">El enlace es válido por 1 hora. Si no pediste esto, ignorá este mensaje.</p>` +
+      `<p style="font-size:13px;color:#6b7280">Si el botón no funciona, copiá este enlace:<br>` +
+      `<a href="${link}" style="color:#2f7d32;word-break:break-all">${link}</a></p>` +
+      `</div></div>`,
   });
   res.json({ ok: true });
 });
 
 authRouter.post('/reset-password', async (req, res) => {
-  const { token, password } = z.object({ token: z.string().min(1), password: z.string().min(8).max(100) }).parse(req.body);
-  const entry = resetTokens.get(token);
-  if (!entry || entry.expires < Date.now()) throw new HttpError(400, 'El enlace expiró o no es válido. Pedí uno nuevo.');
-  const user = await User.findById(entry.userId).select('+passwordHash');
-  if (!user) throw new HttpError(400, 'Usuario no encontrado');
+  const { token, password } = z.object({ token: z.string().min(1), password: passwordSchema }).parse(req.body);
+  const hashed = hashToken(token);
+  const user = await User.findOne({
+    resetToken: hashed,
+    resetTokenExpires: { $gt: new Date() },
+    activo: true,
+  }).select('+passwordHash +resetToken +resetTokenExpires');
+  if (!user) throw new HttpError(400, 'El enlace expiró o no es válido. Pedí uno nuevo.');
+
   user.passwordHash = await User.hashPassword(password);
   user.debeCambiarPassword = false;
+  user.resetToken = undefined;
+  user.resetTokenExpires = undefined;
+  user.loginIntentosFallidos = 0;
+  user.loginBloqueadoHasta = undefined;
   await user.save();
-  resetTokens.delete(token);
   res.json({ ok: true });
 });
 
-// Usuarios de la propia organización. Las cooperativas los gestionan acá; los clientes
-// (empresa/municipio) lo hacen desde el portal con el mismo criterio.
+// Usuarios de la propia organización
 export const usersRouter = Router();
 
 usersRouter.get('/', requireRole('cliente_admin'), async (req, res) => {
@@ -85,7 +140,7 @@ usersRouter.get('/', requireRole('cliente_admin'), async (req, res) => {
 
 usersRouter.post('/', requireRole('cliente_admin'), async (req, res) => {
   const data = z
-    .object({ nombre: z.string().min(2), email: z.string().email(), password: z.string().min(8), rol: z.enum(rolesPara(rolDeToken(req.user))) })
+    .object({ nombre: z.string().min(2), email: z.string().email(), password: passwordSchema, rol: z.enum(rolesPara(rolDeToken(req.user))) })
     .parse(req.body);
   const user = await User.create({ ...data, organizacion: req.user.org, passwordHash: await User.hashPassword(data.password) });
   res.status(201).json({ id: user._id, nombre: user.nombre, email: user.email, rol: user.rol });
