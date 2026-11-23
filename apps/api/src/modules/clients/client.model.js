@@ -42,6 +42,17 @@ const clientSchema = new mongoose.Schema(
       frecuenciaRetiro: String, // "semanal", "martes y viernes", etc.
       diasPagoFactura: { type: Number, default: 15 },
     },
+    // Régimen de grandes generadores: datos jurisdiccionales para el certificado verde
+    regimenGG: {
+      jurisdiccion: String, // clave de REGIMENES_GG (caba, buenos_aires, cordoba…)
+      nroRegistroGG: String, // N° inscripción en el registro de la jurisdicción
+      categoriaGG: String, // categoría del generador (I/II/III en CABA, etc.)
+      nroHabilitacionEspecial: String,
+      categoriaYA: String, // categorías Y/A del residuo (PBA, Ley 11.720)
+      codigoValorizacion: String, // R1–R13 (Basilea)
+      categoriaResiduoCABA: String,
+      clasificacionResiduo: String, // Córdoba: clasificación según Ley 9.088/10.208
+    },
     activo: { type: Boolean, default: true },
   },
   { timestamps: true },
@@ -85,6 +96,18 @@ export const clientInput = z.object({
       fin: dateInput.optional(),
       frecuenciaRetiro: z.string().optional(),
       diasPagoFactura: z.number().int().min(0).optional(),
+    })
+    .optional(),
+  regimenGG: z
+    .object({
+      jurisdiccion: z.string().optional(),
+      nroRegistroGG: z.string().optional(),
+      categoriaGG: z.string().optional(),
+      nroHabilitacionEspecial: z.string().optional(),
+      categoriaYA: z.string().optional(),
+      codigoValorizacion: z.string().optional(),
+      categoriaResiduoCABA: z.string().optional(),
+      clasificacionResiduo: z.string().optional(),
     })
     .optional(),
   activo: z.boolean().optional(),

@@ -41,6 +41,7 @@ import { balanceRouter } from './modules/finanzas/balance.routes.js';
 import { RegistroSeguridad, registroInput, registroUpdate, seguridadResumenRouter } from './modules/seguridad/seguridad.js';
 import { accesoPortalRouter } from './modules/clients/acceso.routes.js';
 import { constanciaRouter } from './modules/certificates/constancia.js';
+import { regimenesGGRouter } from './modules/certificates/regimenes-gg.routes.js';
 import { normativaRouter } from './modules/normativa/normativa.routes.js';
 import { clasificadorRouter } from './modules/normativa/clasificador.js';
 import { productividadRouter } from './modules/productividad/productividad.routes.js';
@@ -171,6 +172,7 @@ export function createApp(config = {}) {
   coopApi.use('/estado', estadoRouter); // versión, uptime, storage, email
   coopApi.use('/clientes', accesoPortalRouter);
   coopApi.use('/clientes', constanciaRouter); // constancia anual de reciclado (Ley 25.612)
+  coopApi.use('/regimenes-gg', regimenesGGRouter); // jurisdicciones y campos para grandes generadores
   coopApi.use('/normativa', normativaRouter); // marco normativo según la jurisdicción
   coopApi.use('/clasificador', clasificadorRouter); // clasificación de residuos en los tres niveles
   coopApi.use('/productividad', productividadRouter); // indicadores de la guía de productividad de plantas

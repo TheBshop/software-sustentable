@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import { api, fmtPeso, openPdf } from '../api.js';
-import { ConfirmButton, Tag } from '../ui.jsx';
+import { ConfirmButton, Tag, useLoad } from '../ui.jsx';
 import AccesoPortal from './AccesoPortal.jsx';
 
-const VACIO = { tipo: 'generador', razonSocial: '', cuit: '', email: '', telefono: '', direccion: '', modalidad: 'por_retiro', montoFijo: 0 };
+const VACIO = { tipo: 'generador', razonSocial: '', cuit: '', email: '', telefono: '', direccion: '', modalidad: 'por_retiro', montoFijo: 0, ggJurisdiccion: '', ggNroRegistro: '', ggCategoria: '', ggCodigoValorizacion: '', ggCategoriaYA: '', ggCategoriaResiduoCABA: '', ggClasificacionResiduo: '' };
 const TIPOS = { generador: 'Generador', comprador: 'Comprador', proveedor: 'Proveedor (le compramos)', ambos: 'Generador y comprador' };
 const MODALIDADES = { por_retiro: 'Por retiro', por_kg: 'Por kg', abono_mensual: 'Abono mensual', sin_cargo: 'Sin cargo' };
 
@@ -33,12 +33,28 @@ export default function Clientes() {
       telefono: c.contacto?.telefono ?? '',
       modalidad: c.tarifa?.modalidad ?? 'por_retiro',
       montoFijo: c.tarifa?.montoFijo ?? 0,
+      ggJurisdiccion: c.regimenGG?.jurisdiccion ?? '',
+      ggNroRegistro: c.regimenGG?.nroRegistroGG ?? '',
+      ggCategoria: c.regimenGG?.categoriaGG ?? '',
+      ggCodigoValorizacion: c.regimenGG?.codigoValorizacion ?? '',
+      ggCategoriaYA: c.regimenGG?.categoriaYA ?? '',
+      ggCategoriaResiduoCABA: c.regimenGG?.categoriaResiduoCABA ?? '',
+      ggClasificacionResiduo: c.regimenGG?.clasificacionResiduo ?? '',
     });
   }
 
   async function save(e) {
     e.preventDefault();
     setError(null);
+    const gg = form.ggJurisdiccion ? {
+      jurisdiccion: form.ggJurisdiccion,
+      ...(form.ggNroRegistro && { nroRegistroGG: form.ggNroRegistro }),
+      ...(form.ggCategoria && { categoriaGG: form.ggCategoria }),
+      ...(form.ggCodigoValorizacion && { codigoValorizacion: form.ggCodigoValorizacion }),
+      ...(form.ggCategoriaYA && { categoriaYA: form.ggCategoriaYA }),
+      ...(form.ggCategoriaResiduoCABA && { categoriaResiduoCABA: form.ggCategoriaResiduoCABA }),
+      ...(form.ggClasificacionResiduo && { clasificacionResiduo: form.ggClasificacionResiduo }),
+    } : undefined;
     const body = {
       tipo: form.tipo,
       ...(form.direccion.trim() && { direcciones: [{ direccion: form.direccion.trim() }] }),
@@ -46,6 +62,7 @@ export default function Clientes() {
       ...(form.cuit && { cuit: form.cuit }),
       contacto: { ...(form.email && { email: form.email }), ...(form.telefono && { telefono: form.telefono }) },
       tarifa: { modalidad: form.modalidad, montoFijo: Number(form.montoFijo) },
+      ...(gg && { regimenGG: gg }),
     };
     try {
       await api(editId ? `/clientes/${editId}` : '/clientes', { method: editId ? 'PATCH' : 'POST', body });
@@ -125,6 +142,7 @@ export default function Clientes() {
           {['por_retiro', 'abono_mensual'].includes(form.modalidad) && (
             <label>Monto ($)<input type="number" min="0" step="any" value={form.montoFijo} onChange={set('montoFijo')} /></label>
           )}
+          {['generador', 'ambos'].includes(form.tipo) && <RegimenGG form={form} setForm={setForm} set={set} />}
           {error && <p className="error">{error}</p>}
           <div className="row">
             <button type="submit">Guardar</button>
@@ -133,5 +151,48 @@ export default function Clientes() {
         </form>
       </div>
     </>
+  );
+}
+
+function RegimenGG({ form, setForm, set }) {
+  const { data } = useLoad('/regimenes-gg');
+  const regimenes = data?.items ?? [];
+  const seleccionado = regimenes.find((r) => r.clave === form.ggJurisdiccion);
+  const camposExtra = seleccionado?.camposCertificado ?? [];
+  const necesitaCategoria = camposExtra.some((c) => c.campo === 'categoriaResiduoCABA');
+  const necesitaCategoriaYA = camposExtra.some((c) => c.campo === 'categoriaYA');
+  const necesitaClasificacion = camposExtra.some((c) => c.campo === 'clasificacionResiduo');
+  const necesitaCodigo = camposExtra.some((c) => c.campo === 'codigoValorizacion');
+
+  return (
+    <fieldset style={{ border: '1px solid var(--border, #e5e7eb)', borderRadius: 8, padding: '12px 14px', marginTop: 8 }}>
+      <legend style={{ fontSize: 13, fontWeight: 600, color: 'var(--accent, #2f7d32)' }}>Régimen de grandes generadores</legend>
+      <label>
+        Jurisdicción
+        <select value={form.ggJurisdiccion} onChange={(e) => setForm({ ...form, ggJurisdiccion: e.target.value, ggNroRegistro: '', ggCategoria: '', ggCodigoValorizacion: '', ggCategoriaYA: '', ggCategoriaResiduoCABA: '', ggClasificacionResiduo: '' })}>
+          <option value="">Sin régimen específico</option>
+          {regimenes.map((r) => <option key={r.clave} value={r.clave}>{r.nombre}</option>)}
+        </select>
+      </label>
+      {seleccionado && (
+        <>
+          <p className="muted small" style={{ margin: '4px 0 8px' }}>{seleccionado.definicion} — {seleccionado.normaGG}{!seleccionado.verificado && ' ⚠ sin verificar'}</p>
+          <label>N° registro como gran generador<input value={form.ggNroRegistro} onChange={set('ggNroRegistro')} placeholder="Según la jurisdicción" /></label>
+          <label>Categoría del generador<input value={form.ggCategoria} onChange={set('ggCategoria')} placeholder="Ej: I, II, III" /></label>
+          {necesitaCodigo && (
+            <label>
+              Código de valorización
+              <select value={form.ggCodigoValorizacion} onChange={set('ggCodigoValorizacion')}>
+                <option value="">—</option>
+                {Object.entries(data?.codigosValorizacion ?? {}).map(([k, v]) => <option key={k} value={k}>{k} — {v}</option>)}
+              </select>
+            </label>
+          )}
+          {necesitaCategoria && <label>Categoría residuo CABA<input value={form.ggCategoriaResiduoCABA} onChange={set('ggCategoriaResiduoCABA')} /></label>}
+          {necesitaCategoriaYA && <label>Categorías Y/A (Ley 11.720 PBA)<input value={form.ggCategoriaYA} onChange={set('ggCategoriaYA')} /></label>}
+          {necesitaClasificacion && <label>Clasificación del residuo<input value={form.ggClasificacionResiduo} onChange={set('ggClasificacionResiduo')} /></label>}
+        </>
+      )}
+    </fieldset>
   );
 }
