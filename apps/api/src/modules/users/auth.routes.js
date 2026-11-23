@@ -6,6 +6,7 @@ import { requireAuth, requireRole, rolesPara, rolDeToken, signToken } from '../.
 import { HttpError } from '../../middleware/error.js';
 import { enviarMail } from '../../lib/mailer.js';
 import { env } from '../../config/env.js';
+import { altaOperador, TIPOS_OPERADOR } from '../organizations/alta.service.js';
 
 export const authRouter = Router();
 
@@ -57,6 +58,35 @@ authRouter.post('/login', async (req, res) => {
   // Login exitoso: resetear contador y registrar timestamp
   await User.updateOne({ _id: user._id }, { loginIntentosFallidos: 0, loginBloqueadoHasta: null, ultimoLogin: new Date() });
   res.json(sesion(user, user.organizacion));
+});
+
+authRouter.post('/register', async (req, res) => {
+  const data = z.object({
+    tipo: z.enum(TIPOS_OPERADOR),
+    nombre: z.string().min(2, 'Nombre de la organización requerido'),
+    cuit: z.string().optional(),
+    admin: z.object({
+      nombre: z.string().min(2, 'Tu nombre es requerido'),
+      email: z.string().email('Email inválido'),
+      password: passwordSchema,
+    }),
+  }).parse(req.body);
+
+  const { org, admin } = await altaOperador({
+    tipo: data.tipo,
+    nombre: data.nombre,
+    cuit: data.cuit,
+    admin: { nombre: data.admin.nombre, email: data.admin.email },
+  });
+
+  // Setear la contraseña elegida por el usuario (altaOperador genera una al azar)
+  const user = await User.findById(admin.id);
+  user.passwordHash = await User.hashPassword(data.admin.password);
+  user.debeCambiarPassword = false;
+  await user.save();
+
+  const orgDoc = await user.populate('organizacion');
+  res.status(201).json(sesion(user, orgDoc.organizacion));
 });
 
 authRouter.get('/me', requireAuth, (req, res) => res.json(req.user));

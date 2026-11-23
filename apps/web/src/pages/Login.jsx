@@ -18,6 +18,7 @@ export default function Login() {
       const { token, user } = await api('/auth/login', { method: 'POST', body: { email, password } });
       setToken(token);
       setUser(user);
+      if (user.debeCambiarPassword) return navigate('/primera-vez', { replace: true });
       navigate(user.organizacion?.rol === 'plataforma' ? '/plataforma' : esOperador(user) ? '/panel' : '/portal');
     } catch (err) {
       setError(err.message);
@@ -56,6 +57,10 @@ export default function Login() {
         {error && <p className="error" role="alert">{error}</p>}
         <button type="submit" disabled={loading}>{loading ? 'Ingresando…' : 'Ingresar'}</button>
         <p style={{ textAlign: 'center', marginTop: 12 }}><Link to="/forgot-password" style={{ fontSize: 13, color: '#6b7280' }}>Olvidé mi contraseña</Link></p>
+        <p style={{ textAlign: 'center', marginTop: 4 }}>
+          <span style={{ fontSize: 13, color: '#6b7280' }}>¿No tenés cuenta? </span>
+          <Link to="/register" style={{ fontSize: 13 }}>Crear cuenta</Link>
+        </p>
       </form>
       </div>
     </div>

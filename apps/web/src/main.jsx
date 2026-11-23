@@ -62,6 +62,7 @@ import PortalShell from './pages/portal/PortalShell.jsx';
 import Plataforma from './pages/plataforma/Plataforma.jsx';
 import Landing from './pages/Landing.jsx';
 import PrimerIngreso from './pages/PrimerIngreso.jsx';
+import Register from './pages/Register.jsx';
 import Ayuda from './pages/Ayuda.jsx';
 import EstadoPag from './pages/Estado.jsx';
 import './styles.css';
@@ -114,6 +115,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
       <Routes>
         <Route path="/" element={<Landing />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/primera-vez" element={<PrimerIngreso />} />

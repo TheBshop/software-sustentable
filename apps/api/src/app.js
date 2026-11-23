@@ -119,6 +119,16 @@ export function createApp(config = {}) {
     }),
   );
   app.use(
+    '/api/auth/register',
+    rateLimit({
+      windowMs: 60 * 60 * 1000,
+      limit: 5,
+      standardHeaders: 'draft-7',
+      legacyHeaders: false,
+      message: { error: 'Demasiados registros. Esperá una hora.' },
+    }),
+  );
+  app.use(
     '/api/auth/forgot-password',
     rateLimit({
       windowMs: 15 * 60 * 1000,

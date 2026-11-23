@@ -42,7 +42,8 @@ export default function Landing() {
           <h1>Sacale el contador, la planilla y la carpeta de normativa a tu cooperativa.</h1>
           <p className="land-lead">Gestión RSU es el único software argentino que junta la <strong>operación diaria</strong> de tu planta, la <strong>facturación AFIP</strong>, los <strong>manifiestos de ley</strong>, tus <strong>consumos</strong> de luz, gas, agua y combustible, y tu <strong>huella de carbono mensual</strong> — en una sola pantalla.</p>
           <div className="land-ctas">
-            <Link to="/login" className="primary button">Entrar a mi cuenta</Link>
+            <Link to="/register" className="primary button">Crear cuenta gratis</Link>
+            <Link to="/login" className="secondary button">Entrar a mi cuenta</Link>
             <a href={WPP_DEMO} target="_blank" rel="noreferrer" className="secondary button">Pedir una demo</a>
           </div>
           <ul className="land-puntos">
