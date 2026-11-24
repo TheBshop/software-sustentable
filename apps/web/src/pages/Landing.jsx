@@ -39,7 +39,7 @@ export default function Landing() {
       <section className="land-hero">
         <div className="land-hero-txt">
           <span className="land-eyebrow">Gestión sustentable integral — Argentina</span>
-          <h1>Sacale el contador, la planilla y la carpeta de normativa a tu cooperativa.</h1>
+          <h1>Operación, trazabilidad y cumplimiento para el sector de residuos.</h1>
           <p className="land-lead">Gestión RSU es el único software argentino que junta la <strong>operación diaria</strong> de tu planta, la <strong>facturación AFIP</strong>, los <strong>manifiestos de ley</strong>, tus <strong>consumos</strong> de luz, gas, agua y combustible, y tu <strong>huella de carbono mensual</strong> — en una sola pantalla.</p>
           <div className="land-ctas">
             <Link to="/register" className="primary button">Crear cuenta gratis</Link>
