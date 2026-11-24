@@ -86,7 +86,7 @@ try {
   console.log('\nPróximos pasos:');
   console.log('  1. (Si no salió el email) mandá al admin URL + usuario + contraseña.');
   console.log('  2. Primer ingreso: cambio de contraseña y datos fiscales.');
-  console.log('  3. Si va a facturar AFIP, cargar el certificado desde /comercial/afip.');
+  console.log('  3. Si va a facturar con ARCA, cargar el certificado desde /comercial/afip.');
   console.log(`${linea}\n`);
 } catch (err) {
   console.error(`✗ ${err.message}`);

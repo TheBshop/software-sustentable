@@ -80,7 +80,7 @@ obligacionesRouter.get('/', async (_req, res) => {
   {
     const ultimoComp = await Comprobante.findOne().sort('-fecha').lean().catch(() => null);
     const tieneAfip = !!ultimoComp;
-    items.push({ ...obl('facturacion', 'Facturación electrónica con CAE', 'fiscal', 'RG 4291 y modif.'), semaforo: tieneAfip ? 'verde' : 'gris', automatico: true, ayuda: tieneAfip ? 'Al día: última factura emitida.' : 'Configurá tus datos de AFIP para emitir facturas.', ruta: '/comercial/afip' });
+    items.push({ ...obl('facturacion', 'Facturación electrónica con CAE', 'fiscal', 'RG 4291 y modif.'), semaforo: tieneAfip ? 'verde' : 'gris', automatico: true, ayuda: tieneAfip ? 'Al día: última factura emitida.' : 'Configurá tus datos de ARCA para emitir facturas.', ruta: '/comercial/afip' });
   }
 
   // --- AMBIENTALES ---

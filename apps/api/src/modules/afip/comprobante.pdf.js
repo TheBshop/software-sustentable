@@ -85,11 +85,11 @@ export async function renderComprobantePdf(comprobanteId, stream) {
   // QR y CAE al pie
   const yQR = doc.page.height - 200;
   doc.image(qrPng, 40, yQR, { width: 130, height: 130 });
-  doc.fillColor('#000').font('Helvetica-Bold').fontSize(11).text('Datos AFIP', 190, yQR);
+  doc.fillColor('#000').font('Helvetica-Bold').fontSize(11).text('Datos ARCA', 190, yQR);
   doc.font('Helvetica').fontSize(10)
     .text(`CAE N°: ${c.cae ?? '—'}`, 190, yQR + 18)
     .text(`Vencimiento del CAE: ${c.caeVence ? fmtFecha(c.caeVence) : '—'}`, 190, yQR + 34)
-    .text(`Comprobante autorizado por AFIP${c.modo === 'mock' ? ' (ambiente de PRUEBAS)' : ''}.`, 190, yQR + 50, { width: W - 190 });
+    .text(`Comprobante autorizado por ARCA${c.modo === 'mock' ? ' (ambiente de PRUEBAS)' : ''}.`, 190, yQR + 50, { width: W - 190 });
 
   doc.end();
 }

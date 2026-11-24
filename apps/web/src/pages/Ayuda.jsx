@@ -16,7 +16,7 @@ const TUTORIALES = [
   { titulo: 'Facturación', pasos: [
     'En "Comercial → Presupuestos" podés mandar una cotización previa; cuando el cliente acepta, la convertís en factura con un clic.',
     'En "Comercial → Facturación" armás la factura mensual sumando los retiros del período.',
-    'Si usás AFIP (en pilotos arranca en modo simulado), el CAE y el QR se agregan cuando conectás tu certificado.',
+    'Si usás ARCA (en pilotos arranca en modo simulado), el CAE y el QR se agregan cuando conectás tu certificado.',
   ] },
   { titulo: 'Manifiestos de traslado', pasos: [
     'Antes de llevar material a otro operador, generá un manifiesto en "Operación → Manifiestos".',

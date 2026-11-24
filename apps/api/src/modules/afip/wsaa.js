@@ -36,7 +36,7 @@ export function obtenerTAMock() {
  * Pendiente de implementar hasta que el primer cliente cargue certificado.
  */
 export async function obtenerTAReal(/* { cert, key, cuitEmisor, entorno = 'homologacion' } */) {
-  throw new Error('WSAA real no está implementado todavía. El cliente debe cargar su certificado AFIP y activamos esta ruta.');
+  throw new Error('WSAA real no está implementado todavía. El cliente debe cargar su certificado ARCA y activamos esta ruta.');
 }
 
 const cache = new Map(); // coop -> TA

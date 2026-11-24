@@ -82,7 +82,7 @@ export async function emitirComprobante(data, { usuario } = {}) {
 
     const res = await solicitarCae({ ...base, modo: cfg.modo, coop: String(org._id), cuitEmisor: cfg.cuitEmisor });
     if (res.resultado !== 'A') {
-      throw new HttpError(422, `AFIP rechazó el comprobante: ${res.errores.map((e) => `[${e.codigo}] ${e.msg}`).join(' | ')}`);
+      throw new HttpError(422, `ARCA rechazó el comprobante: ${res.errores.map((e) => `[${e.codigo}] ${e.msg}`).join(' | ')}`);
     }
     const comp = await ComprobanteAfip.create({
       ...base,

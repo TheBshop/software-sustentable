@@ -46,7 +46,7 @@ function Emitir({ catalogos, onEmitido }) {
 
   return (
     <form className="card stack" onSubmit={enviar}>
-      <h3>Emitir comprobante<Ayuda>En modo prueba: devuelve un CAE simulado sin validez fiscal. Cuando la organización cargue su certificado AFIP real, pasa automáticamente a emitir comprobantes válidos.</Ayuda></h3>
+      <h3>Emitir comprobante<Ayuda>En modo prueba: devuelve un CAE simulado sin validez fiscal. Cuando la organización cargue su certificado ARCA real, pasa automáticamente a emitir comprobantes válidos.</Ayuda></h3>
       <div className="form-grid">
         <label>Tipo<select value={f.tipo} onChange={(e) => setF({ ...f, tipo: e.target.value })}>
           {catalogos && Object.entries(catalogos.tipos).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
@@ -87,8 +87,8 @@ export default function Afip() {
     <div className="stack">
       <div className="page-h">
         <div>
-          <h2>Facturación electrónica AFIP<Ayuda>Factura A, B, C o E con CAE. Se integra con el WSFE de AFIP vía homologación o producción según el certificado cargado.</Ayuda></h2>
-          <p className="muted">{estado.data?.modo === 'mock' ? 'Modo prueba (mock) activo. Los comprobantes son simulados sin validez fiscal.' : 'Conectado a AFIP.'}</p>
+          <h2>Facturación electrónica ARCA<Ayuda>Factura A, B, C o E con CAE. Se integra con el WSFE de ARCA vía homologación o producción según el certificado cargado.</Ayuda></h2>
+          <p className="muted">{estado.data?.modo === 'mock' ? 'Modo prueba (mock) activo. Los comprobantes son simulados sin validez fiscal.' : 'Conectado a ARCA.'}</p>
         </div>
       </div>
       <ErrorMsg error={error} />

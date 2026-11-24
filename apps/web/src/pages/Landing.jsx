@@ -9,7 +9,7 @@ const WPP_DEMO = 'https://wa.me/5493435254141?text=' + encodeURIComponent(
 
 const PUNTOS = [
   { t: 'Me paso el mes atrás de los choferes y las planillas', s: 'Panel operativo en vivo: retiros, pesaje, ingresos a planta y ventas desde cualquier dispositivo. El chofer entra con su usuario desde el celular.' },
-  { t: 'El contador me cobra una fortuna por cada DDJJ', s: 'Libro IVA Ventas y Compras, Mayor, facturación AFIP con CAE y DDJJ mensual de materiales reciclables generados desde las operaciones.' },
+  { t: 'El contador me cobra una fortuna por cada DDJJ', s: 'Libro IVA Ventas y Compras, Mayor, facturación ARCA con CAE y DDJJ mensual de materiales reciclables generados desde las operaciones.' },
   { t: 'Mi cliente grande me pide reporte de impacto', s: 'PDF firmado mensual con CO₂ evitado, toneladas recuperadas y trazabilidad. Lo mandás y tu cliente lo usa para su reporte ESG.' },
   { t: 'Vivo con miedo a la auditoría municipal', s: 'Matriz de obligaciones por jurisdicción, vencimientos con alerta y manifiestos de traslado con QR y firma digital (Ley 25.612).' },
 ];
@@ -41,7 +41,7 @@ export default function Landing() {
         <div className="land-hero-txt">
           <span className="land-eyebrow">Gestión sustentable integral — Argentina</span>
           <h1>Operación, trazabilidad y cumplimiento para el sector de residuos.</h1>
-          <p className="land-lead">Gestión RSU es el único software argentino que junta la <strong>operación diaria</strong> de tu planta, la <strong>facturación AFIP</strong>, los <strong>manifiestos de ley</strong>, tus <strong>consumos</strong> de luz, gas, agua y combustible, y tu <strong>huella de carbono mensual</strong> — en una sola pantalla.</p>
+          <p className="land-lead">Gestión RSU es el único software argentino que junta la <strong>operación diaria</strong> de tu planta, la <strong>facturación ARCA</strong>, los <strong>manifiestos de ley</strong>, tus <strong>consumos</strong> de luz, gas, agua y combustible, y tu <strong>huella de carbono mensual</strong> — en una sola pantalla.</p>
           <div className="land-ctas">
             <Link to="/register" className="primary button">Crear cuenta gratis</Link>
             <Link to="/login" className="secondary button">Entrar a mi cuenta</Link>
@@ -67,7 +67,7 @@ export default function Landing() {
           <article><h3>Comercial</h3><p>Presupuestos, ventas con precio de referencia, stock y margen, contratos, remitos numerados, facturación y convenio con el municipio.</p></article>
           <article><h3>Sustentabilidad</h3><p>Cargás tus consumos de luz, gas, agua y combustible, y la plataforma calcula tu huella de carbono mensual: lo que evitás por recuperar y lo que emitís en la operación.</p></article>
           <article><h3>Cumplimiento argentino</h3><p>Matriz con las leyes y ordenanzas de tu provincia y municipio, manifiestos de traslado con QR (Ley 25.612), reporte mensual tipo SNIGEI, certificados verdes.</p></article>
-          <article><h3>Contabilidad lista para AFIP</h3><p>Facturación electrónica (Factura A/B/C con CAE), Libro IVA Ventas y Compras, Mayor de cuentas, importador desde Odoo.</p></article>
+          <article><h3>Contabilidad lista para ARCA</h3><p>Facturación electrónica (Factura A/B/C con CAE), Libro IVA Ventas y Compras, Mayor de cuentas, importador desde Odoo.</p></article>
           <article><h3>Multi-organización</h3><p>Pensado para cooperativas chicas, federaciones y municipios con varias filiales. Cada organización tiene sus datos aislados; el superadmin consolida.</p></article>
         </div>
       </section>
@@ -86,7 +86,7 @@ export default function Landing() {
               <li>Hasta 5 usuarios</li>
               <li>Todos los módulos</li>
               <li>Soporte directo por WhatsApp</li>
-              <li>Facturación AFIP en homologación</li>
+              <li>Facturación ARCA en homologación</li>
             </ul>
           </article>
           <article>
@@ -95,7 +95,7 @@ export default function Landing() {
             <ul>
               <li>1 organización, hasta 10 usuarios</li>
               <li>Hasta 500 retiros/mes</li>
-              <li>Facturación AFIP producción</li>
+              <li>Facturación ARCA producción</li>
               <li>Backup diario + export ZIP</li>
               <li>Soporte en horario hábil</li>
             </ul>
