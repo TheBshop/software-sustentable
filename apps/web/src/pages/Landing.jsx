@@ -8,10 +8,10 @@ const WPP_DEMO = 'https://wa.me/5493435254141?text=' + encodeURIComponent(
 );
 
 const PUNTOS = [
-  { t: 'Me paso el mes atrás de los choferes y las planillas', s: 'Panel operativo en vivo: retiros, pesaje, ingresos a planta y ventas desde cualquier dispositivo. El chofer entra con su usuario desde el celular.' },
-  { t: 'El contador me cobra una fortuna por cada DDJJ', s: 'Libro IVA Ventas y Compras, Mayor, facturación ARCA con CAE y DDJJ mensual de materiales reciclables generados desde las operaciones.' },
-  { t: 'Mi cliente grande me pide reporte de impacto', s: 'PDF firmado mensual con CO₂ evitado, toneladas recuperadas y trazabilidad. Lo mandás y tu cliente lo usa para su reporte ESG.' },
-  { t: 'Vivo con miedo a la auditoría municipal', s: 'Matriz de obligaciones por jurisdicción, vencimientos con alerta y manifiestos de traslado con QR y firma digital (Ley 25.612).' },
+  { t: 'Cooperativas de reciclado', s: 'Organizá retiros, pesaje, lotes y ventas en un solo lugar. Tus choferes usan el celular, vos ves todo en tiempo real. Facturación ARCA, manifiestos y huella de carbono incluidos.' },
+  { t: 'Empresas recicladoras', s: 'Trazabilidad completa de residuos, certificados verdes para tus clientes, reportes ESG automáticos y cumplimiento normativo por jurisdicción.' },
+  { t: 'Municipios', s: 'Controlá la gestión de residuos de tu distrito: obligaciones legales, convenios con cooperativas, auditoría de operadores y reportes SNIGEI listos para presentar.' },
+  { t: 'Generadores de residuos', s: 'Portal propio para ver retiros, certificados y facturas de tu operador. Descargá tu informe de impacto ambiental cuando lo necesites.' },
 ];
 
 export default function Landing() {
