@@ -46,17 +46,17 @@ export default function Landing() {
             <Link to="/login" className="secondary button">Entrar a mi cuenta</Link>
             <a href={WPP_DEMO} target="_blank" rel="noreferrer" className="secondary button">Pedir una demo</a>
           </div>
-          <ul className="land-puntos">
-            {PUNTOS.map((p) => (
-              <li key={p.t}><b>{p.t}</b><span>{p.s}</span></li>
-            ))}
-          </ul>
         </div>
         <div className="land-hero-vid">
           <video src="/demo.mp4" poster="" controls preload="metadata" playsInline autoPlay muted loop>
             Tu navegador no soporta video embebido. <a href="/demo.mp4">Descargá el video</a>.
           </video>
         </div>
+        <ul className="land-puntos land-puntos-bajo">
+          {PUNTOS.map((p) => (
+            <li key={p.t}><b>{p.t}</b><span>{p.s}</span></li>
+          ))}
+        </ul>
       </section>
 
       <section id="producto" className="land-prod">

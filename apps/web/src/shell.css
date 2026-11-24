@@ -272,6 +272,7 @@ td.mono { white-space: nowrap; }
 .land-ctas .primary:hover { background: var(--verde-oscuro); border-color: var(--verde-oscuro); }
 .land-ctas .secondary { background: #fff; color: var(--tinta); border: 1px solid var(--borde); text-decoration: none; display: inline-flex; align-items: center; }
 .land-puntos { list-style: none; margin: 28px 0 0; padding: 0 !important; display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.land-puntos-bajo { grid-column: 1 / -1; }
 .land-puntos li { display: flex; flex-direction: column; gap: 2px; padding-left: 14px; border-left: 2px solid var(--verde); }
 .land-puntos b { font-size: 14px; color: var(--tinta); }
 .land-puntos span { font-size: 13px; color: var(--gris); }
@@ -308,7 +309,7 @@ td.mono { white-space: nowrap; }
   .land-hero { padding: 24px 16px; }
   .land-hero h1 { font-size: 26px; }
   .land-lead { font-size: 14px; }
-  .land-hero-vid { padding: 8px; border-radius: 12px; }
+  .land-hero-vid { padding: 6px; border-radius: 10px; margin: 0 -16px; width: calc(100% + 32px); box-shadow: none; }
 }
 
 /* Página pública de recepción de manifiestos */
