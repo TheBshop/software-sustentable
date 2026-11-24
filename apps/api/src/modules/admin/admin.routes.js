@@ -36,6 +36,24 @@ adminRouter.post('/organizaciones', async (req, res) => {
   res.status(201).json({ organizacion: { id: org._id, tipo: org.tipo, rol: org.rol, nombre: org.nombre }, admin });
 });
 
+adminRouter.get('/registros-recientes', async (req, res) => {
+  const limite = Math.min(Number(req.query.limite) || 20, 100);
+  const orgs = await Organization.find({ tipo: { $ne: 'plataforma' } }).sort('-createdAt').limit(limite).lean();
+  const orgIds = orgs.map((o) => o._id);
+  const admins = await User.find({ organizacion: { $in: orgIds }, rol: 'admin' }).select('nombre email organizacion ultimoLogin createdAt').lean();
+  const adminPorOrg = Object.fromEntries(admins.map((u) => [String(u.organizacion), u]));
+  res.json({
+    items: orgs.map((o) => {
+      const admin = adminPorOrg[String(o._id)];
+      return {
+        id: o._id, tipo: o.tipo, nombre: o.nombre, cuit: o.cuit, activo: o.activo,
+        jurisdiccion: o.jurisdiccion, creada: o.createdAt,
+        admin: admin ? { nombre: admin.nombre, email: admin.email, ultimoLogin: admin.ultimoLogin } : null,
+      };
+    }),
+  });
+});
+
 adminRouter.patch('/organizaciones/:id', async (req, res) => {
   const data = z.object({ nombre: z.string().min(2).optional(), activo: z.boolean().optional() }).parse(req.body);
   const org = await Organization.findOneAndUpdate({ _id: req.params.id, tipo: { $ne: 'plataforma' } }, data, { new: true });

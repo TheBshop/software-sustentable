@@ -185,6 +185,33 @@ function Fila({ o, onCambio }) {
   );
 }
 
+function RegistrosRecientes() {
+  const { data } = useLoad('/admin/registros-recientes?limite=10');
+  if (!data?.items?.length) return null;
+  return (
+    <div className="card stack">
+      <h3>Registros recientes</h3>
+      <div className="table-wrap">
+        <table>
+          <thead><tr><th>Organización</th><th>Tipo</th><th>Admin</th><th>Email</th><th>Registrada</th><th>Último login</th></tr></thead>
+          <tbody>
+            {data.items.map((o) => (
+              <tr key={o.id}>
+                <td><b>{o.nombre}</b>{o.cuit && <div className="small muted">{o.cuit}</div>}</td>
+                <td><span className="tag gray">{TIPOS[o.tipo] ?? o.tipo}</span></td>
+                <td>{o.admin?.nombre ?? '—'}</td>
+                <td className="small">{o.admin?.email ?? '—'}</td>
+                <td className="small muted">{fmtFecha(o.creada)}</td>
+                <td className="small">{o.admin?.ultimoLogin ? fmtFecha(o.admin.ultimoLogin) : <span className="muted">Nunca</span>}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
 export default function Plataforma() {
   const user = getUser();
   const [filtro, setFiltro] = useState('');
@@ -228,6 +255,7 @@ export default function Plataforma() {
               </div>
               <label className="row">Buscar<input type="search" placeholder="Nombre o CUIT" value={filtro} onChange={(e) => setFiltro(e.target.value)} /></label>
             </div>
+            <RegistrosRecientes />
             <NuevaOrg onListo={reload} />
             <div className="card flush table-wrap">
               <table>
