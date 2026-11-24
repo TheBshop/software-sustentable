@@ -156,7 +156,20 @@ tbody tr:hover td { background: #fafbfb; }
 .login-hero li::before { content: '✓'; color: #5eead4; font-weight: 700; }
 .login-hero .eyebrow { font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: #5eead4; }
 .login-form-col { display: grid; place-items: center; padding: 24px 16px; }
-@media (max-width: 860px) { .login-pant { grid-template-columns: minmax(0, 1fr); } .login-hero { padding: 32px 20px; } }
+@media (max-width: 860px) {
+  .login-pant { grid-template-columns: minmax(0, 1fr); }
+  .login-hero { padding: 32px 20px; }
+  .login-hero h1 { font-size: 24px; }
+  .login-hero ul { display: none; }
+  .card.login { width: 100%; }
+}
+@media (max-width: 480px) {
+  .login-hero { padding: 24px 16px; gap: 10px; }
+  .login-hero h1 { font-size: 20px; }
+  .login-hero p { font-size: 14px; }
+  .login-form-col { padding: 16px; }
+  .card.login fieldset legend { font-size: 15px; }
+}
 
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
@@ -283,6 +296,19 @@ td.mono { white-space: nowrap; }
   .land-hero { grid-template-columns: 1fr; gap: 28px; padding: 32px 20px; }
   .land-puntos { grid-template-columns: 1fr; }
   .land-prod, .land-demo { padding: 48px 20px; }
+  .land-nav a:not(.primary):not(.secondary) { display: none; }
+  .land-ctas { flex-direction: column; }
+  .land-ctas .button { text-align: center; }
+}
+@media (max-width: 480px) {
+  .land-top { padding: 10px 16px; }
+  .land-top .land-logo img { height: 32px; }
+  .land-nav { gap: 8px; }
+  .land-nav .primary, .land-nav .secondary { padding: 8px 12px; font-size: 13px; }
+  .land-hero { padding: 24px 16px; }
+  .land-hero h1 { font-size: 26px; }
+  .land-lead { font-size: 14px; }
+  .land-hero-vid { padding: 8px; border-radius: 12px; }
 }
 
 /* Página pública de recepción de manifiestos */
