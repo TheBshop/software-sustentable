@@ -162,6 +162,10 @@ function Fila({ o, onCambio }) {
     await api(`/admin/organizaciones/${o.id}`, { method: 'PATCH', body: { activo: !o.activo } });
     onCambio();
   }
+  async function eliminar() {
+    await api(`/admin/organizaciones/${o.id}`, { method: 'DELETE' });
+    onCambio();
+  }
   return (
     <>
       <tr>
@@ -174,6 +178,7 @@ function Fila({ o, onCambio }) {
         <td className="actions">
           <button type="button" className="link" onClick={() => setAbierta(!abierta)}>{abierta ? 'Cerrar' : 'Usuarios'}</button>
           <ConfirmButton onConfirm={toggleActivo}>{o.activo ? 'Desactivar' : 'Activar'}</ConfirmButton>
+          <ConfirmButton onConfirm={eliminar}>Eliminar</ConfirmButton>
         </td>
       </tr>
       {abierta && (

@@ -54,6 +54,14 @@ adminRouter.get('/registros-recientes', async (req, res) => {
   });
 });
 
+adminRouter.delete('/organizaciones/:id', async (req, res) => {
+  const org = await Organization.findOne({ _id: req.params.id, tipo: { $ne: 'plataforma' } });
+  if (!org) throw new HttpError(404, 'Organización no encontrada');
+  const { deletedCount } = await User.deleteMany({ organizacion: org._id });
+  await org.deleteOne();
+  res.json({ eliminada: true, usuariosEliminados: deletedCount });
+});
+
 adminRouter.patch('/organizaciones/:id', async (req, res) => {
   const data = z.object({ nombre: z.string().min(2).optional(), activo: z.boolean().optional() }).parse(req.body);
   const org = await Organization.findOneAndUpdate({ _id: req.params.id, tipo: { $ne: 'plataforma' } }, data, { new: true });
