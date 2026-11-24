@@ -63,6 +63,7 @@ import Plataforma from './pages/plataforma/Plataforma.jsx';
 import Landing from './pages/Landing.jsx';
 import PrimerIngreso from './pages/PrimerIngreso.jsx';
 import Register from './pages/Register.jsx';
+import CalculadoraCarbono from './pages/CalculadoraCarbono.jsx';
 import Ayuda from './pages/Ayuda.jsx';
 import EstadoPag from './pages/Estado.jsx';
 import './styles.css';
@@ -116,6 +117,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
         <Route path="/" element={<Landing />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/calculadora-carbono" element={<CalculadoraCarbono />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/primera-vez" element={<PrimerIngreso />} />

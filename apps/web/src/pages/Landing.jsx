@@ -31,6 +31,7 @@ export default function Landing() {
         <nav className="land-nav">
           <a href="#producto">Producto</a>
           <a href="#precios">Planes</a>
+          <Link to="/calculadora-carbono">Calculadora CO₂</Link>
           <a href={WPP_DEMO} target="_blank" rel="noreferrer" className="secondary sm">Pedir una demo</a>
           <Link to="/login" className="primary button">Entrar</Link>
         </nav>

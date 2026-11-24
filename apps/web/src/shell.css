@@ -312,6 +312,54 @@ td.mono { white-space: nowrap; }
   .land-hero-vid { padding: 6px; border-radius: 10px; margin: 0 -16px; width: calc(100% + 32px); box-shadow: none; }
 }
 
+/* Calculadora de huella de carbono */
+.calc-fondo { min-height: 100vh; display: grid; grid-template-columns: 260px minmax(0, 1fr); background: var(--fondo); }
+.calc-sidebar { background: #0d2a2e; color: #e2f0ef; padding: 32px 24px; display: flex; flex-direction: column; gap: 32px; }
+.calc-logo img { filter: brightness(0) invert(1); }
+.calc-pasos { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 4px; }
+.calc-pasos li { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 8px; font-size: 14px; color: #8bb8b4; }
+.calc-pasos li.activo { background: rgba(94, 234, 212, 0.12); color: #fff; font-weight: 600; }
+.calc-pasos li.hecho { color: #5eead4; }
+.calc-num { width: 26px; height: 26px; border-radius: 50%; background: rgba(255,255,255,0.1); display: grid; place-items: center; font-size: 13px; font-weight: 700; flex-shrink: 0; }
+.calc-pasos li.activo .calc-num { background: #5eead4; color: #0d2a2e; }
+.calc-pasos li.hecho .calc-num { background: #5eead4; color: #0d2a2e; }
+.calc-main { padding: 40px 48px; max-width: 720px; display: flex; flex-direction: column; gap: 24px; }
+.calc-header { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; }
+.calc-header h1 { margin: 0; font-size: 22px; font-weight: 700; }
+.calc-progreso { font-size: 14px; color: var(--gris); white-space: nowrap; }
+.calc-barra { height: 4px; background: var(--borde); border-radius: 4px; overflow: hidden; }
+.calc-barra i { display: block; height: 100%; background: var(--verde); border-radius: 4px; transition: width 0.3s; }
+.calc-seccion-tag { font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--verde-oscuro); font-weight: 600; }
+.calc-pregunta h2 { margin: 4px 0 16px; font-size: 20px; font-weight: 600; }
+.calc-opciones { display: flex; flex-direction: column; gap: 8px; }
+.calc-opcion { text-align: left; padding: 14px 18px; border: 1px solid var(--borde); border-radius: 10px; background: #fff; font-size: 15px; cursor: pointer; transition: border-color 0.15s, background 0.15s; }
+.calc-opcion:hover { border-color: var(--verde); background: #f0fdf4; }
+.calc-opcion.seleccionada { border-color: var(--verde); background: #dcfce7; font-weight: 600; }
+.calc-nav { display: flex; gap: 12px; }
+.calc-disclaimer { font-size: 12px; color: var(--gris); margin-top: auto; }
+.calc-resultado h2 { margin: 0 0 20px; font-size: 22px; }
+.calc-total { display: flex; align-items: baseline; gap: 10px; margin-bottom: 24px; }
+.calc-numero { font-size: 56px; font-weight: 800; color: var(--verde-oscuro); line-height: 1; }
+.calc-unidad { font-size: 18px; color: var(--gris); }
+.calc-desglose { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+.calc-cat { display: flex; justify-content: space-between; padding: 12px 16px; background: #fff; border: 1px solid var(--borde); border-radius: 8px; }
+.calc-cat-label { font-size: 14px; }
+.calc-cat-valor { font-weight: 700; font-size: 14px; color: var(--verde-oscuro); }
+.calc-nota { font-size: 13px; color: var(--gris); line-height: 1.5; margin: 8px 0 16px; }
+.calc-acciones { display: flex; gap: 12px; flex-wrap: wrap; }
+@media (max-width: 768px) {
+  .calc-fondo { grid-template-columns: 1fr; }
+  .calc-sidebar { flex-direction: row; padding: 16px; gap: 16px; align-items: center; overflow-x: auto; }
+  .calc-sidebar .calc-logo { flex-shrink: 0; }
+  .calc-pasos { flex-direction: row; gap: 2px; }
+  .calc-pasos li { padding: 6px 10px; font-size: 13px; white-space: nowrap; }
+  .calc-pasos li span:last-child { display: none; }
+  .calc-main { padding: 24px 16px; }
+  .calc-header h1 { font-size: 18px; }
+  .calc-numero { font-size: 40px; }
+  .calc-acciones { flex-direction: column; }
+}
+
 /* Página pública de recepción de manifiestos */
 .recibir-pant { min-height: 100vh; background: var(--fondo); padding: 20px; display: flex; justify-content: center; }
 .recibir-pant .card { max-width: 700px; width: 100%; display: flex; flex-direction: column; gap: 14px; padding: 20px; }
