@@ -37,6 +37,7 @@ export const SECCIONES = [
       { to: '/operacion/manifiestos', label: 'Manifiestos', perfiles: PLANTA },
       { to: '/operacion/identificacion', label: 'Identificar residuos' },
       { to: '/operacion/destruccion', label: 'Destrucción de datos' },
+      { to: '/operacion/reacondicionamiento', label: 'Reacondicionamiento' },
       { to: '/operacion/recuperadores', label: 'Recuperadores', perfiles: PLANTA, roles: GESTIONA },
       { to: '/operacion/productividad', label: 'Productividad', perfiles: PLANTA, roles: GESTIONA },
       { to: '/operacion/seguridad', label: 'Seguridad e higiene', roles: ADMINISTRA },
