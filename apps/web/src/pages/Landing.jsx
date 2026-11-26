@@ -8,17 +8,17 @@ const WPP_DEMO = 'https://wa.me/5493435254141?text=' + encodeURIComponent(
 );
 
 const PUNTOS = [
-  { t: 'Cooperativas de reciclado', s: 'Organizá retiros, pesaje, lotes y ventas en un solo lugar. Tus choferes usan el celular, vos ves todo en tiempo real. Facturación ARCA, manifiestos y huella de carbono incluidos.' },
-  { t: 'Empresas recicladoras', s: 'Trazabilidad completa de residuos, certificados verdes para tus clientes, reportes ESG automáticos y cumplimiento normativo por jurisdicción.' },
+  { t: 'Cooperativas y empresas recicladoras', s: 'Organizá retiros, pesaje, lotes y ventas en un solo lugar. Trazabilidad completa, certificados verdes, reportes ESG, facturación ARCA y huella de carbono incluidos.' },
   { t: 'Municipios', s: 'Controlá la gestión de residuos de tu distrito: obligaciones legales, convenios con cooperativas, auditoría de operadores y reportes SNIGEI listos para presentar.' },
   { t: 'Generadores de residuos', s: 'Portal propio para ver retiros, certificados y facturas de tu operador. Descargá tu informe de impacto ambiental cuando lo necesites.' },
+  { t: 'Vecinos', s: 'Sacale foto a tus residuos y la IA te dice qué es, cómo separarlo y dónde tirarlo. Registrate gratis y empezá a reciclar mejor.' },
 ];
 
 export default function Landing() {
   // Ya hay sesión: no mostrar la landing, mandar al panel que corresponda
   if (getToken()) {
     const u = getUser();
-    const destino = u?.organizacion?.rol === 'plataforma' ? '/plataforma' : esOperador(u) ? '/panel' : '/portal';
+    const destino = u?.organizacion?.rol === 'plataforma' ? '/plataforma' : u?.organizacion?.rol === 'vecino' ? '/vecino' : esOperador(u) ? '/panel' : '/portal';
     return <Navigate to={destino} replace />;
   }
 
