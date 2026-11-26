@@ -5,7 +5,7 @@ import { Intake, Sale } from '../plant/plant.models.js';
 import { Material } from '../materials/material.model.js';
 import { Client } from '../clients/client.model.js';
 import { Recuperador } from '../recuperadores/recuperadores.js';
-import { Comprobante } from '../afip/comprobante.model.js';
+import { ComprobanteAfip as Comprobante } from '../afip/comprobante.model.js';
 import { Organization } from '../organizations/organization.model.js';
 import { currentTenant } from '../../lib/tenancy.js';
 

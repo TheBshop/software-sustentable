@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { Organization } from '../organizations/organization.model.js';
 import { Evidencia, estadoEvidencia } from '../cumplimiento/evidencia.model.js';
-import { Comprobante } from '../afip/comprobante.model.js';
+import { ComprobanteAfip as Comprobante } from '../afip/comprobante.model.js';
 import { currentTenant } from '../../lib/tenancy.js';
 import { perfilDe } from '../registros/registro.model.js';
 
