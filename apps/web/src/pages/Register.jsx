@@ -6,6 +6,7 @@ const TIPOS = [
   { value: 'cooperativa', label: 'Cooperativa' },
   { value: 'recicladora', label: 'Empresa recicladora' },
   { value: 'municipio', label: 'Municipio' },
+  { value: 'vecino', label: 'Vecino / Ciudadano' },
 ];
 
 export default function Register() {
@@ -19,7 +20,10 @@ export default function Register() {
   const coinciden = f.password === f.confirm;
   const formOk = f.nombre.trim() && f.adminNombre.trim() && f.email && passwordOk && coinciden;
 
-  const set = (k) => (e) => setF({ ...f, [k]: e.target.value });
+  const set = (k) => (e) => {
+    if (k === 'tipo' && e.target.value === 'vecino') return navigate('/register-vecino');
+    setF({ ...f, [k]: e.target.value });
+  };
 
   async function onSubmit(e) {
     e.preventDefault();

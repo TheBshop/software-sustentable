@@ -60,10 +60,13 @@ export default function Login() {
         <p style={{ textAlign: 'center', marginTop: 4 }}>
           <span style={{ fontSize: 13, color: '#6b7280' }}>¿No tenés cuenta? </span>
           <Link to="/register" style={{ fontSize: 13 }}>Crear cuenta</Link>
-          <span style={{ fontSize: 13, color: '#6b7280' }}> · </span>
-          <Link to="/register-vecino" style={{ fontSize: 13 }}>Soy vecino</Link>
         </p>
       </form>
+      <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 12, padding: '20px 24px', textAlign: 'center', marginTop: 16 }}>
+        <p style={{ margin: '0 0 8px', fontSize: 15, fontWeight: 600, color: 'var(--tinta, #0f1f24)' }}>¿Sos vecino y querés reciclar mejor?</p>
+        <p style={{ margin: '0 0 12px', fontSize: 13, color: 'var(--gris, #5f7177)' }}>Sacale foto a tus residuos y te decimos cómo separarlos. Gratis.</p>
+        <Link to="/register-vecino" className="primary button" style={{ fontSize: 14, padding: '10px 24px' }}>Registrarme como vecino</Link>
+      </div>
       </div>
     </div>
   );
