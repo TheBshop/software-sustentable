@@ -52,6 +52,7 @@ import PortalPedidos from './pages/portal/Pedidos.jsx';
 import VerificarCertificado from './pages/VerificarCertificado.jsx';
 import RecibirManifiesto from './pages/RecibirManifiesto.jsx';
 import Manifiestos from './pages/operacion/Manifiestos.jsx';
+import Identificacion from './pages/operacion/Identificacion.jsx';
 import PortalInicio from './pages/portal/Inicio.jsx';
 import PortalRetiros from './pages/portal/Retiros.jsx';
 import PortalCertificados from './pages/portal/Certificados.jsx';
@@ -137,6 +138,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
           <Route path="/operacion/rutinas" element={<Rutinas />} />
           <Route path="/operacion/tratamientos" element={<Tratamientos />} />
           <Route path="/operacion/manifiestos" element={<Manifiestos />} />
+          <Route path="/operacion/identificacion" element={<Identificacion />} />
           <Route path="/comercial/remitos" element={<Remitos />} />
           <Route path="/comercial/afip" element={<Afip />} />
           <Route path="/comercial/contabilidad" element={<Contabilidad />} />
