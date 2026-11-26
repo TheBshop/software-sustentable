@@ -50,6 +50,7 @@ import { Recuperador, recuperadorInput, comprasRouter, recuperadoresResumenRoute
 import { obligacionesRouter } from './modules/obligaciones/obligaciones.routes.js';
 import { ddjjReciclarRouter } from './modules/ddjj-reciclar/ddjj-reciclar.routes.js';
 import { identificacionRouter } from './modules/identificacion/identificacion.routes.js';
+import { destruccionRouter } from './modules/destruccion/destruccion.routes.js';
 import { vecinoRouter } from './modules/vecino/vecino.routes.js';
 import { snigeiPublicoRouter } from './modules/snigei/snigei-publico.routes.js';
 import { demoRouter } from './demo/demo.routes.js';
@@ -213,6 +214,7 @@ export function createApp(config = {}) {
   coopApi.use('/ddjj-reciclar', ddjjReciclarRouter); // DDJJ RG 2849 comercializadores de materiales a reciclar
   coopApi.use('/consumos', consumosRouter); // servicios, combustible y huella de carbono
   coopApi.use('/identificacion', identificacionRouter); // identificación de residuos con IA desde foto
+  coopApi.use('/destruccion', destruccionRouter); // destrucción segura de datos con certificado
   coopApi.use('/mi-organizacion/exportar', exportarRouter); // export ZIP de todos los datos (Ley 25.326)
   coopApi.use('/mi-organizacion', miOrganizacionRouter); // datos fiscales y edición de la propia org
   coopApi.use('/estado', estadoRouter); // versión, uptime, storage, email
