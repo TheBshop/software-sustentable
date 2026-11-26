@@ -64,6 +64,8 @@ import Plataforma from './pages/plataforma/Plataforma.jsx';
 import Landing from './pages/Landing.jsx';
 import PrimerIngreso from './pages/PrimerIngreso.jsx';
 import Register from './pages/Register.jsx';
+import RegisterVecino from './pages/RegisterVecino.jsx';
+import Vecino from './pages/Vecino.jsx';
 import CalculadoraCarbono from './pages/CalculadoraCarbono.jsx';
 import Ayuda from './pages/Ayuda.jsx';
 import EstadoPag from './pages/Estado.jsx';
@@ -76,6 +78,7 @@ function Zona({ portal, children }) {
   if (!getToken() || !user) return <Navigate to="/login" replace />;
   if (user.debeCambiarPassword && !location.pathname.startsWith('/primera-vez')) return <Navigate to="/primera-vez" replace />;
   if (user.organizacion?.rol === 'plataforma') return <Navigate to="/plataforma" replace />;
+  if (user.organizacion?.rol === 'vecino') return <Navigate to="/vecino" replace />;
   if (!portal && !esOperador(user)) return <Navigate to="/portal" replace />;
   if (portal && esOperador(user)) return <Navigate to="/panel" replace />;
   if (!portal) return children;
@@ -118,10 +121,12 @@ ReactDOM.createRoot(document.getElementById('root')).render(
         <Route path="/" element={<Landing />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/register-vecino" element={<RegisterVecino />} />
         <Route path="/calculadora-carbono" element={<CalculadoraCarbono />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/primera-vez" element={<PrimerIngreso />} />
+        <Route path="/vecino" element={(() => { const u = getUser(); if (!getToken() || u?.organizacion?.rol !== 'vecino') return <Navigate to="/login" replace />; return <Vecino />; })()} />
         <Route path="/plataforma" element={<GateAdmin><Plataforma /></GateAdmin>} />
         {/* Selector de prototipos: solo responde con la API en modo demostración */}
         <Route path="/demo" element={<main className="demo-main"><Demo /></main>} />

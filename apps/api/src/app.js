@@ -50,6 +50,7 @@ import { Recuperador, recuperadorInput, comprasRouter, recuperadoresResumenRoute
 import { obligacionesRouter } from './modules/obligaciones/obligaciones.routes.js';
 import { ddjjReciclarRouter } from './modules/ddjj-reciclar/ddjj-reciclar.routes.js';
 import { identificacionRouter } from './modules/identificacion/identificacion.routes.js';
+import { vecinoRouter } from './modules/vecino/vecino.routes.js';
 import { snigeiPublicoRouter } from './modules/snigei/snigei-publico.routes.js';
 import { demoRouter } from './demo/demo.routes.js';
 import { assertHabilitados, assertCorrienteHabilitada, registrarIngreso, registrarVenta } from './modules/movimientos/movimiento.service.js';
@@ -130,6 +131,16 @@ export function createApp(config = {}) {
     }),
   );
   app.use(
+    '/api/auth/register-vecino',
+    rateLimit({
+      windowMs: 60 * 60 * 1000,
+      limit: 5,
+      standardHeaders: 'draft-7',
+      legacyHeaders: false,
+      message: { error: 'Demasiados registros. Esperá una hora.' },
+    }),
+  );
+  app.use(
     '/api/auth/forgot-password',
     rateLimit({
       windowMs: 15 * 60 * 1000,
@@ -165,6 +176,9 @@ export function createApp(config = {}) {
   app.use('/api/admin', adminRouter);
   // Portal de clientes generadores (empresas y municipios). Versionado: lo pueden consumir terceros.
   app.use('/api/v1/portal', portalRouter);
+
+  // Zona vecinos: ciudadanos que reportan residuos
+  app.use('/api/vecino', vecinoRouter);
 
   // Zona de gestión: organizaciones operadoras (cooperativa, recicladora o municipio).
   // Los generadores usan el portal.

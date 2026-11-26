@@ -89,6 +89,35 @@ authRouter.post('/register', async (req, res) => {
   res.status(201).json(sesion(user, orgDoc.organizacion));
 });
 
+authRouter.post('/register-vecino', async (req, res) => {
+  const data = z.object({
+    nombre: z.string().min(2, 'Tu nombre es requerido'),
+    email: z.string().email('Email inválido'),
+    password: passwordSchema,
+    provincia: z.string().min(2, 'Elegí tu provincia'),
+    municipio: z.string().optional(),
+  }).parse(req.body);
+
+  if (await User.exists({ email: data.email.toLowerCase() })) throw new HttpError(409, 'Ya existe un usuario con ese email');
+
+  const { Organization } = await import('../organizations/organization.model.js');
+  const org = await Organization.create({
+    tipo: 'vecino',
+    rol: 'vecino',
+    nombre: data.nombre,
+    jurisdiccion: { provincia: data.provincia, municipio: data.municipio },
+  });
+  const user = await User.create({
+    nombre: data.nombre,
+    email: data.email.toLowerCase(),
+    rol: 'vecino',
+    organizacion: org._id,
+    passwordHash: await User.hashPassword(data.password),
+    debeCambiarPassword: false,
+  });
+  res.status(201).json(sesion(user, org));
+});
+
 authRouter.get('/me', requireAuth, (req, res) => res.json(req.user));
 
 authRouter.post('/cambiar-password', requireAuth, async (req, res) => {

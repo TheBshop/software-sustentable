@@ -5,8 +5,9 @@ import { HttpError } from './error.js';
 // Roles según el tipo de organización del usuario
 export const ROLES_COOPERATIVA = ['admin', 'administracion', 'operador_planta', 'chofer'];
 export const ROLES_CLIENTE = ['cliente_admin', 'cliente']; // empresas y municipios (portal)
+export const ROLES_VECINO = ['vecino']; // ciudadanos
 export const ROLES_PLATAFORMA = ['superadmin']; // administradores del SaaS
-export const ROLES = [...ROLES_COOPERATIVA, ...ROLES_CLIENTE, ...ROLES_PLATAFORMA];
+export const ROLES = [...ROLES_COOPERATIVA, ...ROLES_CLIENTE, ...ROLES_VECINO, ...ROLES_PLATAFORMA];
 
 /** Recibe el rol de la organización ('operador' / 'generador') o, en tokens viejos, su tipo. */
 export const rolesPara = (rolOTipo) => (['operador', 'cooperativa'].includes(rolOTipo) ? ROLES_COOPERATIVA : ROLES_CLIENTE);

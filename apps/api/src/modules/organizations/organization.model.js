@@ -6,10 +6,10 @@ import mongoose from 'mongoose';
 //   rol 'generador' → cliente de un operador (comercio, industria, institución o dependencia
 //                     municipal); entra gratis al portal (/api/v1/portal). Tipos: empresa o municipio.
 //   rol 'plataforma' → la organización de los administradores del SaaS (una sola).
-export const TIPOS_ORG = ['cooperativa', 'recicladora', 'municipio', 'empresa', 'plataforma'];
-export const ROLES_ORG = ['operador', 'generador', 'plataforma'];
+export const TIPOS_ORG = ['cooperativa', 'recicladora', 'municipio', 'empresa', 'vecino', 'plataforma'];
+export const ROLES_ORG = ['operador', 'generador', 'vecino', 'plataforma'];
 /** Rol por defecto: cooperativas y recicladoras operan; empresas y municipios sin rol son generadores (compatibilidad). */
-export const rolPorDefecto = (tipo) => (tipo === 'plataforma' ? 'plataforma' : ['cooperativa', 'recicladora'].includes(tipo) ? 'operador' : 'generador');
+export const rolPorDefecto = (tipo) => (tipo === 'plataforma' ? 'plataforma' : tipo === 'vecino' ? 'vecino' : ['cooperativa', 'recicladora'].includes(tipo) ? 'operador' : 'generador');
 export const esOperador = (org) => (org?.rol ?? rolPorDefecto(org?.tipo)) === 'operador';
 
 // Corrientes de residuos (ver docs/08-marco-normativo.md)

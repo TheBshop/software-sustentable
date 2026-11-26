@@ -19,7 +19,7 @@ export default function Login() {
       setToken(token);
       setUser(user);
       if (user.debeCambiarPassword) return navigate('/primera-vez', { replace: true });
-      navigate(user.organizacion?.rol === 'plataforma' ? '/plataforma' : esOperador(user) ? '/panel' : '/portal');
+      navigate(user.organizacion?.rol === 'plataforma' ? '/plataforma' : user.organizacion?.rol === 'vecino' ? '/vecino' : esOperador(user) ? '/panel' : '/portal');
     } catch (err) {
       setError(err.message);
     } finally {
@@ -60,6 +60,8 @@ export default function Login() {
         <p style={{ textAlign: 'center', marginTop: 4 }}>
           <span style={{ fontSize: 13, color: '#6b7280' }}>¿No tenés cuenta? </span>
           <Link to="/register" style={{ fontSize: 13 }}>Crear cuenta</Link>
+          <span style={{ fontSize: 13, color: '#6b7280' }}> · </span>
+          <Link to="/register-vecino" style={{ fontSize: 13 }}>Soy vecino</Link>
         </p>
       </form>
       </div>
