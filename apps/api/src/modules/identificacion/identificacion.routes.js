@@ -31,7 +31,7 @@ identificacionRouter.post('/analizar', subirImagen.single('foto'), async (req, r
     items: resultado.datos.items,
     observaciones: resultado.datos.observaciones,
     recomendacion: resultado.datos.recomendacion,
-    usuario: req.user._id,
+    usuario: req.user.sub,
     notas: req.body.notas || undefined,
   });
 

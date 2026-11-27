@@ -52,6 +52,8 @@ import { ddjjReciclarRouter } from './modules/ddjj-reciclar/ddjj-reciclar.routes
 import { identificacionRouter } from './modules/identificacion/identificacion.routes.js';
 import { destruccionRouter } from './modules/destruccion/destruccion.routes.js';
 import { reacondicionamientoRouter } from './modules/reacondicionamiento/reacondicionamiento.routes.js';
+import { eprRouter } from './modules/epr/epr.routes.js';
+import { trazabilidadRouter, trazabilidadPublicaRouter } from './modules/trazabilidad/trazabilidad.routes.js';
 import { vecinoRouter } from './modules/vecino/vecino.routes.js';
 import { snigeiPublicoRouter } from './modules/snigei/snigei-publico.routes.js';
 import { demoRouter } from './demo/demo.routes.js';
@@ -167,6 +169,7 @@ export function createApp(config = {}) {
   // Recepción pública de manifiestos (QR del PDF → firma + geolocalización)
   app.use('/api/public/manifiestos', (_req, _res, next) => runWithoutTenant(next), manifiestosPublicosRouter);
   app.use('/api/public/snigei', snigeiPublicoRouter);
+  app.use('/api/public/trazabilidad', (_req, _res, next) => runWithoutTenant(next), trazabilidadPublicaRouter);
   if (env.demoMode) app.use('/api/demo', (_req, _res, next) => runWithoutTenant(next), demoRouter);
 
   // ---- Privadas ----
@@ -217,6 +220,8 @@ export function createApp(config = {}) {
   coopApi.use('/identificacion', identificacionRouter); // identificación de residuos con IA desde foto
   coopApi.use('/destruccion', destruccionRouter); // destrucción segura de datos con certificado
   coopApi.use('/reacondicionamiento', reacondicionamientoRouter); // reacondicionamiento de equipos
+  coopApi.use('/epr', eprRouter); // reportes EPR para marcas/productores
+  coopApi.use('/trazabilidad', trazabilidadRouter); // productos reciclados con QR y calculadora de huella
   coopApi.use('/mi-organizacion/exportar', exportarRouter); // export ZIP de todos los datos (Ley 25.326)
   coopApi.use('/mi-organizacion', miOrganizacionRouter); // datos fiscales y edición de la propia org
   coopApi.use('/estado', estadoRouter); // versión, uptime, storage, email

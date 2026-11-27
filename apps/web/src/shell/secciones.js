@@ -62,6 +62,8 @@ export const SECCIONES = [
       { to: '/comercial/contabilidad', label: 'Contabilidad', perfiles: PLANTA, roles: ADMINISTRA },
       { to: '/comercial/importar-odoo', label: 'Importar Odoo', perfiles: PLANTA, roles: ADMINISTRA },
       { to: '/comercial/balance', label: 'Balance', perfiles: PLANTA, roles: ADMINISTRA },
+      { to: '/comercial/epr', label: 'EPR (marcas)', perfiles: PLANTA, roles: ADMINISTRA },
+      { to: '/comercial/trazabilidad', label: 'Trazabilidad + QR', perfiles: PLANTA, roles: ADMINISTRA },
     ],
   },
   {

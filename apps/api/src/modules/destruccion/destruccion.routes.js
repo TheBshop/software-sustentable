@@ -4,6 +4,7 @@ import { z } from 'zod';
 import multer from 'multer';
 import { Destruccion, METODOS_DESTRUCCION, TIPOS_DISPOSITIVO } from './destruccion.model.js';
 import { storage } from '../../lib/storage.js';
+import { nextSeq } from '../../lib/counters.js';
 import { HttpError } from '../../middleware/error.js';
 
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 }, fileFilter: (_r, f, cb) => cb(null, f.mimetype.startsWith('image/')) });
@@ -37,8 +38,7 @@ destruccionRouter.post('/', upload.single('foto'), async (req, res) => {
     fotoUrl = await storage.save(req.file.buffer, { prefix: 'destruccion', mimetype: req.file.mimetype });
   }
 
-  const ultimo = await Destruccion.findOne().sort('-numero').select('numero').lean();
-  const numero = (ultimo?.numero ?? 0) + 1;
+  const numero = await nextSeq('destruccion');
   const codigo = crypto.randomBytes(12).toString('base64url');
 
   const doc = await Destruccion.create({

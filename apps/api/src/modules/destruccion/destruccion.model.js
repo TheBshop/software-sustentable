@@ -27,7 +27,7 @@ const dispositivoSchema = new mongoose.Schema({
 
 const destruccionSchema = new mongoose.Schema({
   codigo: { type: String, required: true, unique: true },
-  numero: Number,
+  numero: { type: Number, index: true },
   cliente: { type: ObjectId, ref: 'Client' },
   clienteNombre: String,
   clienteCuit: String,

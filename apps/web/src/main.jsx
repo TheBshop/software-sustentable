@@ -23,7 +23,6 @@ import Stock from './pages/comercial/Stock.jsx';
 import Contratos from './pages/comercial/Contratos.jsx';
 import Convenio from './pages/comercial/Convenio.jsx';
 import { ClientesYProveedores, BalanceYCaja } from './pages/comercial/Extras.jsx';
-import Dashboard from './pages/Dashboard.jsx';
 import Indicadores from './pages/resultados/Indicadores.jsx';
 import Retiros from './pages/Retiros.jsx';
 import Certificados from './pages/Certificados.jsx';
@@ -55,6 +54,9 @@ import Manifiestos from './pages/operacion/Manifiestos.jsx';
 import Identificacion from './pages/operacion/Identificacion.jsx';
 import Destruccion from './pages/operacion/Destruccion.jsx';
 import Reacondicionamiento from './pages/operacion/Reacondicionamiento.jsx';
+import EPR from './pages/comercial/EPR.jsx';
+import Trazabilidad from './pages/comercial/Trazabilidad.jsx';
+import TrazabilidadPublica from './pages/TrazabilidadPublica.jsx';
 import PortalInicio from './pages/portal/Inicio.jsx';
 import PortalRetiros from './pages/portal/Retiros.jsx';
 import PortalCertificados from './pages/portal/Certificados.jsx';
@@ -124,6 +126,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/register-vecino" element={<RegisterVecino />} />
+        <Route path="/trazabilidad/:token" element={<TrazabilidadPublica />} />
         <Route path="/calculadora-carbono" element={<CalculadoraCarbono />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
@@ -169,6 +172,8 @@ ReactDOM.createRoot(document.getElementById('root')).render(
           <Route path="/comercial/materiales" element={<Materiales />} />
           <Route path="/comercial/facturacion" element={<Facturacion />} />
           <Route path="/comercial/balance" element={<BalanceYCaja />} />
+          <Route path="/comercial/epr" element={<EPR />} />
+          <Route path="/comercial/trazabilidad" element={<Trazabilidad />} />
           <Route path="/resultados" element={<Indicadores />} />
           <Route path="/resultados/sustentabilidad" element={<Sustentabilidad />} />
           <Route path="/cumplimiento" element={<Matriz />} />
