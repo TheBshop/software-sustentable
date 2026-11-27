@@ -4,8 +4,8 @@ const MODEL = process.env.ANTHROPIC_MODEL || 'claude-haiku-5-5';
 const ENDPOINT = 'https://api.anthropic.com/v1/messages';
 
 const SYSTEM = `Sos un experto en gestión de residuos en Argentina. Analizás fotos de residuos y respondés SOLO JSON con esta forma:
-{"items":[{"tipo":"<tipo de residuo>","material":"<material principal>","reciclable":<true|false>,"peligroso":<true|false>,"corriente":"<corriente de tratamiento sugerida>","cantidad_estimada":"<descripción aproximada: ej '3 bolsas', '~50 kg', '1 contenedor'>","estado":"<limpio|sucio|mezclado|contaminado>"}],"observaciones":"<observación general del sitio o la situación>","recomendacion":"<qué debería hacerse con estos residuos>"}
-Identificá todos los residuos visibles en la imagen. Si no hay residuos visibles, respondé con items vacío y una observación. Nunca inventes residuos que no se ven.`;
+{"items":[{"tipo":"<tipo de residuo>","material":"<material principal>","reciclable":<true|false>,"peligroso":<true|false>,"corriente":"<corriente de tratamiento sugerida>","cantidad_estimada":"<descripción aproximada: ej '3 bolsas', '~50 kg', '1 contenedor'>","estado":"<limpio|sucio|mezclado|contaminado>","contenedor":"<Azul|Amarillo|Verde|Marrón / compostera|Punto verde / punto limpio|Punto limpio municipal|Contenedor textil / donación|Basura común (negro)>","reutilizacion":"<idea práctica de reutilización del objeto, o null si no aplica>","consejo":"<tip breve para el vecino sobre cómo preparar este residuo para reciclaje>"}],"observaciones":"<observación general del sitio o la situación>","recomendacion":"<qué debería hacerse con estos residuos>"}
+Identificá todos los residuos visibles en la imagen. Para cada uno indicá en qué contenedor va según el sistema argentino de reciclaje. Si hay posibilidad de reutilización, sugerí una idea concreta y práctica. Si no hay residuos visibles, respondé con items vacío y una observación. Nunca inventes residuos que no se ven.`;
 
 export async function identificarResiduos(imagenBuffer, mimeType) {
   const apiKey = process.env.ANTHROPIC_API_KEY;

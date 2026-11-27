@@ -273,22 +273,53 @@ export default function Vecino() {
                   <h3 style={{ margin: 0, fontSize: 16 }}>Resultado del análisis</h3>
                   <span style={{ fontSize: 13, color: 'var(--gris)' }}>~{fmtKg(resultado.pesoEstimadoKg)} kg | CO₂ ~{fmtKg(resultado.co2EvitadoKg)} kg</span>
                 </div>
-                {resultado.items?.map((it, i) => (
-                  <div key={i} style={{ padding: 12, borderRadius: 8, background: 'var(--fondo, #f5f7f8)', display: 'flex', flexDirection: 'column', gap: 6 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <b style={{ fontSize: 15 }}>{it.tipo || it.material}</b>
-                      <span style={{ fontSize: 12, padding: '2px 8px', borderRadius: 20, background: it.reciclable ? '#dcfce7' : '#fef2f2', color: it.reciclable ? '#166534' : '#991b1b' }}>
-                        {it.reciclable ? 'Reciclable' : 'No reciclable'}
-                      </span>
-                    </div>
-                    {it.guia && (
-                      <div style={{ padding: 8, borderRadius: 6, background: '#fff', border: '1px solid var(--borde)' }}>
-                        <span style={{ fontSize: 12, fontWeight: 600, color: CONTENEDOR_COLOR[it.guia.contenedor] || '#374151' }}>🗑️ {it.guia.contenedor}</span>
-                        <p style={{ margin: '4px 0 0', fontSize: 13 }}>{it.guia.instruccion}</p>
+                {resultado.items?.map((it, i) => {
+                  const contenedor = it.contenedor || it.guia?.contenedor;
+                  const colorCont = CONTENEDOR_COLOR[contenedor] || '#374151';
+                  return (
+                    <div key={i} style={{ padding: 12, borderRadius: 10, background: '#fff', border: '1px solid var(--borde, #e2e8ea)', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <b style={{ fontSize: 15 }}>{it.tipo || it.material}</b>
+                        <div style={{ display: 'flex', gap: 4 }}>
+                          {it.peligroso && <span style={{ fontSize: 12, padding: '2px 8px', borderRadius: 20, background: '#fef2f2', color: '#991b1b' }}>Peligroso</span>}
+                          <span style={{ fontSize: 12, padding: '2px 8px', borderRadius: 20, background: it.reciclable ? '#dcfce7' : '#fef2f2', color: it.reciclable ? '#166534' : '#991b1b' }}>
+                            {it.reciclable ? 'Reciclable' : 'No reciclable'}
+                          </span>
+                        </div>
                       </div>
-                    )}
-                  </div>
-                ))}
+
+                      {/* Contenedor */}
+                      {contenedor && (
+                        <div style={{ padding: 10, borderRadius: 8, background: colorCont + '12', border: `1px solid ${colorCont}30`, display: 'flex', alignItems: 'center', gap: 10 }}>
+                          <div style={{ width: 36, height: 36, borderRadius: 8, background: colorCont, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 16, flexShrink: 0 }}>🗑️</div>
+                          <div>
+                            <b style={{ fontSize: 14, color: colorCont }}>{contenedor}</b>
+                            {it.consejo && <p style={{ margin: '2px 0 0', fontSize: 13, color: '#374151' }}>{it.consejo}</p>}
+                            {!it.consejo && it.guia?.instruccion && <p style={{ margin: '2px 0 0', fontSize: 13, color: '#374151' }}>{it.guia.instruccion}</p>}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Reutilización */}
+                      {it.reutilizacion && (
+                        <div style={{ padding: 10, borderRadius: 8, background: '#fef9c3', border: '1px solid #fde047', display: 'flex', alignItems: 'flex-start', gap: 8 }}>
+                          <span style={{ fontSize: 16, flexShrink: 0 }}>💡</span>
+                          <div>
+                            <b style={{ fontSize: 13, color: '#854d0e' }}>Idea de reutilización</b>
+                            <p style={{ margin: '2px 0 0', fontSize: 13, color: '#713f12' }}>{it.reutilizacion}</p>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Info adicional */}
+                      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', fontSize: 12, color: 'var(--gris)' }}>
+                        {it.material && <span>Material: {it.material}</span>}
+                        {it.cantidad_estimada && <span>· Cant: {it.cantidad_estimada}</span>}
+                        {it.estado && <span>· Estado: {it.estado}</span>}
+                      </div>
+                    </div>
+                  );
+                })}
                 {resultado.observaciones && <p style={{ fontSize: 13, color: 'var(--gris)', margin: 0 }}>{resultado.observaciones}</p>}
                 {resultado.recomendacion && (
                   <div style={{ padding: 10, borderRadius: 8, background: '#f0fdf4', border: '1px solid #bbf7d0' }}>
