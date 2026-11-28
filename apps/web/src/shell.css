@@ -148,7 +148,7 @@ tbody tr:hover td { background: #fafbfb; }
 
 /* Ingreso */
 .login-pant { min-height: 100vh; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
-.login-hero { padding: 48px; background: linear-gradient(160deg, rgba(13,42,46,0.88), rgba(19,78,74,0.80) 50%, rgba(13,42,46,0.90)), url('/hero-reciclaje.jpg') center/cover no-repeat; color: #e2f0ef; display: flex; flex-direction: column; justify-content: center; gap: 18px; position: relative; overflow: hidden; }
+.login-hero { padding: 48px; background: linear-gradient(160deg, rgba(13,42,46,0.55), rgba(19,78,74,0.50) 50%, rgba(13,42,46,0.60)), url('/hero-reciclaje.jpg') center/cover no-repeat; color: #e2f0ef; display: flex; flex-direction: column; justify-content: center; gap: 18px; position: relative; overflow: hidden; }
 .login-hero h1 { margin: 0; font-size: clamp(28px, 3.4vw, 42px); line-height: 1.12; color: #fff; max-width: 18ch; font-weight: 700; position: relative; z-index: 1; }
 .login-hero p { color: #b9d6d4; font-size: 16px; max-width: 46ch; position: relative; z-index: 1; }
 .login-hero ul { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px; position: relative; z-index: 1; }
@@ -160,7 +160,7 @@ tbody tr:hover td { background: #fafbfb; }
 .login-hero .hero-feat-img { width: 56px; height: 56px; border-radius: 8px; object-fit: cover; opacity: 0.8; flex-shrink: 0; }
 .login-hero .hero-feat-text { font-size: 14px; color: #d5ebe9; line-height: 1.4; }
 .login-hero .hero-feat-text strong { color: #fff; font-weight: 600; display: block; margin-bottom: 2px; }
-.login-form-col { display: grid; place-items: center; padding: 24px 16px; background: linear-gradient(135deg, rgba(255,255,255,0.97), rgba(245,250,249,0.95)), url('/bg-materiales.jpg') center/cover no-repeat; }
+.login-form-col { display: grid; place-items: center; padding: 24px 16px; background: linear-gradient(135deg, rgba(255,255,255,0.65), rgba(245,250,249,0.60)), url('/bg-materiales.jpg') center/cover no-repeat; }
 @media (max-width: 860px) {
   .login-pant { grid-template-columns: minmax(0, 1fr); }
   .login-hero { padding: 32px 20px; }
@@ -268,7 +268,7 @@ td.mono { white-space: nowrap; }
 @media (max-width: 640px) { .wpp-float { width: 52px; height: 52px; bottom: 16px; right: 16px; } }
 
 .land-hero { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); gap: 48px; max-width: 1240px; margin: 0 auto; padding: 56px 28px 40px; align-items: center; position: relative; }
-.land-hero::before { content: ''; position: absolute; inset: 0; background: url('/hero-reciclaje.jpg') center/cover no-repeat; opacity: 0.06; filter: blur(2px); z-index: 0; pointer-events: none; }
+.land-hero::before { content: ''; position: absolute; inset: 0; background: url('/hero-reciclaje.jpg') center/cover no-repeat; opacity: 0.5; filter: blur(2px); z-index: 0; pointer-events: none; }
 .land-hero > * { position: relative; z-index: 1; }
 .land-eyebrow { font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--verde); font-weight: 600; }
 .land-hero h1 { font-size: clamp(34px, 5vw, 56px); font-weight: 700; margin: 16px 0 14px; line-height: 1.08; letter-spacing: -0.02em; }
@@ -287,7 +287,7 @@ td.mono { white-space: nowrap; }
 .land-hero-vid video { width: 100%; height: auto; border-radius: 10px; display: block; background: #000; }
 
 .land-prod { background: var(--fondo); padding: 72px 28px; position: relative; overflow: hidden; }
-.land-prod::before { content: ''; position: absolute; inset: 0; background: url('/bg-clasificacion.jpg') center/cover no-repeat; opacity: 0.05; filter: blur(3px); z-index: 0; pointer-events: none; }
+.land-prod::before { content: ''; position: absolute; inset: 0; background: url('/bg-clasificacion.jpg') center/cover no-repeat; opacity: 0.5; filter: blur(3px); z-index: 0; pointer-events: none; }
 .land-prod > * { position: relative; z-index: 1; }
 .land-prod:nth-of-type(even)::before { background-image: url('/bg-contenedores.jpg'); }
 .land-prod h2, .land-demo h2 { max-width: 1240px; margin: 0 auto 24px; font-size: clamp(26px, 3.4vw, 36px); font-weight: 700; }
@@ -297,14 +297,14 @@ td.mono { white-space: nowrap; }
 .land-grid p { font-size: 14px; color: var(--gris); line-height: 1.55; }
 
 .land-demo { padding: 72px 28px; max-width: 1240px; margin: 0 auto; position: relative; overflow: hidden; }
-.land-demo::before { content: ''; position: absolute; inset: 0; background: url('/bg-materiales.jpg') center/cover no-repeat; opacity: 0.06; filter: blur(3px); z-index: 0; pointer-events: none; }
+.land-demo::before { content: ''; position: absolute; inset: 0; background: url('/bg-materiales.jpg') center/cover no-repeat; opacity: 0.5; filter: blur(3px); z-index: 0; pointer-events: none; }
 .land-demo > * { position: relative; z-index: 1; }
 .land-demos { list-style: none; margin: 20px 0 0; padding: 0 !important; display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px; }
 .land-demos li { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 14px 16px; border: 1px solid var(--borde); border-radius: 10px; background: #fff; }
 .land-demos b { display: block; font-size: 14px; }
 
 .land-foot { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 28px; border-top: 1px solid var(--borde); color: var(--gris); font-size: 13px; position: relative; overflow: hidden; }
-.land-foot::before { content: ''; position: absolute; inset: 0; background: url('/hero-reciclaje.jpg') center/cover no-repeat; opacity: 0.04; filter: blur(2px); z-index: 0; pointer-events: none; }
+.land-foot::before { content: ''; position: absolute; inset: 0; background: url('/hero-reciclaje.jpg') center/cover no-repeat; opacity: 0.5; filter: blur(2px); z-index: 0; pointer-events: none; }
 .land-foot > * { position: relative; z-index: 1; }
 
 @media (max-width: 880px) {
