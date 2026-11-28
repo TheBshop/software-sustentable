@@ -32,7 +32,7 @@ export const SEED_USUARIOS = [
   { email: 'empresa@elpuente.local', password: 'empresa1234', org: 'empresa', rol: 'cliente_admin', nombre: 'Laura (El Puente)' },
   { email: 'municipio@ejemplo.local', password: 'municipio1234', org: 'municipio', rol: 'cliente_admin', nombre: 'Área de Ambiente' },
   { email: 'admin@recicladora.local', password: 'admin1234', org: 'recicladora', rol: 'admin', nombre: 'Admin Recicladora' },
-  { email: 'superadmin@plataforma.local', password: 'super1234', org: 'plataforma', rol: 'superadmin', nombre: 'Administración de la plataforma' },
+  { email: 'valentinoruberto@gmail.com', password: 'super1234', org: 'plataforma', rol: 'superadmin', nombre: 'Valentino Ruberto' },
   { email: 'ambiente@municipiooperador.local', password: 'admin1234', org: 'municipioOperador', rol: 'admin', nombre: 'Dirección de Ambiente' },
 ];
 

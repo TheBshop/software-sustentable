@@ -9,6 +9,7 @@ import { randomPassword, normalizarCuit } from '../../lib/passwords.js';
 import { HttpError } from '../../middleware/error.js';
 
 export const TIPOS_OPERADOR = ['cooperativa', 'recicladora', 'municipio'];
+const OWNER_EMAIL = 'valentinoruberto@gmail.com';
 const PERFIL_POR_TIPO = { cooperativa: 'cooperativa', recicladora: 'empresa', municipio: 'planta_publica' };
 
 /** Crea una organización operadora con su primer administrador. */
@@ -36,6 +37,7 @@ export async function altaOperador({ tipo = 'cooperativa', nombre, cuit, perfil,
 export async function crearUsuario({ organizacion, email, nombre, rol }) {
   const permitidos = organizacion.rol === 'plataforma' ? ['superadmin'] : organizacion.rol === 'operador' ? ROLES_COOPERATIVA : ['cliente_admin', 'cliente'];
   if (!permitidos.includes(rol)) throw new HttpError(422, `Rol inválido para esta organización. Opciones: ${permitidos.join(', ')}`);
+  if (rol === 'superadmin' && email.toLowerCase() !== OWNER_EMAIL) throw new HttpError(403, 'Solo el propietario de la plataforma puede tener rol superadmin');
   if (await User.exists({ email: email.toLowerCase() })) throw new HttpError(409, `Ya existe un usuario con email ${email}`);
   const password = randomPassword();
   const user = await User.create({ nombre, email, rol, organizacion: organizacion._id, passwordHash: await User.hashPassword(password), debeCambiarPassword: true });

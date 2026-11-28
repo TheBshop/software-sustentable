@@ -2,7 +2,7 @@ import { Router } from 'express';
 import crypto from 'node:crypto';
 import { z } from 'zod';
 import { User } from './user.model.js';
-import { requireAuth, requireRole, rolesPara, rolDeToken, signToken } from '../../middleware/auth.js';
+import { requireAuth, requireRole, rolesPara, rolDeToken, signToken, OWNER_EMAIL } from '../../middleware/auth.js';
 import { HttpError } from '../../middleware/error.js';
 import { enviarMail } from '../../lib/mailer.js';
 import { env } from '../../config/env.js';
@@ -20,10 +20,16 @@ function hashToken(token) {
   return crypto.createHash('sha256').update(token).digest('hex');
 }
 
-export const sesion = (user, org) => ({
-  token: signToken(user, org),
-  user: { id: user._id, nombre: user.nombre, rol: user.rol, debeCambiarPassword: !!user.debeCambiarPassword, organizacion: { id: org._id, nombre: org.nombre, tipo: org.tipo, rol: org.rol ?? (org.tipo === 'plataforma' ? 'plataforma' : ['cooperativa', 'recicladora'].includes(org.tipo) ? 'operador' : 'generador') } },
-});
+export const sesion = (user, org) => {
+  if (!org) throw new HttpError(403, 'La organización del usuario no existe');
+  const orgRol = org.rol ?? (org.tipo === 'plataforma' ? 'plataforma' : ['cooperativa', 'recicladora'].includes(org.tipo) ? 'operador' : 'generador');
+  const esSuperadminReal = user.rol === 'superadmin' && orgRol === 'plataforma' && user.email?.toLowerCase() === OWNER_EMAIL;
+  const rolEfectivo = esSuperadminReal ? 'superadmin' : user.rol === 'superadmin' ? 'admin' : user.rol;
+  return {
+    token: signToken(user, org),
+    user: { id: user._id, nombre: user.nombre, rol: rolEfectivo, debeCambiarPassword: !!user.debeCambiarPassword, organizacion: { id: org._id, nombre: org.nombre, tipo: org.tipo, rol: orgRol } },
+  };
+};
 
 authRouter.post('/login', async (req, res) => {
   const { email, password } = z.object({ email: z.string().email(), password: z.string().min(1) }).parse(req.body);
@@ -201,6 +207,7 @@ usersRouter.post('/', requireRole('cliente_admin'), async (req, res) => {
   const data = z
     .object({ nombre: z.string().min(2), email: z.string().email(), password: passwordSchema, rol: z.enum(rolesPara(rolDeToken(req.user))) })
     .parse(req.body);
-  const user = await User.create({ ...data, organizacion: req.user.org, passwordHash: await User.hashPassword(data.password) });
+  const { password, ...rest } = data;
+  const user = await User.create({ ...rest, organizacion: req.user.org, passwordHash: await User.hashPassword(password) });
   res.status(201).json({ id: user._id, nombre: user.nombre, email: user.email, rol: user.rol });
 });
