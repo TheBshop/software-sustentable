@@ -34,6 +34,8 @@ export const SUBTIPOS_REGU = {
   termometros: 'Termómetros',
   quimicos_domiciliarios: 'Pinturas, solventes, barnices y similares',
   higiene_personal: 'Pañales y elementos de higiene personal',
+  cartuchos_toners: 'Cartuchos de impresora y tóners',
+  envases_fitosanitarios: 'Envases de fitosanitarios',
   otros: 'Otros REGU',
 };
 
@@ -46,6 +48,12 @@ export const TRATAMIENTOS = {
   reciclado: 'Reciclado (insumo de otro proceso productivo)',
   reuso: 'Reúso',
   compostaje: 'Compostaje',
+  biodigestion: 'Digestión anaeróbica (biogás)',
+  incineracion: 'Incineración controlada',
+  tratamiento_quimico: 'Tratamiento químico o microondas',
+  estabilizacion: 'Estabilización / inertización',
+  coprocesamiento: 'Coprocesamiento en horno cementero',
+  biorremediacion: 'Biorremediación de suelos',
   disposicion_final: 'Disposición final',
 };
 
@@ -58,5 +66,7 @@ export const FRACCION_POR_CATEGORIA = {
   plasticos: 'plasticos',
   vidrio: 'vidrio',
   metales: 'metales',
+  organicos: 'organicos',
+  textiles: 'secos_valorizables',
   otros: 'secos_valorizables',
 };

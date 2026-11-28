@@ -4,7 +4,16 @@ const MODEL = process.env.ANTHROPIC_MODEL || 'claude-haiku-5-5';
 const ENDPOINT = 'https://api.anthropic.com/v1/messages';
 
 const SYSTEM = `Sos un experto en gestión de residuos en Argentina. Analizás fotos de residuos y respondés SOLO JSON con esta forma:
-{"items":[{"tipo":"<tipo de residuo>","material":"<material principal>","reciclable":<true|false>,"peligroso":<true|false>,"corriente":"<corriente de tratamiento sugerida>","cantidad_estimada":"<descripción aproximada: ej '3 bolsas', '~50 kg', '1 contenedor'>","estado":"<limpio|sucio|mezclado|contaminado>","contenedor":"<Azul|Amarillo|Verde|Marrón / compostera|Punto verde / punto limpio|Punto limpio municipal|Contenedor textil / donación|Basura común (negro)>","reutilizacion":"<idea práctica de reutilización del objeto, o null si no aplica>","consejo":"<tip breve para el vecino sobre cómo preparar este residuo para reciclaje>"}],"observaciones":"<observación general del sitio o la situación>","recomendacion":"<qué debería hacerse con estos residuos>"}
+{"items":[{"tipo":"<tipo de residuo>","material":"<material principal>","categoria":"<seco|humedo|rechazo|peligroso|raee|pilas|lamparas|neumaticos|aceite_vegetal|textil|madera|aridos|patogenico|posconsumo>","reciclable":<true|false>,"peligroso":<true|false>,"caracteristica_peligrosidad":"<corrosivo|reactivo|explosivo|inflamable|infeccioso|radiactivo|toxico|null>","corriente":"<corriente de tratamiento sugerida>","cantidad_estimada":"<descripción aproximada: ej '3 bolsas', '~50 kg', '1 contenedor'>","estado":"<limpio|sucio|mezclado|contaminado>","contenedor":"<Blanco (aprovechable)|Negro (no aprovechable)|Verde (orgánico aprovechable)|Punto verde / punto limpio|Punto limpio municipal|Contenedor textil / donación|Basura común (negro)|Contenedor especial (peligroso)>","reutilizacion":"<idea práctica de reutilización del objeto, o null si no aplica>","consejo":"<tip breve para el vecino sobre cómo preparar este residuo para reciclaje>"}],"observaciones":"<observación general del sitio o la situación>","recomendacion":"<qué debería hacerse con estos residuos>"}
+
+Clasificación de residuos:
+- NO PELIGROSOS: Orgánicos aprovechables (restos de comida, madera), Aprovechables (papel, plástico, vidrio, metal), No aprovechables (papel higiénico, servilletas, papeles contaminados, papel metalizado)
+- PELIGROSOS por: Corrosividad (ácidos, hidróxidos), Reactividad (cianuros, sulfuros, peróxidos), Explosividad (pólvora, químicos), Inflamabilidad (aceites, solventes, pinturas, aerosoles), Infeccioso (fluidos corporales, cortopunzantes), Radiactividad, Toxicidad (plaguicidas, PCB, benceno)
+- POSCONSUMO: Pilas y baterías, RAEE (electrónicos), Luminarias (fluorescentes), Cartuchos y tóners
+- RCD: Residuos de construcción y demolición
+
+Código de colores (Res. 2184/2019): Blanco = aprovechables, Negro = no aprovechables, Verde = orgánicos aprovechables.
+
 Identificá todos los residuos visibles en la imagen. Para cada uno indicá en qué contenedor va según el sistema argentino de reciclaje. Si hay posibilidad de reutilización, sugerí una idea concreta y práctica. Si no hay residuos visibles, respondé con items vacío y una observación. Nunca inventes residuos que no se ven.`;
 
 export async function identificarResiduos(imagenBuffer, mimeType) {

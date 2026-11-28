@@ -3,27 +3,33 @@ import { Link, useNavigate } from 'react-router-dom';
 import { api, setToken, setUser, esOperador } from '../api.js';
 
 const TIPOS = [
-  { value: 'cooperativa', label: 'Cooperativa' },
-  { value: 'recicladora', label: 'Empresa recicladora' },
   { value: 'municipio', label: 'Municipio' },
-  { value: 'vecino', label: 'Vecino / Ciudadano' },
+  { value: 'cooperativa', label: 'Cooperativa / Empresa' },
+  { value: 'vecino', label: 'Vecino' },
+];
+
+const PROVINCIAS = [
+  'Buenos Aires', 'CABA', 'Catamarca', 'Chaco', 'Chubut', 'Córdoba', 'Corrientes',
+  'Entre Ríos', 'Formosa', 'Jujuy', 'La Pampa', 'La Rioja', 'Mendoza', 'Misiones',
+  'Neuquén', 'Río Negro', 'Salta', 'San Juan', 'San Luis', 'Santa Cruz', 'Santa Fe',
+  'Santiago del Estero', 'Tierra del Fuego', 'Tucumán',
 ];
 
 export default function Register() {
   const navigate = useNavigate();
-  const [f, setF] = useState({ tipo: 'cooperativa', nombre: '', cuit: '', adminNombre: '', email: '', password: '', confirm: '' });
+  const [f, setF] = useState({ tipo: 'municipio', nombre: '', cuit: '', adminNombre: '', email: '', password: '', confirm: '', provincia: '', municipio: '' });
   const [showPwd, setShowPwd] = useState(false);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
 
+  const esVecino = f.tipo === 'vecino';
   const passwordOk = f.password.length >= 8;
   const coinciden = f.password === f.confirm;
-  const formOk = f.nombre.trim() && f.adminNombre.trim() && f.email && passwordOk && coinciden;
+  const formOk = esVecino
+    ? f.adminNombre.trim() && f.email && f.provincia && passwordOk && coinciden
+    : f.nombre.trim() && f.adminNombre.trim() && f.email && passwordOk && coinciden;
 
-  const set = (k) => (e) => {
-    if (k === 'tipo' && e.target.value === 'vecino') return navigate('/register-vecino');
-    setF({ ...f, [k]: e.target.value });
-  };
+  const set = (k) => (e) => setF({ ...f, [k]: e.target.value });
 
   async function onSubmit(e) {
     e.preventDefault();
@@ -31,17 +37,33 @@ export default function Register() {
     if (!coinciden) return setError('Las contraseñas no coinciden');
     setLoading(true);
     try {
-      const { token, user } = await api('/auth/register', {
-        method: 'POST',
-        body: {
-          tipo: f.tipo,
-          nombre: f.nombre.trim(),
-          ...(f.cuit.trim() && { cuit: f.cuit.trim() }),
-          admin: { nombre: f.adminNombre.trim(), email: f.email, password: f.password },
-        },
-      });
+      let res;
+      if (esVecino) {
+        res = await api('/auth/register-vecino', {
+          method: 'POST',
+          body: {
+            nombre: f.adminNombre.trim(),
+            email: f.email,
+            password: f.password,
+            provincia: f.provincia,
+            ...(f.municipio.trim() && { municipio: f.municipio.trim() }),
+          },
+        });
+      } else {
+        res = await api('/auth/register', {
+          method: 'POST',
+          body: {
+            tipo: f.tipo === 'cooperativa' ? 'cooperativa' : 'municipio',
+            nombre: f.nombre.trim(),
+            ...(f.cuit.trim() && { cuit: f.cuit.trim() }),
+            admin: { nombre: f.adminNombre.trim(), email: f.email, password: f.password },
+          },
+        });
+      }
+      const { token, user } = res;
       setToken(token);
       setUser(user);
+      if (esVecino) return navigate('/vecino', { replace: true });
       navigate(esOperador(user) ? '/bienvenida' : '/panel', { replace: true });
     } catch (err) {
       setError(err.message);
@@ -65,25 +87,45 @@ export default function Register() {
       <div className="login-form-col">
         <form className="card login" onSubmit={onSubmit}>
           <h2>Crear cuenta</h2>
-          <p className="muted">Datos de tu organización y tu usuario administrador.</p>
+          <p className="muted">Elegí tu perfil y completá tus datos.</p>
 
-          <fieldset style={{ border: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>
-            <legend style={{ fontWeight: 600, marginBottom: 4 }}>Organización</legend>
-            <label>
-              Tipo
-              <select value={f.tipo} onChange={set('tipo')}>
-                {TIPOS.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
-              </select>
-            </label>
-            <label>
-              Nombre
-              <input value={f.nombre} onChange={set('nombre')} required placeholder="Ej: Cooperativa Nueva Vida" autoFocus />
-            </label>
-            <label>
-              CUIT <span className="muted" style={{ fontWeight: 400 }}>(opcional)</span>
-              <input value={f.cuit} onChange={set('cuit')} placeholder="30-12345678-9" />
-            </label>
-          </fieldset>
+          <label>
+            Tipo de perfil
+            <select value={f.tipo} onChange={set('tipo')}>
+              {TIPOS.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
+            </select>
+          </label>
+
+          {!esVecino && (
+            <fieldset style={{ border: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <legend style={{ fontWeight: 600, marginBottom: 4 }}>Organización</legend>
+              <label>
+                Nombre
+                <input value={f.nombre} onChange={set('nombre')} required placeholder={f.tipo === 'municipio' ? 'Ej: Municipio de Paraná' : 'Ej: Cooperativa Nueva Vida'} />
+              </label>
+              <label>
+                CUIT <span className="muted" style={{ fontWeight: 400 }}>(opcional)</span>
+                <input value={f.cuit} onChange={set('cuit')} placeholder="30-12345678-9" />
+              </label>
+            </fieldset>
+          )}
+
+          {esVecino && (
+            <fieldset style={{ border: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <legend style={{ fontWeight: 600, marginBottom: 4 }}>Ubicación</legend>
+              <label>
+                Provincia
+                <select value={f.provincia} onChange={set('provincia')} required>
+                  <option value="">Elegí tu provincia</option>
+                  {PROVINCIAS.map((p) => <option key={p} value={p}>{p}</option>)}
+                </select>
+              </label>
+              <label>
+                Municipio <span className="muted" style={{ fontWeight: 400 }}>(opcional)</span>
+                <input value={f.municipio} onChange={set('municipio')} placeholder="Ej: Paraná" />
+              </label>
+            </fieldset>
+          )}
 
           <fieldset style={{ border: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>
             <legend style={{ fontWeight: 600, marginBottom: 4 }}>Tu usuario</legend>

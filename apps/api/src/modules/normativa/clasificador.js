@@ -10,7 +10,8 @@ import { Organization } from '../organizations/organization.model.js';
 export const ORIGENES = { vivienda: 'Vivienda', comercio: 'Comercio, oficina o institución', gran: 'Gran generador', industria: 'Industria o servicio', salud: 'Centro de salud', obra: 'Obra o demolición', campo: 'Campo', buque: 'Buque o puerto' };
 export const CATEGORIAS = {
   seco: 'Seco reciclable', humedo: 'Húmedo / orgánico', rechazo: 'Rechazo no reciclable', industrial: 'Residuo de proceso industrial',
-  raee: 'REGU · Aparato eléctrico o electrónico (RAEE)', nfu: 'REGU · Neumático fuera de uso', avu: 'REGU · Aceite vegetal usado', pilas: 'REGU · Pilas y baterías', lamparas: 'REGU · Lámparas y tubos fluorescentes',
+  raee: 'REGU · Aparato eléctrico o electrónico (RAEE)', nfu: 'REGU · Neumático fuera de uso', avu: 'REGU · Aceite vegetal usado', pilas: 'REGU · Pilas y baterías', lamparas: 'REGU · Lámparas y tubos fluorescentes', cartuchos_toners: 'REGU · Cartuchos de impresora y tóners',
+  textil: 'Textil (ropa, calzado, tela)', madera: 'Madera',
   voluminoso: 'Voluminoso doméstico', poda: 'Poda y jardinería', arido: 'Áridos, escombros y restos de obra',
   patogenico: 'Patogénico (infeccioso)', fito_a: 'Envase de fitosanitario lavable (Tipo A)', fito_b: 'Envase de fitosanitario no lavable (Tipo B)', pcb: 'Con PCB (más de 50 ppm)', radiactivo: 'Radiactivo', buque: 'De buque (MARPOL)',
 };
@@ -31,6 +32,21 @@ export const CATALOGO = [
   ['Bidón de agroquímico con triple lavado', 'campo', 'fito_a'], ['Bolsa de agroquímico en polvo', 'campo', 'fito_b'],
   ['Transformador con PCB', 'industria', 'pcb'], ['Fuente radiactiva en desuso', 'industria', 'radiactivo'], ['Sentinas de un buque', 'buque', 'buque'],
   ['Escombros y restos de obra', 'obra', 'arido'], ['Ramas y restos de poda', 'vivienda', 'poda'], ['Colchón o muebles viejos', 'vivienda', 'voluminoso'],
+  // Del documento "Guía manejo de residuos sólidos"
+  ['Restos de comida y materia orgánica (cocina)', 'comercio', 'humedo'], ['Madera (embalajes, pallets)', 'industria', 'humedo'],
+  ['Plásticos limpios (bolsas, vasos, platos desechables)', 'comercio', 'seco'], ['Papelería de oficina (cartón y papel)', 'comercio', 'seco'],
+  ['Papel higiénico y servilletas', 'vivienda', 'rechazo'], ['Toallas higiénicas y protectores', 'vivienda', 'rechazo'], ['Papeles y cartones contaminados con comida', 'vivienda', 'rechazo'], ['Papel metalizado', 'vivienda', 'rechazo'],
+  ['Ropa y calzado', 'vivienda', 'textil'],
+  ['Cartuchos de impresora y tóners', 'comercio', 'cartuchos_toners'],
+  ['Monitores y computadoras en desuso', 'comercio', 'raee'], ['Aires acondicionados en desuso', 'comercio', 'raee'], ['Teléfonos y equipos móviles', 'comercio', 'raee'],
+  ['Ácido fluorhídrico', 'industria', 'industrial', ['H8'], '', 'alto'], ['Ácido clorhídrico', 'industria', 'industrial', ['H8'], '', 'alto'],
+  ['Hidróxido de sodio (soda cáustica)', 'industria', 'industrial', ['H8'], '', 'alto'],
+  ['Cianuros', 'industria', 'industrial', ['H6.1'], '', 'alto'], ['Peróxidos orgánicos', 'industria', 'industrial', ['H5.2'], '', 'alto'],
+  ['Restos de pólvora y explosivos', 'industria', 'industrial', ['H1'], '', 'alto'],
+  ['Productos de limpieza (solventes)', 'comercio', 'industrial', ['H3'], '', 'medio'], ['Latas de aerosol con restos de butano', 'vivienda', 'rechazo', ['H3'], ''],
+  ['Plaguicidas obsoletos', 'campo', 'industrial', ['H6.1', 'H12'], '', 'alto'],
+  ['Fluidos corporales y residuos anatomopatológicos', 'salud', 'patogenico'], ['Cortopunzantes (bisturís, lancetas)', 'salud', 'patogenico'],
+  ['Residuos de construcción y demolición (RCD)', 'obra', 'arido'],
 ].map(([nombre, origen, cat, h = [], y = '', riesgo = 'bajo'], i) => ({ id: i, nombre, origen, cat, h, y, riesgo }));
 
 const PELIGROSOS_PROV = { buenos_aires: 'Residuo especial (Ley 11.720 y Decreto 806/97)', caba: 'Residuo peligroso (Ley 2.214): corrientes Y y características H', cordoba: 'Residuo peligroso (Ley 8.973 y Decreto 2.149/03)', entre_rios: 'Residuo peligroso (adhesión a la Ley 24.051 y Decreto 4.977/09)', santa_fe: 'Residuo peligroso (Decreto 1.844/02)' };
@@ -42,7 +58,9 @@ export function regimen(c) {
   if (['patogenico', 'fito_a', 'fito_b', 'pcb', 'radiactivo', 'buque'].includes(c.cat)) return c.cat;
   if (c.origen === 'salud' && !['seco', 'humedo'].includes(c.cat)) return 'patogenico';
   const peligroso = h.length || c.y;
-  if (['raee', 'nfu', 'avu', 'pilas', 'lamparas'].includes(c.cat)) return c.origen === 'vivienda' && peligroso ? 'peligroso_domiciliario_regu' : 'regu';
+  if (['raee', 'nfu', 'avu', 'pilas', 'lamparas', 'cartuchos_toners'].includes(c.cat)) return c.origen === 'vivienda' && peligroso ? 'peligroso_domiciliario_regu' : 'regu';
+  if (c.cat === 'textil') return c.origen === 'vivienda' ? 'domiciliario' : 'asimilable';
+  if (c.cat === 'madera') return c.origen === 'vivienda' ? 'domiciliario' : 'asimilable';
   if (peligroso) return c.origen === 'vivienda' ? 'peligroso_domiciliario' : 'peligroso';
   if (['voluminoso', 'poda', 'arido'].includes(c.cat)) return c.cat;
   if (c.cat === 'industrial') return 'industrial';

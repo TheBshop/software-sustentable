@@ -9,10 +9,15 @@ export const CATEGORIAS = {
   vidrio: 'Vidrio',
   metales: 'Metales',
   electronicos: 'Electrónicos',
+  organicos: 'Orgánicos',
+  textiles: 'Textiles',
+  construccion_demolicion: 'Construcción y demolición',
+  posconsumo: 'Posconsumo',
+  peligrosos: 'Peligrosos',
   otros: 'Otros',
 };
 const VACIO = { codigo: '', nombre: '', categoria: 'papel_carton', corriente: 'rsu', fraccion: '', subtipoRegu: '', factorCo2: '', tarifaRetiroKg: '', precioVentaKg: '', unidades: '', refMin: '', refMax: '', mezcla: false, factorCo2Fuente: '', tratamiento: '' };
-export const TRATAMIENTOS = { reciclado: 'Reciclado', reuso: 'Reúso', compostaje: 'Compostaje', disposicion_final: 'Disposición final' };
+export const TRATAMIENTOS = { reciclado: 'Reciclado', reuso: 'Reúso', compostaje: 'Compostaje', biodigestion: 'Digestión anaeróbica', incineracion: 'Incineración controlada', tratamiento_quimico: 'Tratamiento químico', estabilizacion: 'Estabilización', coprocesamiento: 'Coprocesamiento', biorremediacion: 'Biorremediación', disposicion_final: 'Disposición final' };
 
 // "fardo=60; bolsón=25" ⇄ [{ nombre, kg }]
 const unidadesATexto = (u = []) => u.map((x) => `${x.nombre}=${x.kg}`).join('; ');

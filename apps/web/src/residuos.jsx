@@ -30,6 +30,8 @@ export const SUBTIPOS_REGU = {
   termometros: 'Termómetros',
   quimicos_domiciliarios: 'Pinturas, solventes, barnices y similares',
   higiene_personal: 'Pañales y elementos de higiene personal',
+  cartuchos_toners: 'Cartuchos de impresora y tóners',
+  envases_fitosanitarios: 'Envases de fitosanitarios',
   otros: 'Otros REGU',
 };
 

@@ -4,7 +4,7 @@ import { z } from 'zod';
 import { CORRIENTES } from '../organizations/organization.model.js';
 import { FRACCIONES, SUBTIPOS_REGU, FRACCION_POR_CATEGORIA, TRATAMIENTOS } from './fracciones.js';
 
-export const CATEGORIAS = ['papel_carton', 'plasticos', 'vidrio', 'metales', 'electronicos', 'otros'];
+export const CATEGORIAS = ['papel_carton', 'plasticos', 'vidrio', 'metales', 'electronicos', 'organicos', 'textiles', 'construccion_demolicion', 'posconsumo', 'peligrosos', 'otros'];
 
 const materialSchema = new mongoose.Schema(
   {
