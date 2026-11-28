@@ -78,11 +78,20 @@ export default function Register() {
         <span className="eyebrow">Gestión RSU</span>
         <h1>Empezá a gestionar tus residuos</h1>
         <p>Creá tu cuenta gratis y configurá tu organización en minutos. Sin tarjeta, sin compromiso.</p>
-        <ul>
-          <li>Registros digitales con trazabilidad completa</li>
-          <li>Cumplimiento normativo según tu jurisdicción</li>
-          <li>Certificados, remitos e informes listos para presentar</li>
-        </ul>
+        <div className="hero-features">
+          <div className="hero-feat">
+            <img className="hero-feat-img" src="/bg-clasificacion.jpg" alt="" />
+            <div className="hero-feat-text"><strong>Trazabilidad completa</strong>Registros digitales de cada operación</div>
+          </div>
+          <div className="hero-feat">
+            <img className="hero-feat-img" src="/bg-contenedores.jpg" alt="" />
+            <div className="hero-feat-text"><strong>Cumplimiento normativo</strong>Según tu jurisdicción y actividad</div>
+          </div>
+          <div className="hero-feat">
+            <img className="hero-feat-img" src="/bg-materiales.jpg" alt="" />
+            <div className="hero-feat-text"><strong>Informes y certificados</strong>Listos para presentar ante la autoridad</div>
+          </div>
+        </div>
       </section>
       <div className="login-form-col">
         <form className="card login" onSubmit={onSubmit}>

@@ -148,19 +148,24 @@ tbody tr:hover td { background: #fafbfb; }
 
 /* Ingreso */
 .login-pant { min-height: 100vh; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
-.login-hero { padding: 48px; background: radial-gradient(120% 120% at 0% 0%, #134e4a 0%, #0d2a2e 60%); color: #e2f0ef; display: flex; flex-direction: column; justify-content: center; gap: 18px; }
-.login-hero h1 { margin: 0; font-size: clamp(28px, 3.4vw, 42px); line-height: 1.12; color: #fff; max-width: 18ch; font-weight: 700; }
-.login-hero p { color: #b9d6d4; font-size: 16px; max-width: 46ch; }
-.login-hero ul { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px; }
+.login-hero { padding: 48px; background: linear-gradient(160deg, rgba(13,42,46,0.88), rgba(19,78,74,0.80) 50%, rgba(13,42,46,0.90)), url('/hero-reciclaje.jpg') center/cover no-repeat; color: #e2f0ef; display: flex; flex-direction: column; justify-content: center; gap: 18px; position: relative; overflow: hidden; }
+.login-hero h1 { margin: 0; font-size: clamp(28px, 3.4vw, 42px); line-height: 1.12; color: #fff; max-width: 18ch; font-weight: 700; position: relative; z-index: 1; }
+.login-hero p { color: #b9d6d4; font-size: 16px; max-width: 46ch; position: relative; z-index: 1; }
+.login-hero ul { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px; position: relative; z-index: 1; }
 .login-hero li { display: flex; gap: 8px; color: #d5ebe9; }
 .login-hero li::before { content: '✓'; color: #5eead4; font-weight: 700; }
-.login-hero .eyebrow { font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: #5eead4; }
-.login-form-col { display: grid; place-items: center; padding: 24px 16px; }
+.login-hero .eyebrow { font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: #5eead4; position: relative; z-index: 1; }
+.login-hero .hero-features { display: flex; flex-direction: column; gap: 14px; margin-top: 8px; position: relative; z-index: 1; }
+.login-hero .hero-feat { display: flex; align-items: center; gap: 14px; padding: 14px 18px; border-radius: 12px; background: rgba(255,255,255,0.08); backdrop-filter: blur(6px); border: 1px solid rgba(255,255,255,0.10); }
+.login-hero .hero-feat-img { width: 56px; height: 56px; border-radius: 8px; object-fit: cover; opacity: 0.8; flex-shrink: 0; }
+.login-hero .hero-feat-text { font-size: 14px; color: #d5ebe9; line-height: 1.4; }
+.login-hero .hero-feat-text strong { color: #fff; font-weight: 600; display: block; margin-bottom: 2px; }
+.login-form-col { display: grid; place-items: center; padding: 24px 16px; background: linear-gradient(135deg, rgba(255,255,255,0.97), rgba(245,250,249,0.95)), url('/bg-materiales.jpg') center/cover no-repeat; }
 @media (max-width: 860px) {
   .login-pant { grid-template-columns: minmax(0, 1fr); }
   .login-hero { padding: 32px 20px; }
   .login-hero h1 { font-size: 24px; }
-  .login-hero ul { display: none; }
+  .login-hero ul, .login-hero .hero-features { display: none; }
   .card.login { width: 100%; }
 }
 @media (max-width: 480px) {

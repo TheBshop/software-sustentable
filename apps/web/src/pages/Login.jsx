@@ -33,11 +33,20 @@ export default function Login() {
         <span className="eyebrow">Gestión RSU</span>
         <h1>Gestión legal de residuos, en orden y al día</h1>
         <p>Para cooperativas, empresas recicladoras y municipios: registros, trazabilidad y cumplimiento según tu actividad y tu jurisdicción.</p>
-        <ul>
-          <li>Registros de cada día, con quién cargó qué</li>
-          <li>Obligaciones nacionales, provinciales y municipales</li>
-          <li>Certificados, remitos e informes para presentar</li>
-        </ul>
+        <div className="hero-features">
+          <div className="hero-feat">
+            <img className="hero-feat-img" src="/bg-clasificacion.jpg" alt="" />
+            <div className="hero-feat-text"><strong>Clasificación y trazabilidad</strong>Registros de cada día, con quién cargó qué</div>
+          </div>
+          <div className="hero-feat">
+            <img className="hero-feat-img" src="/bg-contenedores.jpg" alt="" />
+            <div className="hero-feat-text"><strong>Cumplimiento normativo</strong>Obligaciones nacionales, provinciales y municipales</div>
+          </div>
+          <div className="hero-feat">
+            <img className="hero-feat-img" src="/bg-materiales.jpg" alt="" />
+            <div className="hero-feat-text"><strong>Documentación lista</strong>Certificados, remitos e informes para presentar</div>
+          </div>
+        </div>
       </section>
       <div className="login-form-col">
       <form className="card login" onSubmit={onSubmit}>
